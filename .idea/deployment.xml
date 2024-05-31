@@ -12,8 +12,11 @@
       <paths name="UMRT-ARM-ROS-DEV (3922110e-6745-4e72-bdeb-44fc86fd01ca)">
         <serverdata>
           <mappings>
-            <mapping local="$PROJECT_DIR$" web="/" />
+            <mapping deploy="/tmp/communication-master-example" local="$PROJECT_DIR$" />
           </mappings>
+          <excludedPaths>
+            <excludedPath local="true" path="$PROJECT_DIR$/cmake-build-debug-umrt-arm-ros-dev" />
+          </excludedPaths>
         </serverdata>
       </paths>
       <paths name="rpi (65154107-7b7c-40e4-a134-28be72c8a3eb)">
