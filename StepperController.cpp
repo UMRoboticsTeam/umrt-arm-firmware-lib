@@ -7,8 +7,8 @@
 
 #include <boost/log/trivial.hpp>
 
-#include "StepperController.h"
 #include "SYSEX_COMMANDS.h"
+#include "StepperController.h"
 #include "Utils.h"
 
 
@@ -91,13 +91,17 @@ void StepperController::handleSysex(const std::vector<unsigned char>& message) {
     }
 
     switch (message[0]) {
-        case SysexCommands::ARDUINO_ECHO:this->handleEArduinoEcho(message);
+        case SysexCommands::ARDUINO_ECHO:
+            this->handleEArduinoEcho(message);
             break;
-        case SysexCommands::SET_SPEED:this->handleESetSpeed(message);
+        case SysexCommands::SET_SPEED:
+            this->handleESetSpeed(message);
             break;
-        case SysexCommands::GET_SPEED:this->handleEGetSpeed(message);
+        case SysexCommands::GET_SPEED:
+            this->handleEGetSpeed(message);
             break;
-        default:BOOST_LOG_TRIVIAL(info) << "Unknown Sysex received with command=" << message[0];
+        default:
+            BOOST_LOG_TRIVIAL(info) << "Unknown Sysex received with command=" << message[0];
             break;
     }
 }
