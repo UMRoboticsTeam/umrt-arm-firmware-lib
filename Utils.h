@@ -126,7 +126,7 @@ std::string decode_string(const std::vector<uint8_t>& data) {
     // Note: data.cend() - 1 is safe because we know data.size() >= 2
     std::vector<uint8_t>::const_iterator end = data.cend() - 1;
     for (std::vector<uint8_t>::const_iterator i = data.cbegin(); i != end; i += 2) {
-        s.append(static_cast<char>(decode_8(i)));
+        s.push_back(static_cast<char>(decode_8(i)));
     }
 
     return s;
