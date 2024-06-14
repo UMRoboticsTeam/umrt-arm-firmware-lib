@@ -22,6 +22,17 @@
       <paths name="rpi (65154107-7b7c-40e4-a134-28be72c8a3eb)">
         <serverdata>
           <mappings>
+            <mapping deploy="/tmp/tmp.5nTFIoNFYO" local="$PROJECT_DIR$" />
+          </mappings>
+          <excludedPaths>
+            <excludedPath local="true" path="$PROJECT_DIR$/cmake-build-debug-rpi" />
+            <excludedPath local="true" path="$PROJECT_DIR$/cmake-build-debug-rpi" />
+          </excludedPaths>
+        </serverdata>
+      </paths>
+      <paths name="rpi-ros-dev (dbd213dd-8ef3-45a0-9c35-30842684b8e1)">
+        <serverdata>
+          <mappings>
             <mapping local="$PROJECT_DIR$" web="/" />
           </mappings>
         </serverdata>
