@@ -111,25 +111,29 @@ inline uint16_t decode_16(const std::vector<uint8_t>& data) { return decode_16(d
 
 // Decode Firmata 7-bit packets into an 8-bit integer
 // See firmatify_8 for an explanation of what Firmata does to packets
-inline uint16_t decode_8(const std::vector<uint8_t>::const_iterator& data) { return data[0] | data[1] << 7; }
+inline uint8_t decode_8(const uint8_t& lsb, const uint8_t& msb) { return lsb | msb << 7; }
+
+inline uint16_t decode_8(const std::vector<uint8_t>::const_iterator& data) { return decode_8(data[0], data[1]); }
 
 inline uint8_t decode_8(const std::vector<uint8_t>& data) { return decode_8(data.cbegin()); }
 
 // Decode a Firmata 7-bit packet stream into an std::string
-std::string decode_string(const std::vector<uint8_t>& data) {
+inline std::string decode_string(const std::vector<uint8_t>& data) {
     std::string s;
 
     // Need at least 2 elements to do anything
     if (data.size() <= 1) { return s; }
 
-    // Since we consume 2 elements at a time, we need to iterate until the second-last element
-    // Note: data.cend() - 1 is safe because we know data.size() >= 2
-    std::vector<uint8_t>::const_iterator end = data.cend() - 1;
-    for (std::vector<uint8_t>::const_iterator i = data.cbegin(); i != end; i += 2) {
-        s.push_back(static_cast<char>(decode_8(i)));
+    for (int i = 0; i + 1 < data.size(); i += 2) {
+        s.push_back(static_cast<char>(decode_8(data[i], data[i + 1])));
     }
 
     return s;
+}
+
+// Encode an std::string into an 8-bit packet stream
+inline std::vector<uint8_t> encode_string(const std::string& str) {
+    return { str.cbegin(), str.cend() };
 }
 
 #endif //COMMUNICATION_MASTER_EXAMPLE_UTILS_H
