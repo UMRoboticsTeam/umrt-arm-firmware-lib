@@ -23,8 +23,14 @@ public:
     void update() { return s.update(); }
 
     void sendTestRoutine(){
+        s.sendString("test");
+
+        // Wait 1 second
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+
         // Setup handler for text echos and send one
         processPayload = [this](const std::vector<uint8_t>& p) -> void { this->onEchoText(p); };
+        s.sendEcho(encode_string("hello world"));
 
         // Wait 1 second
         std::this_thread::sleep_for(std::chrono::seconds(1));
