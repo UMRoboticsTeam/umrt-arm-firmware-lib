@@ -10,7 +10,7 @@ include_directories(${Boost_INCLUDE_DIRS})
 # Setup openFrameworksArduino
 add_subdirectory(openFrameworksArduino)
 
-add_executable(communication_master_example main.cpp StepperController.cpp StepperController.h Utils.h)
+add_executable(communication_master_example main.cpp StepperController.cpp StepperController.h Utils.h CommunicationTest.h)
 
 #target_link_libraries(communication_master_example -static)
 target_link_libraries(communication_master_example ${Boost_LIBRARIES})
@@ -21,4 +21,6 @@ target_include_directories(communication_master_example PUBLIC
         "${PROJECT_BINARY_DIR}"
         "${PROJECT_SOURCE_DIR}/openFrameworksArduino/src"
         )
+
+set_target_properties(communication_master_example PROPERTIES LINKER_LANGUAGE CXX)
 

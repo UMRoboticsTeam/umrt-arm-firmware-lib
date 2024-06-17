@@ -5,15 +5,13 @@
 #include <string>
 
 #include "StepperController.h"
+#include "CommunicationTest.h"
 
-const std::string DEVICE = "/dev/ttyUSB1";
+const std::string DEVICE = "/dev/ttyUSB0";
 const int BAUD_RATE = 57600;
 
 constexpr boost::log::trivial::severity_level LOG_LEVEL = boost::log::trivial::debug;
 constexpr uint32_t TOTAL_LOG_SIZE = 100 * 1024 * 1024; // 100 MiB
-
-void onSetup();
-
 
 int main() {
     // Setup logging
@@ -27,21 +25,13 @@ int main() {
     boost::log::add_common_attributes();
     BOOST_LOG_TRIVIAL(debug) << "Logging started";
 
-    StepperController s;
-
-    s.ESetup.connect(&onSetup);
-
-    s.connect(DEVICE, 57600);
+    CommunicationTest c(DEVICE, BAUD_RATE);
 
     // Run update loop forever
+    // TODO: Look into a better way of doing the polling loop which isn't so intensive
     for (;;) {
-        s.update();
+        c.update();
     }
 
     return 0;
-}
-
-void onSetup(){
-    std::cout << "Arduino setup!" << std::endl;
-
 }
