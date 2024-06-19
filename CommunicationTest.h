@@ -11,6 +11,8 @@
 #include <thread>
 #include <string>
 
+#include <vector>
+
 class CommunicationTest {
 public:
     CommunicationTest(const std::string& device, const int baud) {
@@ -28,7 +30,7 @@ public:
         // Wait 1 second
         std::this_thread::sleep_for(std::chrono::seconds(1));
 
-        // Setup handler for text echos and send one
+        /*// Setup handler for text echos and send one
         processPayload = [this](const std::vector<uint8_t>& p) -> void { this->onEchoText(p); };
         s.sendEcho(encode_string("hello world"));
 
@@ -42,10 +44,14 @@ public:
         s.sendEcho(pack_32(32767));
 
         // Wait 1 second
-        std::this_thread::sleep_for(std::chrono::seconds(1));
+        std::this_thread::sleep_for(std::chrono::seconds(1));*/
 
         // Setup handler for raw 32-bit numerical echos and send 3
         processPayload = [this](const std::vector<uint8_t>& p) -> void { this->onEchoRaw(p); };
+        std::vector<uint8_t> v1 = pack_32(0xDEAD'BEEF);
+        std::vector<uint8_t> v2 = firmatify_32(v1);
+        uint32_t v3 = decode_32(v2);
+        //s.sendSysEx(0x71, encode_string("abcd"));
         s.sendEcho(pack_32(0xDEAD'BEEF));
         s.sendEcho(pack_32(1000));
         s.sendEcho(pack_32(32767));
@@ -91,9 +97,9 @@ protected:
     void onEchoRaw(const std::vector<uint8_t>& payload) {
         if (payload.empty()) { return; }
 
-        std::cout << "[ " << payload[0];
+        std::cout << "[ 0x" << std::hex << std::setw(2) << std::setfill('0') << +payload[0];
         for (auto p = payload.cbegin() + 1; p != payload.end(); ++p) {
-            std::cout << ", " << *p;
+            std::cout << ", 0x" << std::hex << std::setw(2) << std::setfill('0') << +*p;
         }
         std::cout << " ]" << std::endl;
     }
