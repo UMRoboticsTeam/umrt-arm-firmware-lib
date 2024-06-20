@@ -48,6 +48,8 @@ protected:
 
     void setupArduino(const int& version);
 
+    // Note that using extended command IDs (i.e. command byte 0x00 followed by a 2 byte command ID) yields undefined behaviour
+    // TODO: We therefore shouldn't be using 0x00 for ARDUINO_ECHO
     void handleSysex(const std::vector<unsigned char>& message);
 
     void handleEArduinoEcho(const std::vector<unsigned char>& message);

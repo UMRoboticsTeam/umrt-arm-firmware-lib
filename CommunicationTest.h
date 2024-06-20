@@ -30,7 +30,7 @@ public:
         // Wait 1 second
         std::this_thread::sleep_for(std::chrono::seconds(1));
 
-        /*// Setup handler for text echos and send one
+        // Setup handler for text echos and send one
         processPayload = [this](const std::vector<uint8_t>& p) -> void { this->onEchoText(p); };
         s.sendEcho(encode_string("hello world"));
 
@@ -44,14 +44,10 @@ public:
         s.sendEcho(pack_32(32767));
 
         // Wait 1 second
-        std::this_thread::sleep_for(std::chrono::seconds(1));*/
+        std::this_thread::sleep_for(std::chrono::seconds(1));
 
         // Setup handler for raw 32-bit numerical echos and send 3
         processPayload = [this](const std::vector<uint8_t>& p) -> void { this->onEchoRaw(p); };
-        std::vector<uint8_t> v1 = pack_32(0xDEAD'BEEF);
-        std::vector<uint8_t> v2 = firmatify_32(v1);
-        uint32_t v3 = decode_32(v2);
-        //s.sendSysEx(0x71, encode_string("abcd"));
         s.sendEcho(pack_32(0xDEAD'BEEF));
         s.sendEcho(pack_32(1000));
         s.sendEcho(pack_32(32767));
