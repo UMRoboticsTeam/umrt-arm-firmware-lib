@@ -21,6 +21,12 @@ enum SysexCommands : uint8_t {
     // In:  [ motor_id (uint8_t) ]
     // Out: [ motor_id (uint8_t), speed (int16_t) ]
     GET_SPEED = 0x02,
+
+    // Move the motor a specific number of steps (negative speed allowed)
+    // Scheduled steps may be overridden by other commands
+    // In:  [ motor_id (uint8_t), num_steps (uint16_t), speed (int16_t) ]
+    // Out: [ motor_id (uint8_t), num_steps (uint16_t), speed (int16_t) ]
+    SEND_STEP = 0x03
 };
 
 #endif

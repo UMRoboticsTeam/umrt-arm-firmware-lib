@@ -67,6 +67,13 @@ bool StepperController::getSpeed() {
     return true;
 }
 
+bool StepperController::sendStep(const uint16_t num_steps, const int16_t speed) {
+    std::vector<uint8_t> pack = pack_16(num_steps);
+    std::vector<uint8_t> speed_packed = pack_16(speed);
+    pack.insert(pack.end(), speed_packed.cbegin(), speed_packed.cend());
+    sendSysEx(SysexCommands::SEND_STEP, pack);
+}
+
 void StepperController::handleEArduinoEcho(const std::vector<unsigned char>& message) {
     BOOST_LOG_TRIVIAL(debug) << "ArduinoEcho received";
     this->EArduinoEcho(std::vector<uint8_t>(message.cbegin(), message.cend()));
@@ -82,6 +89,15 @@ void StepperController::handleEGetSpeed(const std::vector<unsigned char>& messag
     int16_t speed = static_cast<int16_t>(decode_16(message.cbegin()));
     BOOST_LOG_TRIVIAL(debug) << "SetSpeed received with speed=" << speed;
     this->EGetSpeed(speed);
+}
+
+void StepperController::handleESendStep(const std::vector<unsigned char>& message){
+    auto it = message.cbegin();
+    auto steps = static_cast<uint16_t>(decode_16(it));
+    it += 4;
+    auto speed = static_cast<int16_t>(decode_16(it));
+    BOOST_LOG_TRIVIAL(debug) << "SendStep received with steps=" << steps << ", speed=" << speed;
+    this->ESendStep(steps, speed);
 }
 
 void StepperController::handleSysex(const std::vector<unsigned char>& message) {
@@ -111,6 +127,9 @@ void StepperController::handleSysex(const std::vector<unsigned char>& message) {
             break;
         case SysexCommands::GET_SPEED:
             this->handleEGetSpeed(defirmatified_message);
+            break;
+        case SysexCommands::SEND_STEP:
+            this->handleESendStep(defirmatified_message);
             break;
         default:
             BOOST_LOG_TRIVIAL(info) << "Unknown Sysex received with command=" << message[0];

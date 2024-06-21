@@ -24,6 +24,8 @@ public:
 
     bool getSpeed();
 
+    bool sendStep(const uint16_t num_steps, const int16_t speed);
+
     // Checks if this StepperController is fully setup
     bool isSetup() const { return this->setup_completed; };
 
@@ -43,6 +45,9 @@ public:
     // Triggered when getSpeed responses are received
     boost::signals2::signal<void(int16_t)> EGetSpeed;
 
+    // Triggered when sendStep responses are received
+    boost::signals2::signal<void(uint16_t, int16_t)> ESendStep;
+
 protected:
     boost::signals2::connection connectionInitialized;
 
@@ -57,6 +62,8 @@ protected:
     void handleESetSpeed(const std::vector<unsigned char>& message);
 
     void handleEGetSpeed(const std::vector<unsigned char>& message);
+
+    void handleESendStep(const std::vector<unsigned char>& message);
 
 private:
     bool setup_completed;
