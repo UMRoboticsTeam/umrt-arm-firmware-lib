@@ -61,6 +61,11 @@ public:
         s.setSpeed(-10);
         std::this_thread::sleep_for(std::chrono::seconds(5));
         s.setSpeed(0);
+
+        //Step forward 20 steps at 10 RPM, then back 10 steps at 5 RPM
+        s.sendStep(20, 100);
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+        s.sendStep(10, -50);
     }
 
 protected:
