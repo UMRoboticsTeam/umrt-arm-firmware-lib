@@ -15,7 +15,7 @@
 
 class CommunicationTest {
 public:
-    CommunicationTest(const std::string& device, const int baud) {
+    CommunicationTest(const std::string& device, const int baud, const std::vector<uint8_t>& motor_ids) : motor_ids(motor_ids) {
         s.ESetup.connect([this] { this->onSetup(); });
         s.EStringReceived.connect([this](std::string&& str) { this->onString(std::forward<decltype(str)>(str)); });
         s.EArduinoEcho.connect([this](std::vector<uint8_t>&& p) { this->onEcho(std::forward<decltype(p)>(p)); });
@@ -55,22 +55,29 @@ public:
         // Wait 1 second
         std::this_thread::sleep_for(std::chrono::seconds(1));
 
-        // Send speed of 2 RPM for 5 seconds, then 1 RPM in other direction for 5 seconds, then stop
-        s.setSpeed(20);
-        std::this_thread::sleep_for(std::chrono::seconds(5));
-        s.setSpeed(-10);
-        std::this_thread::sleep_for(std::chrono::seconds(5));
-        s.setSpeed(0);
+        // Test motors
+        for (uint8_t motor : this->motor_ids) {
+            // Send speed of 2 RPM for 5 seconds, then 1 RPM in other direction for 5 seconds, then stop
+            s.setSpeed(motor, 20);
+            std::this_thread::sleep_for(std::chrono::seconds(5));
+            s.setSpeed(motor, -10);
+            std::this_thread::sleep_for(std::chrono::seconds(5));
+            s.setSpeed(motor, 0);
 
-        //Step forward 20 steps at 10 RPM, then back 10 steps at 5 RPM
-        s.sendStep(20, 100);
-        std::this_thread::sleep_for(std::chrono::seconds(1));
-        s.sendStep(10, -50);
+            //Step forward 20 steps at 10 RPM, then back 10 steps at 5 RPM
+            s.sendStep(motor, 20, 100);
+            std::this_thread::sleep_for(std::chrono::seconds(1));
+            s.sendStep(motor, 10, -50);
+
+            // Wait 1 second
+            std::this_thread::sleep_for(std::chrono::seconds(1));
+        }
     }
 
 protected:
     StepperController s;
     std::thread test_thread;
+    const std::vector<uint8_t> motor_ids;
 
     void onSetup() {
         std::cout << "Arduino setup!" << std::endl;
