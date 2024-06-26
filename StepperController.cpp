@@ -50,26 +50,31 @@ bool StepperController::sendEcho(const std::vector<uint8_t>& payload) {
 }
 
 
-bool StepperController::setSpeed(const int16_t speed) {
+bool StepperController::setSpeed(const uint8_t motor, const int16_t speed) {
     if (!isSetup()) { return false; }
 
-    sendSysEx(SysexCommands::SET_SPEED, pack_16(speed));
+    std::vector<uint8_t> pack = { motor };
+    auto speed_packed = pack_16(speed);
+    pack.insert(pack.end(), speed_packed.cbegin(), speed_packed.cend());
+    sendSysEx(SysexCommands::SET_SPEED, pack);
 
     return true;
 }
 
 
-bool StepperController::getSpeed() {
+bool StepperController::getSpeed(const uint8_t motor) {
     if (!isSetup()) { return false; }
 
-    sendSysEx(SysexCommands::GET_SPEED, std::vector<uint8_t>());
+    sendSysEx(SysexCommands::GET_SPEED, std::vector<uint8_t>({ motor }));
 
     return true;
 }
 
-bool StepperController::sendStep(const uint16_t num_steps, const int16_t speed) {
-    std::vector<uint8_t> pack = pack_16(num_steps);
-    std::vector<uint8_t> speed_packed = pack_16(speed);
+bool StepperController::sendStep(const uint8_t motor, const uint16_t num_steps, const int16_t speed) {
+    std::vector<uint8_t> pack = { motor };
+    auto steps_packed = pack_16(num_steps);
+    auto speed_packed = pack_16(speed);
+    pack.insert(pack.end(), steps_packed.cbegin(), steps_packed.cend());
     pack.insert(pack.end(), speed_packed.cbegin(), speed_packed.cend());
     sendSysEx(SysexCommands::SEND_STEP, pack);
 }
@@ -80,24 +85,32 @@ void StepperController::handleEArduinoEcho(const std::vector<unsigned char>& mes
 }
 
 void StepperController::handleESetSpeed(const std::vector<unsigned char>& message) {
-    int16_t speed = static_cast<int16_t>(decode_16(message.cbegin()));
-    BOOST_LOG_TRIVIAL(debug) << "SetSpeed received with speed=" << speed;
-    this->ESetSpeed(speed);
+    auto it = message.cbegin();
+    uint8_t motor = *it;
+    it += 1;
+    auto speed = static_cast<int16_t>(decode_16(it));
+    BOOST_LOG_TRIVIAL(debug) << "SetSpeed received for motor " << motor << " with speed=" << speed;
+    this->ESetSpeed(motor, speed);
 }
 
 void StepperController::handleEGetSpeed(const std::vector<unsigned char>& message) {
-    int16_t speed = static_cast<int16_t>(decode_16(message.cbegin()));
-    BOOST_LOG_TRIVIAL(debug) << "SetSpeed received with speed=" << speed;
-    this->EGetSpeed(speed);
+    auto it = message.cbegin();
+    uint8_t motor = *it;
+    it += 1;
+    auto speed = static_cast<int16_t>(decode_16(it));
+    BOOST_LOG_TRIVIAL(debug) << "GetSpeed received for motor " << motor << " with speed=" << speed;
+    this->EGetSpeed(motor, speed);
 }
 
-void StepperController::handleESendStep(const std::vector<unsigned char>& message){
+void StepperController::handleESendStep(const std::vector<unsigned char>& message) {
     auto it = message.cbegin();
+    uint8_t motor = *it;
+    it += 1;
     auto steps = static_cast<uint16_t>(decode_16(it));
     it += 4;
     auto speed = static_cast<int16_t>(decode_16(it));
-    BOOST_LOG_TRIVIAL(debug) << "SendStep received with steps=" << steps << ", speed=" << speed;
-    this->ESendStep(steps, speed);
+    BOOST_LOG_TRIVIAL(debug) << "SendStep received for motor " << motor << " with steps=" << steps << ", speed=" << speed;
+    this->ESendStep(motor, steps, speed);
 }
 
 void StepperController::handleSysex(const std::vector<unsigned char>& message) {
@@ -114,7 +127,7 @@ void StepperController::handleSysex(const std::vector<unsigned char>& message) {
     // Defirmatify data - See firmatify_32 in Utils.h for explanation of why this is needed
     std::vector<unsigned char> defirmatified_message(message.size() / 2);
     for (int i = 0; i < message.size(); ++i) {
-        defirmatified_message[i] = message[2*i + 1] | message[2*i + 2] << 7; // +1 since we don't want to include the command byte
+        defirmatified_message[i] = message[2 * i + 1] | message[2 * i + 2] << 7; // +1 since we don't want to include the command byte
     }
 
     // Process the message
