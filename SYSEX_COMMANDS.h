@@ -26,7 +26,12 @@ enum SysexCommands : uint8_t {
     // Scheduled steps may be overridden by other commands
     // In:  [ motor_id (uint8_t), num_steps (uint16_t), speed (int16_t) ]
     // Out: [ motor_id (uint8_t), num_steps (uint16_t), speed (int16_t) ]
-    SEND_STEP = 0x03
+    SEND_STEP = 0x03,
+	
+	// Set the position of the gripper servo
+	// In:  [ position (uint8_t) ]
+	// Out: [ position (uint8_t) ]
+	SET_GRIPPER = 0x04
 };
 
 #endif
