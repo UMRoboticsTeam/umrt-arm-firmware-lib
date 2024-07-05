@@ -71,6 +71,8 @@ bool StepperController::getSpeed(const uint8_t motor) {
 }
 
 bool StepperController::sendStep(const uint8_t motor, const uint16_t num_steps, const int16_t speed) {
+    if (!isSetup()) { return false; }
+
     std::vector<uint8_t> pack = { motor };
     auto steps_packed = pack_16(num_steps);
     auto speed_packed = pack_16(speed);
