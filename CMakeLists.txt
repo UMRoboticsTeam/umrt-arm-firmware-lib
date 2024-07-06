@@ -19,7 +19,7 @@ target_link_libraries(communication_master_example openFrameworksArduino)
 #include_directories(openFrameworksArduino/src)
 target_include_directories(communication_master_example PUBLIC
         "${PROJECT_BINARY_DIR}"
-        "${PROJECT_SOURCE_DIR}/openFrameworksArduino/src"
+        "${PROJECT_SOURCE_DIR}/openFrameworksArduino/openFrameworksArduino/src"
         )
 
 set_target_properties(communication_master_example PROPERTIES LINKER_LANGUAGE CXX)
