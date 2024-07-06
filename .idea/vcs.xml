@@ -3,5 +3,6 @@
   <component name="VcsDirectoryMappings">
     <mapping directory="$PROJECT_DIR$/.." vcs="Git" />
     <mapping directory="$PROJECT_DIR$/openFrameworksArduino" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/openFrameworksArduino/openFrameworksArduino" vcs="Git" />
   </component>
 </project>
