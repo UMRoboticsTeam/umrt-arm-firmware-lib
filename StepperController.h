@@ -26,6 +26,8 @@ public:
 
     bool sendStep(const uint8_t motor, const uint16_t num_steps, const int16_t speed);
 
+    bool setGripper(const uint8_t position);
+
     // Checks if this StepperController is fully setup
     bool isSetup() const { return this->setup_completed; };
 
@@ -48,6 +50,9 @@ public:
     // Triggered when sendStep responses are received
     boost::signals2::signal<void(uint8_t, uint16_t, int16_t)> ESendStep;
 
+    // Triggered when setGripper responses are received
+    boost::signals2::signal<void(uint8_t)> ESetGripper;
+
 protected:
     boost::signals2::connection connectionInitialized;
 
@@ -64,6 +69,8 @@ protected:
     void handleEGetSpeed(const std::vector<unsigned char>& message);
 
     void handleESendStep(const std::vector<unsigned char>& message);
+
+    void handleESetGripper(const std::vector<unsigned char>& message);
 
 private:
     bool setup_completed;
