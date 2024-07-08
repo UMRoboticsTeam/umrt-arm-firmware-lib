@@ -7,7 +7,7 @@
 #include "StepperController.h"
 #include "CommunicationTest.h"
 
-const std::string DEVICE = "/dev/ttyUSB0";
+const std::string DEVICE = "/dev/umrt-arm";
 const int BAUD_RATE = 57600;
 
 constexpr boost::log::trivial::severity_level LOG_LEVEL = boost::log::trivial::debug;
