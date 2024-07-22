@@ -11,7 +11,6 @@
 #include "StepperController.h"
 #include "Utils.h"
 
-
 StepperController::StepperController() : setup_completed(false) {
     BOOST_LOG_TRIVIAL(trace) << "StepperController construction begun";
 
@@ -40,7 +39,6 @@ void StepperController::setupArduino(const int& version) {
     this->ESetup();
 }
 
-
 bool StepperController::sendEcho(const std::vector<uint8_t>& payload) {
     if (!isSetup()) { return false; }
 
@@ -48,7 +46,6 @@ bool StepperController::sendEcho(const std::vector<uint8_t>& payload) {
 
     return true;
 }
-
 
 bool StepperController::setSpeed(const uint8_t motor, const int16_t speed) {
     if (!isSetup()) { return false; }
@@ -118,7 +115,8 @@ void StepperController::handleESendStep(const std::vector<unsigned char>& messag
     auto steps = static_cast<uint16_t>(decode_16(it));
     it += 4;
     auto speed = static_cast<int16_t>(decode_16(it));
-    BOOST_LOG_TRIVIAL(debug) << "SendStep received for motor " << motor << " with steps=" << steps << ", speed=" << speed;
+    BOOST_LOG_TRIVIAL(debug) << "SendStep received for motor " << motor << " with steps=" << steps << ", speed="
+                             << speed;
     this->ESendStep(motor, steps, speed);
 }
 
@@ -133,7 +131,8 @@ void StepperController::handleSysex(const std::vector<unsigned char>& message) {
         return;
     }
 
-    if (!(message.size() % 2)) { // Must be odd since the first byte is the 7-bit command, followed by a firmatified payload
+    // Must be odd since the first byte is the 7-bit command, followed by a firmatified payload
+    if (!(message.size() % 2)) {
         BOOST_LOG_TRIVIAL(error) << "SysEx received with non-firmatified data";
         return;
     }
@@ -141,26 +140,17 @@ void StepperController::handleSysex(const std::vector<unsigned char>& message) {
     // Defirmatify data - See firmatify_32 in Utils.h for explanation of why this is needed
     std::vector<unsigned char> defirmatified_message(message.size() / 2);
     for (int i = 0; i < message.size(); ++i) {
-        defirmatified_message[i] = message[2 * i + 1] | message[2 * i + 2] << 7; // +1 since we don't want to include the command byte
+        // +1 since we don't want to include the command byte
+        defirmatified_message[i] = message[2 * i + 1] | message[2 * i + 2] << 7;
     }
 
     // Process the message
     switch (message[0]) {
-        case SysexCommands::ARDUINO_ECHO:
-            this->handleEArduinoEcho(defirmatified_message);
-            break;
-        case SysexCommands::SET_SPEED:
-            this->handleESetSpeed(defirmatified_message);
-            break;
-        case SysexCommands::GET_SPEED:
-            this->handleEGetSpeed(defirmatified_message);
-            break;
-        case SysexCommands::SEND_STEP:
-            this->handleESendStep(defirmatified_message);
-            break;
-        case SysexCommands::SET_GRIPPER:
-            this->handleESetGripper(defirmatified_message);
-            break;
+        case SysexCommands::ARDUINO_ECHO: this->handleEArduinoEcho(defirmatified_message); break;
+        case SysexCommands::SET_SPEED: this->handleESetSpeed(defirmatified_message); break;
+        case SysexCommands::GET_SPEED: this->handleEGetSpeed(defirmatified_message); break;
+        case SysexCommands::SEND_STEP: this->handleESendStep(defirmatified_message); break;
+        case SysexCommands::SET_GRIPPER: this->handleESetGripper(defirmatified_message); break;
         default:
             BOOST_LOG_TRIVIAL(info) << "Unknown Sysex received with command=" << message[0];
             break;
