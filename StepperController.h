@@ -42,7 +42,7 @@ public:
      * Response callbacks are available through @ref ESetSpeed.
      *
      * @param motor the ID of the motor to control
-     * @param speed the signed target speed to set the motor to
+     * @param speed the signed target speed to set the motor to, in 1/10 RPM
      * @return `true` if successfully written to the serial connection
      */
     bool setSpeed(const uint8_t motor, const int16_t speed);
@@ -64,7 +64,7 @@ public:
      *
      * @param motor the ID of the motor to move
      * @param num_steps the number of steps to move
-     * @param speed the signed target speed to move the motor at
+     * @param speed the signed target speed to move the motor at, in 1/10 RPM
      * @return `true` if successfully written to the serial connection
      */
     bool sendStep(const uint8_t motor, const uint16_t num_steps, const int16_t speed);
