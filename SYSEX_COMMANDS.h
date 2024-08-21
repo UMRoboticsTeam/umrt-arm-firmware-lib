@@ -7,7 +7,7 @@
 #ifndef SYSEX_COMMANDS_H
 #define SYSEX_COMMANDS_H
 
-#include <cstdint>
+#include <stdint.h>
 
 /**
 * Lists the command IDs and associated requirements which can be sent over Firmata to a Stepper Controller.
