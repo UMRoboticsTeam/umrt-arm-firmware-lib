@@ -149,8 +149,9 @@ protected:
     void handleSysex(const std::vector<unsigned char>& message);
 
     /**
-     * @name Helper functions for decoding the parameters of Sysex commands processed by @ref handleSysex before
-     * forwarding to their associated <a href=https://www.boost.org/doc/libs/1_63_0/doc/html/signals.html>signal</a>.
+     * @name Signal Processing Helper Functions
+     * Helper functions for decoding the parameters of Sysex commands processed by @ref handleSysex before forwarding
+     * to their associated <a href=https://www.boost.org/doc/libs/1_63_0/doc/html/signals.html>signal</a>.
      *
      * @param message the de-firmatified Sysex payload
      */
