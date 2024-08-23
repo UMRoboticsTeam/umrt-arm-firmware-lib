@@ -55,6 +55,28 @@ enum SysexCommands : uint8_t {
     SEND_STEP = 0x03,
 
     /**
+    * Moves a motor to a specific step position. The motor will be moved until GET_POS reflects the requested
+    * position. Since this command seeks a position, the sign of the speed is ignored.
+    * @param motor_id [uint8_t] the ID of the motor to control
+    * @param position [int32_t] the number of steps to move
+    * @param speed [int16_t] the signed target speed to move the motor at, in 1/10 RPM
+    * @returns
+    *      [uint8_t] motor_id,<br>
+    *      [int32_t] position,<br>
+    *      [int16_t] speed
+    */
+    SEEK_POS = 0x04,
+
+    /**
+    * Gets the current number of steps from the zero point for a motor.
+    * @param motor_id [uint8_t] the ID of the motor to query
+    * @returns
+    *      [uint8_t] motor_id,<br>
+    *      [int32_t] position,<br>
+    */
+    GET_POS = 0x05,
+
+    /**
     * Sets the target position of the gripper servo.
     * The servo is controlled such that [0, 180] maps the entire servo range, meaning that a position of `180` may
     * correspond to 90°, 180°, 270°, etc. based on the particular servo attached. Values greater than `180` are
@@ -63,7 +85,7 @@ enum SysexCommands : uint8_t {
     * @returns
     *      [uint8_t] position
     */
-    SET_GRIPPER = 0x04
+    SET_GRIPPER = 0x06
 };
 
 #endif
