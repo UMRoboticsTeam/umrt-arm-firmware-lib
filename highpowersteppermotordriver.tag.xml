@@ -1,0 +1,299 @@
+<?xml version='1.0' encoding='UTF-8' standalone='yes' ?>
+<tagfile>
+  <compound kind="file">
+    <name>HighPowerStepperDriver.h</name>
+    <path>/mnt/d/Repos/high-power-stepper-driver-arduino/</path>
+    <filename>_high_power_stepper_driver_8h</filename>
+    <class kind="class">DRV8711SPI</class>
+    <class kind="class">HighPowerStepperDriver</class>
+    <member kind="enumeration">
+      <type></type>
+      <name>HPSDRegAddr</name>
+      <anchorfile>_high_power_stepper_driver_8h.html</anchorfile>
+      <anchor>a59a2054fee7d1f068ad3caa7ce4a7ea3</anchor>
+      <arglist></arglist>
+      <enumvalue file="_high_power_stepper_driver_8h.html" anchor="a59a2054fee7d1f068ad3caa7ce4a7ea3a32f7eee2581c72a5561c21df3013a89a">CTRL</enumvalue>
+      <enumvalue file="_high_power_stepper_driver_8h.html" anchor="a59a2054fee7d1f068ad3caa7ce4a7ea3adb5a3630bf07493c9d96388887b74016">TORQUE</enumvalue>
+      <enumvalue file="_high_power_stepper_driver_8h.html" anchor="a59a2054fee7d1f068ad3caa7ce4a7ea3a88559a0cfd8250c9d65970cc145c92d4">OFF</enumvalue>
+      <enumvalue file="_high_power_stepper_driver_8h.html" anchor="a59a2054fee7d1f068ad3caa7ce4a7ea3a56f031dd03707d695f76c63ddbf40bd7">BLANK</enumvalue>
+      <enumvalue file="_high_power_stepper_driver_8h.html" anchor="a59a2054fee7d1f068ad3caa7ce4a7ea3af34d9b416802d4cda3a4ee548619f206">DECAY</enumvalue>
+      <enumvalue file="_high_power_stepper_driver_8h.html" anchor="a59a2054fee7d1f068ad3caa7ce4a7ea3ac78decb824e426b2dbfc79ae121b79f4">STALL</enumvalue>
+      <enumvalue file="_high_power_stepper_driver_8h.html" anchor="a59a2054fee7d1f068ad3caa7ce4a7ea3a2e391a7285515e3663a36f473cf6fe20">DRIVE</enumvalue>
+      <enumvalue file="_high_power_stepper_driver_8h.html" anchor="a59a2054fee7d1f068ad3caa7ce4a7ea3a5f241c8c8f985b3c51e05d39cf030f4c">STATUS</enumvalue>
+    </member>
+    <member kind="enumeration">
+      <type></type>
+      <name>HPSDStepMode</name>
+      <anchorfile>_high_power_stepper_driver_8h.html</anchorfile>
+      <anchor>a76d0fed9f6e42b73b043f1442f8483eb</anchor>
+      <arglist></arglist>
+      <enumvalue file="_high_power_stepper_driver_8h.html" anchor="a76d0fed9f6e42b73b043f1442f8483eba2c1075962b33cd67a97ef42f84778138">MicroStep256</enumvalue>
+      <enumvalue file="_high_power_stepper_driver_8h.html" anchor="a76d0fed9f6e42b73b043f1442f8483eba5c3f4f3e5128926dedb93825ee95b812">MicroStep128</enumvalue>
+      <enumvalue file="_high_power_stepper_driver_8h.html" anchor="a76d0fed9f6e42b73b043f1442f8483eba2aeb936cd6a4c54abb587f0ba1c28709">MicroStep64</enumvalue>
+      <enumvalue file="_high_power_stepper_driver_8h.html" anchor="a76d0fed9f6e42b73b043f1442f8483ebad1f53611ac4a6d94505b4cd8e179c021">MicroStep32</enumvalue>
+      <enumvalue file="_high_power_stepper_driver_8h.html" anchor="a76d0fed9f6e42b73b043f1442f8483eba32a1925587074aa2ab0b44b374e99462">MicroStep16</enumvalue>
+      <enumvalue file="_high_power_stepper_driver_8h.html" anchor="a76d0fed9f6e42b73b043f1442f8483eba7f311759d1f0cddf3dfad7f4813c7b5a">MicroStep8</enumvalue>
+      <enumvalue file="_high_power_stepper_driver_8h.html" anchor="a76d0fed9f6e42b73b043f1442f8483eba285a257e7e9e4cd6627539fedf1a5930">MicroStep4</enumvalue>
+      <enumvalue file="_high_power_stepper_driver_8h.html" anchor="a76d0fed9f6e42b73b043f1442f8483eba86c48d47c10dfb12e589e5ce2c550d49">MicroStep2</enumvalue>
+      <enumvalue file="_high_power_stepper_driver_8h.html" anchor="a76d0fed9f6e42b73b043f1442f8483ebab2f885913ed26c5dbf69164ca6d8a14c">MicroStep1</enumvalue>
+    </member>
+    <member kind="enumeration">
+      <type></type>
+      <name>HPSDDecayMode</name>
+      <anchorfile>_high_power_stepper_driver_8h.html</anchorfile>
+      <anchor>af630abdac1d4e8f08feb515c12ad24e5</anchor>
+      <arglist></arglist>
+      <enumvalue file="_high_power_stepper_driver_8h.html" anchor="af630abdac1d4e8f08feb515c12ad24e5aefa5397985b8609a5dbeb430a4bcadd3">Slow</enumvalue>
+      <enumvalue file="_high_power_stepper_driver_8h.html" anchor="af630abdac1d4e8f08feb515c12ad24e5ac99c6c327f488108f18c5c17402f0952">SlowIncMixedDec</enumvalue>
+      <enumvalue file="_high_power_stepper_driver_8h.html" anchor="af630abdac1d4e8f08feb515c12ad24e5ae16b5b7f26f54214445cbe38d72c2828">Fast</enumvalue>
+      <enumvalue file="_high_power_stepper_driver_8h.html" anchor="af630abdac1d4e8f08feb515c12ad24e5a699b4f79215d191584653efebf156e52">Mixed</enumvalue>
+      <enumvalue file="_high_power_stepper_driver_8h.html" anchor="af630abdac1d4e8f08feb515c12ad24e5aedb2a6b7a1136ab6defb1cb3124b0b1f">SlowIncAutoMixedDec</enumvalue>
+      <enumvalue file="_high_power_stepper_driver_8h.html" anchor="af630abdac1d4e8f08feb515c12ad24e5aa45fc141e82c04e451f635032f5b9da5">AutoMixed</enumvalue>
+    </member>
+    <member kind="enumeration">
+      <type></type>
+      <name>HPSDStatusBit</name>
+      <anchorfile>_high_power_stepper_driver_8h.html</anchorfile>
+      <anchor>a34951f5dcaa9d42dc5e5bfdcf082a5b2</anchor>
+      <arglist></arglist>
+      <enumvalue file="_high_power_stepper_driver_8h.html" anchor="a34951f5dcaa9d42dc5e5bfdcf082a5b2a5e0e60caae359d7fe4c26f529b06a8da">OTS</enumvalue>
+      <enumvalue file="_high_power_stepper_driver_8h.html" anchor="a34951f5dcaa9d42dc5e5bfdcf082a5b2ae0b57574143b297c523024d2455e2722">AOCP</enumvalue>
+      <enumvalue file="_high_power_stepper_driver_8h.html" anchor="a34951f5dcaa9d42dc5e5bfdcf082a5b2a860ce279a813b9c2553c7a422f378a1c">BOCP</enumvalue>
+      <enumvalue file="_high_power_stepper_driver_8h.html" anchor="a34951f5dcaa9d42dc5e5bfdcf082a5b2a6e0c9a4b0adcaab99074d2952dca8294">APDF</enumvalue>
+      <enumvalue file="_high_power_stepper_driver_8h.html" anchor="a34951f5dcaa9d42dc5e5bfdcf082a5b2afec0d60890ebf0d65d7547bccee914cb">BPDF</enumvalue>
+      <enumvalue file="_high_power_stepper_driver_8h.html" anchor="a34951f5dcaa9d42dc5e5bfdcf082a5b2a747160ed904511b8086c45e27df12777">UVLO</enumvalue>
+      <enumvalue file="_high_power_stepper_driver_8h.html" anchor="a34951f5dcaa9d42dc5e5bfdcf082a5b2ac6ce23be5d350ce18a665427d2d950f7">STD</enumvalue>
+      <enumvalue file="_high_power_stepper_driver_8h.html" anchor="a34951f5dcaa9d42dc5e5bfdcf082a5b2ab0045f82e003a42446430900e07b332b">STDLAT</enumvalue>
+    </member>
+  </compound>
+  <compound kind="class">
+    <name>DRV8711SPI</name>
+    <filename>class_d_r_v8711_s_p_i.html</filename>
+    <member kind="function">
+      <type>void</type>
+      <name>setChipSelectPin</name>
+      <anchorfile>class_d_r_v8711_s_p_i.html</anchorfile>
+      <anchor>a9a9372c4a4c88345b4f0780db8b46697</anchor>
+      <arglist>(uint8_t pin)</arglist>
+    </member>
+    <member kind="function">
+      <type>uint16_t</type>
+      <name>readReg</name>
+      <anchorfile>class_d_r_v8711_s_p_i.html</anchorfile>
+      <anchor>a4c90a757e94d0d367cedb3490a43a848</anchor>
+      <arglist>(uint8_t address)</arglist>
+    </member>
+    <member kind="function">
+      <type>uint16_t</type>
+      <name>readReg</name>
+      <anchorfile>class_d_r_v8711_s_p_i.html</anchorfile>
+      <anchor>ab6c8cdcb6ee9e9d68ac9b209cdda7309</anchor>
+      <arglist>(HPSDRegAddr address)</arglist>
+    </member>
+    <member kind="function">
+      <type>void</type>
+      <name>writeReg</name>
+      <anchorfile>class_d_r_v8711_s_p_i.html</anchorfile>
+      <anchor>a1fe0beaac3954e5591e659a7443b4e09</anchor>
+      <arglist>(uint8_t address, uint16_t value)</arglist>
+    </member>
+    <member kind="function">
+      <type>void</type>
+      <name>writeReg</name>
+      <anchorfile>class_d_r_v8711_s_p_i.html</anchorfile>
+      <anchor>a5a37303dbfdf40ae9614efbe84a51004</anchor>
+      <arglist>(HPSDRegAddr address, uint16_t value)</arglist>
+    </member>
+  </compound>
+  <compound kind="class">
+    <name>HighPowerStepperDriver</name>
+    <filename>class_high_power_stepper_driver.html</filename>
+    <member kind="function">
+      <type></type>
+      <name>HighPowerStepperDriver</name>
+      <anchorfile>class_high_power_stepper_driver.html</anchorfile>
+      <anchor>a23f57d14fa6478180d94ececeb03acc4</anchor>
+      <arglist>()</arglist>
+    </member>
+    <member kind="function">
+      <type>void</type>
+      <name>setChipSelectPin</name>
+      <anchorfile>class_high_power_stepper_driver.html</anchorfile>
+      <anchor>a40b693d19b6adeac780da92bb3ee44dc</anchor>
+      <arglist>(uint8_t pin)</arglist>
+    </member>
+    <member kind="function">
+      <type>void</type>
+      <name>resetSettings</name>
+      <anchorfile>class_high_power_stepper_driver.html</anchorfile>
+      <anchor>a43f75308b4db69cbd9352fae7250fc47</anchor>
+      <arglist>()</arglist>
+    </member>
+    <member kind="function">
+      <type>bool</type>
+      <name>verifySettings</name>
+      <anchorfile>class_high_power_stepper_driver.html</anchorfile>
+      <anchor>a6ba65d5b2a4c57235bcaf0cb3b60db25</anchor>
+      <arglist>()</arglist>
+    </member>
+    <member kind="function">
+      <type>void</type>
+      <name>applySettings</name>
+      <anchorfile>class_high_power_stepper_driver.html</anchorfile>
+      <anchor>a99c747a61570c452c037aa29d1979738</anchor>
+      <arglist>()</arglist>
+    </member>
+    <member kind="function">
+      <type>void</type>
+      <name>enableDriver</name>
+      <anchorfile>class_high_power_stepper_driver.html</anchorfile>
+      <anchor>a52ea1257511878953ab03c5322964435</anchor>
+      <arglist>()</arglist>
+    </member>
+    <member kind="function">
+      <type>void</type>
+      <name>disableDriver</name>
+      <anchorfile>class_high_power_stepper_driver.html</anchorfile>
+      <anchor>a46729c2d703d638b0dac946938f20a96</anchor>
+      <arglist>()</arglist>
+    </member>
+    <member kind="function">
+      <type>void</type>
+      <name>setDirection</name>
+      <anchorfile>class_high_power_stepper_driver.html</anchorfile>
+      <anchor>ab4da8257895ce7605c1b5034e0ecea4e</anchor>
+      <arglist>(bool value)</arglist>
+    </member>
+    <member kind="function">
+      <type>bool</type>
+      <name>getDirection</name>
+      <anchorfile>class_high_power_stepper_driver.html</anchorfile>
+      <anchor>ab55ad696ceca88bd523100afbb3fb5cc</anchor>
+      <arglist>()</arglist>
+    </member>
+    <member kind="function">
+      <type>void</type>
+      <name>step</name>
+      <anchorfile>class_high_power_stepper_driver.html</anchorfile>
+      <anchor>a6dbfebbb31ab57a47da84c0954f4d346</anchor>
+      <arglist>()</arglist>
+    </member>
+    <member kind="function">
+      <type>void</type>
+      <name>setStepMode</name>
+      <anchorfile>class_high_power_stepper_driver.html</anchorfile>
+      <anchor>a6909f6fb5a86910fedab7719e91b7980</anchor>
+      <arglist>(HPSDStepMode mode)</arglist>
+    </member>
+    <member kind="function">
+      <type>void</type>
+      <name>setStepMode</name>
+      <anchorfile>class_high_power_stepper_driver.html</anchorfile>
+      <anchor>a09890727d508fedd5740f008e46934a4</anchor>
+      <arglist>(uint16_t mode)</arglist>
+    </member>
+    <member kind="function">
+      <type>void</type>
+      <name>setCurrentMilliamps36v4</name>
+      <anchorfile>class_high_power_stepper_driver.html</anchorfile>
+      <anchor>a2190e55757e7dac5ee3c3b9c56a84402</anchor>
+      <arglist>(uint16_t current)</arglist>
+    </member>
+    <member kind="function">
+      <type>void</type>
+      <name>setDecayMode</name>
+      <anchorfile>class_high_power_stepper_driver.html</anchorfile>
+      <anchor>aeec56596d33e6c5f6a0a92effb051b6e</anchor>
+      <arglist>(HPSDDecayMode mode)</arglist>
+    </member>
+    <member kind="function">
+      <type>uint8_t</type>
+      <name>readStatus</name>
+      <anchorfile>class_high_power_stepper_driver.html</anchorfile>
+      <anchor>ad163dac4f6b5bfedf32a2552ae7415f9</anchor>
+      <arglist>()</arglist>
+    </member>
+    <member kind="function">
+      <type>void</type>
+      <name>clearStatus</name>
+      <anchorfile>class_high_power_stepper_driver.html</anchorfile>
+      <anchor>a5a05783755568bb11512c88a2fc7ff73</anchor>
+      <arglist>()</arglist>
+    </member>
+    <member kind="function">
+      <type>uint8_t</type>
+      <name>readFaults</name>
+      <anchorfile>class_high_power_stepper_driver.html</anchorfile>
+      <anchor>a84c7609dd9374b1e9b133d8be3f4d4d6</anchor>
+      <arglist>()</arglist>
+    </member>
+    <member kind="function">
+      <type>void</type>
+      <name>clearFaults</name>
+      <anchorfile>class_high_power_stepper_driver.html</anchorfile>
+      <anchor>a7a50c4b6839ff48eb999d84a2fba4063</anchor>
+      <arglist>()</arglist>
+    </member>
+    <member kind="variable">
+      <type>DRV8711SPI</type>
+      <name>driver</name>
+      <anchorfile>class_high_power_stepper_driver.html</anchorfile>
+      <anchor>aff2279cd1d8b8f5f95e64e28c16bdea9</anchor>
+      <arglist></arglist>
+    </member>
+    <member kind="function" protection="protected">
+      <type>void</type>
+      <name>writeCTRL</name>
+      <anchorfile>class_high_power_stepper_driver.html</anchorfile>
+      <anchor>ad63f44f39a053898583737f99bd07f8d</anchor>
+      <arglist>()</arglist>
+    </member>
+    <member kind="function" protection="protected">
+      <type>void</type>
+      <name>writeTORQUE</name>
+      <anchorfile>class_high_power_stepper_driver.html</anchorfile>
+      <anchor>ab141fe0a55ad129dde99eca30de95ea4</anchor>
+      <arglist>()</arglist>
+    </member>
+    <member kind="function" protection="protected">
+      <type>void</type>
+      <name>writeOFF</name>
+      <anchorfile>class_high_power_stepper_driver.html</anchorfile>
+      <anchor>aaa20011218dbcbb6a9e84e73ac27b97f</anchor>
+      <arglist>()</arglist>
+    </member>
+    <member kind="function" protection="protected">
+      <type>void</type>
+      <name>writeBLANK</name>
+      <anchorfile>class_high_power_stepper_driver.html</anchorfile>
+      <anchor>a26884106c558e0ae1da7eaf51063b066</anchor>
+      <arglist>()</arglist>
+    </member>
+    <member kind="function" protection="protected">
+      <type>void</type>
+      <name>writeDECAY</name>
+      <anchorfile>class_high_power_stepper_driver.html</anchorfile>
+      <anchor>ab70beb6ccf4074bf2d0c37ee9d579413</anchor>
+      <arglist>()</arglist>
+    </member>
+    <member kind="function" protection="protected">
+      <type>void</type>
+      <name>writeSTALL</name>
+      <anchorfile>class_high_power_stepper_driver.html</anchorfile>
+      <anchor>a8fa330f06681011e2debbe7d91585f84</anchor>
+      <arglist>()</arglist>
+    </member>
+    <member kind="function" protection="protected">
+      <type>void</type>
+      <name>writeDRIVE</name>
+      <anchorfile>class_high_power_stepper_driver.html</anchorfile>
+      <anchor>a8bddbce975e65db48049935803ac2a18</anchor>
+      <arglist>()</arglist>
+    </member>
+  </compound>
+  <compound kind="page">
+    <name>index</name>
+    <title>High-Power Stepper Motor Driver library for Arduino</title>
+    <filename>index</filename>
+  </compound>
+</tagfile>
