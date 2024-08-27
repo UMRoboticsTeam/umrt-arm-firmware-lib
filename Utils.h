@@ -3,8 +3,8 @@
  * A collection of helper functions related to encoding/decoding data for communication over a Firmata link.
  */
 
-#ifndef COMMUNICATION_MASTER_EXAMPLE_UTILS_H
-#define COMMUNICATION_MASTER_EXAMPLE_UTILS_H
+#ifndef ARM_FIRMWARE_LIB_UTILS_H
+#define ARM_FIRMWARE_LIB_UTILS_H
 
 #include <cstdint>
 #include <string>
@@ -193,4 +193,4 @@ inline std::string decode_string(const std::vector<uint8_t>& data) {
     return { data.cbegin(), data.cend() };
 }
 
-#endif //COMMUNICATION_MASTER_EXAMPLE_UTILS_H
+#endif //ARM_FIRMWARE_LIB_UTILS_H

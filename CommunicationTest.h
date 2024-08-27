@@ -2,14 +2,14 @@
 // Created by Noah on 2024-06-13.
 //
 
-#ifndef COMMUNICATION_MASTER_EXAMPLE_COMMUNICATIONTEST_H
-#define COMMUNICATION_MASTER_EXAMPLE_COMMUNICATIONTEST_H
+#ifndef ARM_FIRMWARE_LIB_COMMUNICATIONTEST_H
+#define ARM_FIRMWARE_LIB_COMMUNICATIONTEST_H
 
 #include "StepperController.h"
 #include "Utils.h"
 #include <boost/log/trivial.hpp>
-#include <thread>
 #include <string>
+#include <thread>
 
 #include <vector>
 
@@ -24,7 +24,7 @@ public:
 
     void update() { return s.update(); }
 
-    void sendTestRoutine(){
+    void sendTestRoutine() {
         s.sendString("test");
 
         // Wait 1 second
@@ -117,4 +117,4 @@ private:
 };
 
 
-#endif //COMMUNICATION_MASTER_EXAMPLE_COMMUNICATIONTEST_H
+#endif //ARM_FIRMWARE_LIB_COMMUNICATIONTEST_H

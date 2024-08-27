@@ -3,8 +3,8 @@
 // Based off of ArduinoTest from openFrameworksArduino (https://github.com/NeuroRoboticTech/openFrameworksArduino/blob/master/examples/ArduinoTest.h)
 //
 
-#ifndef COMMUNICATION_MASTER_EXAMPLE_STEPPERCONTROLLER_H
-#define COMMUNICATION_MASTER_EXAMPLE_STEPPERCONTROLLER_H
+#ifndef ARM_FIRMWARE_LIB_STEPPERCONTROLLER_H
+#define ARM_FIRMWARE_LIB_STEPPERCONTROLLER_H
 
 #include <vector>
 
@@ -174,4 +174,4 @@ private:
     bool setup_completed;
 };
 
-#endif //COMMUNICATION_MASTER_EXAMPLE_STEPPERCONTROLLER_H
+#endif //ARM_FIRMWARE_LIB_STEPPERCONTROLLER_H
