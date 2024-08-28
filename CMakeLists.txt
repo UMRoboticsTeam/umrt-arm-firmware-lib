@@ -25,3 +25,4 @@ set_target_properties(arm_firmware_lib PROPERTIES LINKER_LANGUAGE CXX)
 
 # Setup communication_test_script executable
 add_executable(communication_test_script CommunicationTestScript.cpp)
+target_link_libraries(communication_test_script arm_firmware_lib)
