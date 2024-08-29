@@ -58,7 +58,7 @@ enum SysexCommands : uint8_t {
     * Moves a motor to a specific step position. The motor will be moved until GET_POS reflects the requested
     * position. Since this command seeks a position, the sign of the speed is ignored.
     * @param motor_id [uint8_t] the ID of the motor to control
-    * @param position [int32_t] the number of steps to move
+    * @param position [int32_t] the target position in number of steps from the motor's zero point
     * @param speed [int16_t] the signed target speed to move the motor at, in 1/10 RPM
     * @returns
     *      [uint8_t] motor_id,<br>
