@@ -70,13 +70,14 @@ bool StepperController::getSpeed(const uint8_t motor) {
 bool StepperController::sendStep(const uint8_t motor, const uint16_t num_steps, const int16_t speed) {
     if (!isSetup()) { return false; }
 
-
     std::vector<uint8_t> pack = { motor };
     auto steps_packed = pack_16(num_steps);
     auto speed_packed = pack_16(speed);
     pack.insert(pack.end(), steps_packed.cbegin(), steps_packed.cend());
     pack.insert(pack.end(), speed_packed.cbegin(), speed_packed.cend());
     sendSysEx(SysexCommands::SEND_STEP, pack);
+
+    return true;
 }
 
 bool StepperController::seekPosition(const uint8_t motor, const int32_t position, const int16_t speed) {
@@ -104,6 +105,8 @@ bool StepperController::setGripper(const uint8_t position) {
     if (!isSetup()) { return false; }
 
     sendSysEx(SysexCommands::SET_GRIPPER, std::vector<uint8_t>{ position });
+
+    return true;
 }
 
 void StepperController::handleEArduinoEcho(const std::vector<unsigned char>& message) {
