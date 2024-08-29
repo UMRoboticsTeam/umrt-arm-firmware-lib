@@ -79,6 +79,27 @@ bool StepperController::sendStep(const uint8_t motor, const uint16_t num_steps, 
     sendSysEx(SysexCommands::SEND_STEP, pack);
 }
 
+bool StepperController::seekPosition(const uint8_t motor, const int32_t position, const int16_t speed) {
+    if (!isSetup()) { return false; }
+
+    std::vector<uint8_t> pack = { motor };
+    auto position_packed = pack_32(position);
+    auto speed_packed = pack_16(speed);
+    pack.insert(pack.end(), position_packed.cbegin(), position_packed.cend());
+    pack.insert(pack.end(), speed_packed.cbegin(), speed_packed.cend());
+    sendSysEx(SysexCommands::SEEK_POS, pack);
+
+    return true;
+}
+
+bool StepperController::getPosition(const uint8_t motor) {
+    if (!isSetup()) { return false; }
+
+    sendSysEx(SysexCommands::GET_POS, std::vector<uint8_t>({ motor }));
+
+    return true;
+}
+
 bool StepperController::setGripper(const uint8_t position) {
     if (!isSetup()) { return false; }
 
@@ -120,6 +141,27 @@ void StepperController::handleESendStep(const std::vector<unsigned char>& messag
     this->ESendStep(motor, steps, speed);
 }
 
+void StepperController::handleESeekPosition(const std::vector<unsigned char>& message) {
+    auto it = message.cbegin();
+    uint8_t motor = *it;
+    it += 1;
+    auto position = static_cast<int32_t>(decode_32(it));
+    it += 4;
+    auto speed = static_cast<int16_t>(decode_16(it));
+    BOOST_LOG_TRIVIAL(debug) << "SeekPosition received for motor " << motor << " with position=" << position << ", speed="
+                             << speed;
+    this->ESeekPosition(motor, position, speed);
+}
+
+void StepperController::handleEGetPosition(const std::vector<unsigned char>& message) {
+    auto it = message.cbegin();
+    uint8_t motor = *it;
+    it += 1;
+    auto position = static_cast<int32_t>(decode_32(it));
+    BOOST_LOG_TRIVIAL(debug) << "GetPosition received for motor " << motor << " with position=" << position;
+    this->EGetPosition(motor, position);
+}
+
 void StepperController::handleESetGripper(const std::vector<unsigned char>& message) {
     BOOST_LOG_TRIVIAL(debug) << "SetGripper received";
     this->ESetGripper(message[0]);
@@ -150,6 +192,8 @@ void StepperController::handleSysex(const std::vector<unsigned char>& message) {
         case SysexCommands::SET_SPEED: this->handleESetSpeed(defirmatified_message); break;
         case SysexCommands::GET_SPEED: this->handleEGetSpeed(defirmatified_message); break;
         case SysexCommands::SEND_STEP: this->handleESendStep(defirmatified_message); break;
+        case SysexCommands::SEEK_POS: this->handleESeekPosition(defirmatified_message); break;
+        case SysexCommands::GET_POS: this->handleEGetPosition(defirmatified_message); break;
         case SysexCommands::SET_GRIPPER: this->handleESetGripper(defirmatified_message); break;
         default:
             BOOST_LOG_TRIVIAL(info) << "Unknown Sysex received with command=" << message[0];

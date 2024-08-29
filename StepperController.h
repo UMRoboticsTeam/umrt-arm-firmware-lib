@@ -70,6 +70,25 @@ public:
     bool sendStep(const uint8_t motor, const uint16_t num_steps, const int16_t speed);
 
     /**
+     * Sends a @ref SysexCommands::SEEK_POS command to move a motor to specific step position. Since this command
+     * seeks a position, the sign of the speed is ignored.
+     *
+     * @param motor_id the ID of the motor to move
+     * @param position the target position in number of steps from the motor's zero point
+     * @param speed the signed target speed to move the motor at, in 1/10 RPM. Note that the absolute value is taken.
+     * * @return `true` if successfully written to the serial connection
+     */
+    bool seekPosition(const uint8_t motor, const int32_t position, const int16_t speed);
+
+    /**
+      * Sends a @ref SysexCommands::GET_POS command to query the current position of a motor.
+      *
+      * @param motor the ID of the motor to query
+      * @return `true` if successfully written to the serial connection
+      */
+    bool getPosition(const uint8_t motor);
+
+    /**
      * Sends a @ref SysexCommands::SET_GRIPPER command to set the target position of the gripper servo.
      * Response callbacks are available through @ref ESetGripper.
      *
@@ -121,6 +140,18 @@ public:
 
     /**
      * <a href=https://www.boost.org/doc/libs/1_63_0/doc/html/signals.html>Boost signal</a> triggered when
+     * @ref seekPosition responses are received.
+     */
+    boost::signals2::signal<void(uint8_t, int32_t, int16_t)> ESeekPosition;
+
+    /**
+     * <a href=https://www.boost.org/doc/libs/1_63_0/doc/html/signals.html>Boost signal</a> triggered when
+     * @ref getPosition responses are received.
+     */
+    boost::signals2::signal<void(uint8_t, int32_t)> EGetPosition;
+
+    /**
+     * <a href=https://www.boost.org/doc/libs/1_63_0/doc/html/signals.html>Boost signal</a> triggered when
      * @ref setGripper responses are received.
      */
     boost::signals2::signal<void(uint8_t)> ESetGripper;
@@ -163,6 +194,10 @@ protected:
     void handleEGetSpeed(const std::vector<unsigned char>& message);
 
     void handleESendStep(const std::vector<unsigned char>& message);
+
+    void handleESeekPosition(const std::vector<unsigned char>& message);
+
+    void handleEGetPosition(const std::vector<unsigned char>& message);
 
     void handleESetGripper(const std::vector<unsigned char>& message);
     //@}
