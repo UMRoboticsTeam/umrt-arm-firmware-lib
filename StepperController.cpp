@@ -137,7 +137,7 @@ void StepperController::handleESendStep(const std::vector<unsigned char>& messag
     uint8_t motor = *it;
     it += 1;
     auto steps = static_cast<uint16_t>(decode_16(it));
-    it += 4;
+    it += 2;
     auto speed = static_cast<int16_t>(decode_16(it));
     BOOST_LOG_TRIVIAL(debug) << "SendStep received for motor " << motor << " with steps=" << steps << ", speed="
                              << speed;
