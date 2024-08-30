@@ -4,9 +4,12 @@ import time
 COM_PORT = '/dev/umrt-arm'
 SYSEX_COMMAND_ECHO = 0x00
 SYSEX_COMMAND_SET_SPEED = 0x01
+SYSEX_COMMAND_GET_SPEED = 0x02
 SYSEX_COMMAND_SEND_STEP = 0x03
+SYSEX_COMMAND_GET_POS = 0x04
+SYSEX_COMMAND_SET_GRIPPER = 0x05
 
-MOTOR_IDS = [0, 1]
+MOTOR_IDS = [2]
 
 def pack_32(integer):
     # Little-endian
@@ -49,31 +52,43 @@ def firmatify(pack):
         b.append((p & 0x80) >> 7)
     return b
 
-def decode_32(data):
+def decode_32(data, offset):
     # Decode Firmata 7-bit packets into a 32-bit integer
     # See firmatify for an explanation of what Firmata does to packets
-    return data[0] | data[1] << 7 \
-        | (data[2] | data[3] << 7) << 8 \
-        | (data[4] | data[5] << 7) << 16 \
-        | (data[6] | data[7] << 7) << 24
+    return data[0 + offset] | data[1 + offset] << 7 \
+        | (data[2 + offset] | data[3 + offset] << 7) << 8 \
+        | (data[4 + offset] | data[5 + offset] << 7) << 16 \
+        | (data[6 + offset] | data[7 + offset] << 7) << 24
 
-def decode_16(data):
+def decode_16(data, offset):
     # Decode Firmata 7-bit packets into a 16-bit integer
     # See firmatify for an explanation of what Firmata does to packets
-    return data[0] | data[1] << 7 \
-        | (data[2] | data[3] << 7) << 8
+    return data[0 + offset] | data[1 + offset] << 7 \
+        | (data[2 + offset] | data[3 + offset] << 7) << 8
+
+def decode_8(data, offset):
+    # Decode Firmata 7-bit packets into a 16-bit integer
+    # See firmatify for an explanation of what Firmata does to packets
+    return data[0 + offset] | data[1 + offset] << 7
 
 def on_echo_text(*data):
     print(util.two_byte_iter_to_str(data))
 
 def on_echo_int32(*data):
-    print(decode_32(data))
+    print(decode_32(data, 0))
 
 def on_echo_int16(*data):
-    print(decode_16(data))
+    print(decode_16(data, 0))
 
 def on_echo_raw(*data):
     print(data)
+
+def on_set_speed(*data):
+    print(f'Motor: {decode_8(data, 0)}, speed: {decode_16(data, 2)}')
+
+def on_send_step(*data):
+    print(f'Motor: {decode_8(data, 0)}, steps: {decode_16(data, 2)}, speed: {decode_16(data, 6)}')
+
 
 # Setup Firmata
 b = Arduino(COM_PORT)
@@ -105,6 +120,7 @@ time.sleep(1)
 
 for motor in MOTOR_IDS:
     # Send speed of 2 RPM for 5 seconds, then 1 RPM in other direction for 5 seconds, then stop
+    b.add_cmd_handler(SYSEX_COMMAND_SET_SPEED, on_set_speed)
     b.send_sysex(SYSEX_COMMAND_SET_SPEED, firmatify(bytearray([motor]) + pack_16(20)))
     time.sleep(5)
     b.send_sysex(SYSEX_COMMAND_SET_SPEED,  firmatify(bytearray([motor]) + pack_16(-10)))
@@ -112,6 +128,7 @@ for motor in MOTOR_IDS:
     b.send_sysex(SYSEX_COMMAND_SET_SPEED, firmatify(bytearray([motor]) + pack_16(0)))
     
     # Step forward 20 steps at 10 RPM, then back 10 steps at 5 RPM
+    b.add_cmd_handler(SYSEX_COMMAND_SEND_STEP, on_send_step)
     b.send_sysex(SYSEX_COMMAND_SEND_STEP, firmatify(bytearray([motor]) + pack_16(20) + pack_16(100)))
     time.sleep(1)
     b.send_sysex(SYSEX_COMMAND_SEND_STEP, firmatify(bytearray([motor]) + pack_16(10) + pack_16(-50)))
