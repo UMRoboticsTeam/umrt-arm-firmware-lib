@@ -19,6 +19,12 @@ public:
         s.ESetup.connect([this] { this->onSetup(); });
         s.EStringReceived.connect([this](std::string&& str) { this->onString(std::forward<decltype(str)>(str)); });
         s.EArduinoEcho.connect([this](std::vector<uint8_t>&& p) { this->onEcho(std::forward<decltype(p)>(p)); });
+        s.EGetSpeed.connect([this](auto&& PH1, auto&& PH2) {
+            onGetSpeed(std::forward<decltype(PH1)>(PH1), std::forward<decltype(PH2)>(PH2));
+        });
+        s.EGetPosition.connect([this](auto&& PH1, auto&& PH2) {
+            onGetPosition(std::forward<decltype(PH1)>(PH1), std::forward<decltype(PH2)>(PH2));
+        });
         s.connect(device, baud);
     }
 
@@ -59,15 +65,22 @@ public:
         for (uint8_t motor : this->motor_ids) {
             // Send speed of 2 RPM for 5 seconds, then 1 RPM in other direction for 5 seconds, then stop
             s.setSpeed(motor, 20);
+            s.getSpeed(motor);
             std::this_thread::sleep_for(std::chrono::seconds(5));
             s.setSpeed(motor, -10);
+            s.getSpeed(motor);
             std::this_thread::sleep_for(std::chrono::seconds(5));
             s.setSpeed(motor, 0);
+            s.getSpeed(motor);
 
             //Step forward 20 steps at 10 RPM, then back 10 steps at 5 RPM
+            s.getPosition(motor);
             s.sendStep(motor, 20, 100);
             std::this_thread::sleep_for(std::chrono::seconds(1));
+            s.getPosition(motor);
             s.sendStep(motor, 10, -50);
+            std::this_thread::sleep_for(std::chrono::seconds(1));
+            s.getPosition(motor);
 
             // Wait 1 second
             std::this_thread::sleep_for(std::chrono::seconds(1));
@@ -110,6 +123,16 @@ protected:
             std::cout << ", 0x" << std::hex << std::setw(2) << std::setfill('0') << +*p;
         }
         std::cout << " ]" << std::endl;
+    }
+
+    void onGetSpeed(const uint8_t motor, const int16_t speed) {
+        // motor casted to uint16_t so that it outputs as an integer instead of a char
+        std::cout << std::dec << "Motor " << (uint16_t)motor << ": speed=" << speed << std::endl;
+    }
+
+    void onGetPosition(const uint8_t motor, const int32_t position) {
+        // motor casted to uint16_t so that it outputs as an integer instead of a char
+        std::cout << std::dec << "Motor " << (uint16_t)motor << ": position=" << position << std::endl;
     }
 
 private:
