@@ -52,42 +52,44 @@ def firmatify(pack):
         b.append((p & 0x80) >> 7)
     return b
 
-def decode_32(data, offset):
-    # Decode Firmata 7-bit packets into a 32-bit integer
+def defirmatify(data):
+    # Decode Firmata 7-bit packets into a bytearray of 8-bit packets
     # See firmatify for an explanation of what Firmata does to packets
-    return data[0 + offset] | data[1 + offset] << 7 \
-        | (data[2 + offset] | data[3 + offset] << 7) << 8 \
-        | (data[4 + offset] | data[5 + offset] << 7) << 16 \
-        | (data[6 + offset] | data[7 + offset] << 7) << 24
+    b = bytearray()
+    for i in range(0, len(data), 2):
+        b.append(data[i] | data[i + 1] << 7)
+    return b
 
-def decode_16(data, offset):
-    # Decode Firmata 7-bit packets into a 16-bit integer
-    # See firmatify for an explanation of what Firmata does to packets
-    return data[0 + offset] | data[1 + offset] << 7 \
-        | (data[2 + offset] | data[3 + offset] << 7) << 8
+def decode_32(data, offset=0, signed=True):
+    return int.from_bytes(data[offset:offset+4], byteorder='little', signed=signed)
 
-def decode_8(data, offset):
-    # Decode Firmata 7-bit packets into a 16-bit integer
-    # See firmatify for an explanation of what Firmata does to packets
-    return data[0 + offset] | data[1 + offset] << 7
+def decode_16(data, offset=0, signed=True):
+    return int.from_bytes(data[offset:offset+2], byteorder='little', signed=signed)
+
+def decode_8(data, offset=0, signed=True):
+    return int.from_bytes(data[offset:offset+1], byteorder='little', signed=signed)
 
 def on_echo_text(*data):
     print(util.two_byte_iter_to_str(data))
 
 def on_echo_int32(*data):
+    data = defirmatify(data)
     print(decode_32(data, 0))
 
 def on_echo_int16(*data):
+    data = defirmatify(data)
     print(decode_16(data, 0))
 
 def on_echo_raw(*data):
     print(data)
 
 def on_set_speed(*data):
-    print(f'Motor: {decode_8(data, 0)}, speed: {decode_16(data, 2)}')
+    data = defirmatify(data)
+    print(f'Motor: {decode_8(data, 0, False)}, speed: {decode_16(data, 1)}')
 
 def on_send_step(*data):
-    print(f'Motor: {decode_8(data, 0)}, steps: {decode_16(data, 2)}, speed: {decode_16(data, 6)}')
+    data = defirmatify(data)
+    print(f'Motor: {decode_8(data, 0, False)}, steps: {decode_16(data, 1, False)}, speed: {decode_16(data, 3)}')
 
 
 # Setup Firmata
