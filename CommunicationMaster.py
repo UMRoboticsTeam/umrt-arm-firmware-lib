@@ -86,18 +86,31 @@ def on_echo_raw(*data):
 
 def on_set_speed(*data):
     data = defirmatify(data)
-    print(f'Motor: {decode_8(data, 0, False)}, speed: {decode_16(data, 1)}')
+    print(f'(Requested) Motor: {decode_8(data, 0, False)}, speed: {decode_16(data, 1)}')
+
+def on_get_speed(*data):
+    data = defirmatify(data)
+    print(f'(Queried)   Motor: {decode_8(data, 0, False)}, speed: {decode_16(data, 1)}')
 
 def on_send_step(*data):
     data = defirmatify(data)
-    print(f'Motor: {decode_8(data, 0, False)}, steps: {decode_16(data, 1, False)}, speed: {decode_16(data, 3)}')
+    print(f'(Requested) Motor: {decode_8(data, 0, False)}, steps: {decode_16(data, 1, False)}, speed: {decode_16(data, 3)}')
 
+def on_get_position(*data):
+    data = defirmatify(data)
+    print(f'(Queried)   Motor: {decode_8(data, 0, False)}, position: {decode_32(data, 1)}')
 
 # Setup Firmata
 b = Arduino(COM_PORT)
 b.add_cmd_handler(0x71, on_echo_text)
 it = util.Iterator(b)
 it.start()
+
+# Setup handlers
+b.add_cmd_handler(SYSEX_COMMAND_SET_SPEED, on_set_speed)
+b.add_cmd_handler(SYSEX_COMMAND_GET_SPEED, on_get_speed)
+b.add_cmd_handler(SYSEX_COMMAND_SEND_STEP, on_send_step)
+b.add_cmd_handler(SYSEX_COMMAND_GET_POS, on_get_position)
 
 # Send text echo
 b.add_cmd_handler(SYSEX_COMMAND_ECHO, on_echo_text)
@@ -123,18 +136,23 @@ time.sleep(1)
 
 for motor in MOTOR_IDS:
     # Send speed of 2 RPM for 5 seconds, then 1 RPM in other direction for 5 seconds, then stop
-    b.add_cmd_handler(SYSEX_COMMAND_SET_SPEED, on_set_speed)
+    b.send_sysex(SYSEX_COMMAND_GET_POS, firmatify(bytearray([motor])))
     b.send_sysex(SYSEX_COMMAND_SET_SPEED, firmatify(bytearray([motor]) + pack_16(20)))
+    b.send_sysex(SYSEX_COMMAND_GET_SPEED, firmatify(bytearray([motor])))
     time.sleep(5)
     b.send_sysex(SYSEX_COMMAND_SET_SPEED,  firmatify(bytearray([motor]) + pack_16(-10)))
+    b.send_sysex(SYSEX_COMMAND_GET_SPEED, firmatify(bytearray([motor])))
     time.sleep(5)
     b.send_sysex(SYSEX_COMMAND_SET_SPEED, firmatify(bytearray([motor]) + pack_16(0)))
+    b.send_sysex(SYSEX_COMMAND_GET_SPEED, firmatify(bytearray([motor])))
     
     # Step forward 20 steps at 10 RPM, then back 10 steps at 5 RPM
-    b.add_cmd_handler(SYSEX_COMMAND_SEND_STEP, on_send_step)
+    b.send_sysex(SYSEX_COMMAND_GET_POS, firmatify(bytearray([motor])))
     b.send_sysex(SYSEX_COMMAND_SEND_STEP, firmatify(bytearray([motor]) + pack_16(20) + pack_16(100)))
     time.sleep(1)
+    b.send_sysex(SYSEX_COMMAND_GET_POS, firmatify(bytearray([motor])))
     b.send_sysex(SYSEX_COMMAND_SEND_STEP, firmatify(bytearray([motor]) + pack_16(10) + pack_16(-50)))
+    b.send_sysex(SYSEX_COMMAND_GET_POS, firmatify(bytearray([motor])))
     
     time.sleep(1)
 
