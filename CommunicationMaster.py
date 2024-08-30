@@ -96,6 +96,10 @@ def on_send_step(*data):
     data = defirmatify(data)
     print(f'(Requested) Motor: {decode_8(data, 0, False)}, steps: {decode_16(data, 1, False)}, speed: {decode_16(data, 3)}')
 
+def on_seek_position(*data):
+    data = defirmatify(data)
+    print(f'(Requested) Motor: {decode_8(data, 0, False)}, position: {decode_32(data, 1)}, speed: {decode_16(data, 5)}')
+
 def on_get_position(*data):
     data = defirmatify(data)
     print(f'(Queried)   Motor: {decode_8(data, 0, False)}, position: {decode_32(data, 1)}')
@@ -110,6 +114,7 @@ it.start()
 b.add_cmd_handler(SYSEX_COMMAND_SET_SPEED, on_set_speed)
 b.add_cmd_handler(SYSEX_COMMAND_GET_SPEED, on_get_speed)
 b.add_cmd_handler(SYSEX_COMMAND_SEND_STEP, on_send_step)
+b.add_cmd_handler(SYSEX_COMMAND_SEEK_POS, on_seek_position)
 b.add_cmd_handler(SYSEX_COMMAND_GET_POS, on_get_position)
 
 # Send text echo
@@ -152,6 +157,14 @@ for motor in MOTOR_IDS:
     time.sleep(1)
     b.send_sysex(SYSEX_COMMAND_GET_POS, firmatify(bytearray([motor])))
     b.send_sysex(SYSEX_COMMAND_SEND_STEP, firmatify(bytearray([motor]) + pack_16(10) + pack_16(-50)))
+    time.sleep(1)
+    b.send_sysex(SYSEX_COMMAND_GET_POS, firmatify(bytearray([motor])))
+    
+    time.sleep(1)
+    
+    # Seek back to position 0 from wherever we ended up at 10 RPM
+    b.send_sysex(SYSEX_COMMAND_SEEK_POS, firmatify(bytearray([motor]) + pack_32(0) + pack_16(100)))
+    time.sleep(1)
     b.send_sysex(SYSEX_COMMAND_GET_POS, firmatify(bytearray([motor])))
     
     time.sleep(1)
