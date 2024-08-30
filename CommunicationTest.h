@@ -64,6 +64,7 @@ public:
         // Test motors
         for (uint8_t motor : this->motor_ids) {
             // Send speed of 2 RPM for 5 seconds, then 1 RPM in other direction for 5 seconds, then stop
+            s.getPosition(motor);
             s.setSpeed(motor, 20);
             s.getSpeed(motor);
             std::this_thread::sleep_for(std::chrono::seconds(5));
@@ -84,6 +85,9 @@ public:
 
             // Wait 1 second
             std::this_thread::sleep_for(std::chrono::seconds(1));
+
+            // Seek back to position 0 from wherever we ended up at 10 RPM
+            s.seekPosition(motor, 0, 100);
         }
     }
 
