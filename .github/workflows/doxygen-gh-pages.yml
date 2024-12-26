@@ -1,5 +1,4 @@
 name: Deploy Doxygen to Github Pages
-author: Noah Reeder
 
 on:
   push:
