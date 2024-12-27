@@ -20,6 +20,9 @@ jobs:
         with:
           path: output-doxygen/html
 
+      - name: Prepare tagfile
+        run: mv output-doxygen/tag.xml "${{ github.event.repository.name }}.tag.xml""
+
       - name: Create tagfile artifact
         uses: actions/upload-artifact@v4
         with:
