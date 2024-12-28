@@ -9,6 +9,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+        
+      - name: Install boost
+        uses: MarkusJx/install-boost@v2.4.5
+        with:
+          boost_version: 1.73.0
 
       - name: Build
         uses: threeal/cmake-action@v2.1.0
