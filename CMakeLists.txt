@@ -63,7 +63,7 @@ set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER "${public_headers
 
 # ********** Setup communication_test_script executable **********
 
-set(communication_test_script_target communication_test_script)
+set(communication_test_target communication_test_script)
 set(communication_test_script_sources
         src/CommunicationTestScript.cpp
         )
@@ -71,9 +71,9 @@ set_source_files_properties(
         ${communication_test_script_sources}
         PROPERTIES language "CXX")
 add_executable(
-        ${communication_test_script_target}
+        ${communication_test_target}
         ${communication_test_script_sources})
-target_include_directories(${communication_test_script_target} PUBLIC
+target_include_directories(${communication_test_target} PUBLIC
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/openFrameworksArduino/openFrameworksArduino/src>"
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>"
@@ -81,8 +81,28 @@ target_include_directories(${communication_test_script_target} PUBLIC
         "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>"
         "$<INSTALL_INTERFACE:include/openFrameworksArduino/openFrameworksArduino/src>")
 
-target_link_libraries(${communication_test_script_target}
+target_link_libraries(${communication_test_target}
         ${PROJECT_NAME}
         )
 
-set_target_properties(${communication_test_script_target} PROPERTIES LINKER_LANGUAGE CXX)
+set_target_properties(${communication_test_target} PROPERTIES LINKER_LANGUAGE CXX)
+
+# ********** Setup packaging **********
+
+include(GNUInstallDirs)
+install(TARGETS ${PROJECT_NAME}
+        EXPORT "${PROJECT_NAME}Targets"
+        COMPONENT ${PROJECT_NAME}
+        PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}
+        INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+        )
+
+install(TARGETS ${communication_test_target}
+        EXPORT "${communication_test_target}Targets"
+        COMPONENT ${communication_test_target}
+        PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}
+        INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+        )
+
+message(STATUS "Components to pack: ${CPACK_COMPONENTS_ALL}")
+include(cpack.cmake)
