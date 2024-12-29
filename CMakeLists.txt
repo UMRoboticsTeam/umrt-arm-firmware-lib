@@ -8,7 +8,7 @@ find_package(Boost REQUIRED COMPONENTS log log_setup)
 include_directories(${Boost_INCLUDE_DIRS})
 
 # Setup openFrameworksArduino
-add_subdirectory(openFrameworksArduino)
+add_subdirectory(include/openFrameworksArduino)
 
 # Setup arm_firmware_lib library
 
@@ -18,7 +18,8 @@ target_link_libraries(arm_firmware_lib ${Boost_LIBRARIES})
 target_link_libraries(arm_firmware_lib openFrameworksArduino)
 target_include_directories(arm_firmware_lib PUBLIC
         "${PROJECT_BINARY_DIR}"
-        "${PROJECT_SOURCE_DIR}/openFrameworksArduino/openFrameworksArduino/src"
+        "${PROJECT_SOURCE_DIR}/include"
+        "${PROJECT_SOURCE_DIR}/include/openFrameworksArduino/openFrameworksArduino/src"
         )
 
 set_target_properties(arm_firmware_lib PROPERTIES LINKER_LANGUAGE CXX)
