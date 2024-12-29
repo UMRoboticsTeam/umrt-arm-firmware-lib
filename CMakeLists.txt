@@ -12,7 +12,7 @@ add_subdirectory(include/openFrameworksArduino)
 
 # Setup arm_firmware_lib library
 
-add_library(arm_firmware_lib SHARED src/StepperController.cpp)
+add_library(arm_firmware_lib src/StepperController.cpp)
 
 target_link_libraries(arm_firmware_lib ${Boost_LIBRARIES})
 target_link_libraries(arm_firmware_lib openFrameworksArduino)
@@ -37,5 +37,3 @@ target_include_directories(communication_test_script PRIVATE
         "${PROJECT_SOURCE_DIR}/include"
         "${PROJECT_SOURCE_DIR}/include/openFrameworksArduino/openFrameworksArduino/src"
         )
-
-# Setup packages
