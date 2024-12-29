@@ -1,3 +1,7 @@
+"""!@file
+@brief Python MWE for controlling stepper motors over the communication link
+"""
+
 from pyfirmata2 import Arduino, util
 import time
 
