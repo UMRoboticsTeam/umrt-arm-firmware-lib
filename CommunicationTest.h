@@ -13,6 +13,7 @@
 
 #include <vector>
 
+// TODO: Could use some docs, would be nice if we could get some sample output
 class CommunicationTest {
 public:
     CommunicationTest(const std::string& device, const int baud, const std::vector<uint8_t>& motor_ids) : motor_ids(motor_ids) {

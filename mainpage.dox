@@ -1,0 +1,41 @@
+/** \mainpage
+This library offers functionality common to multiple of the projects supporting the University of Manitoba Robotics
+Team's robotic arm.
+
+This includes:
+    - Communication between the arm's high-level and low-level computer
+    - A small application for testing the communication link
+    - An abstraction for controlling the arm's stepper motors
+        - StepperController
+
+\section communication-test-script Communication Test Script
+
+A small program to test communication between the high-level and low-level computer has been implemented in both Python
+and C++.
+The test sequence is:
+ -# Send the string "test" to the low-level controller, nothing is expected to happen
+ -# Send the string "hello world" as an ECHO command, it should be received back and printed as a string
+ -# Send some numbers as ECHO commands, they should be received back and printed as numbers
+ -# Send some numbers as ECHO commands, they should be received back and printed as raw data vectors
+ -# Cycle through each motor:
+    -# Spin forward at 2 RPM for 5 seconds
+    -# Spin backward at 1 RPM in other direction for 5 seconds
+    -# Stop
+    -# Query the speed, which should respond with 0
+    -# Query the position
+    -# Step forward 20 steps at 10 RPM
+    -# Query the position, should be 20 steps further than before
+    -# Step backward 10 steps at 5 RPM
+    -# Query the position, should be 10 steps closer than before
+    -# Seek back to position 0
+    -# Query the position, which should respond with 0
+
+
+The Python implementation, CommunicationMaster.py, was the communication system's proof-of-concept.
+It is entirely self-contained, and serves as the minimum working example of how to control the arm's motors from a
+high-level computer.
+
+The C++ implementation, CommunicationTest.h, tests the full functionality of arm-firmware-lib.
+It uses openFrameworksArduino's Firmata implementation to create a StepperController, and uses the event system to
+verify that the correct responses (and therefore correct callbacks) are fired when the low-level controller responds.
+*/
