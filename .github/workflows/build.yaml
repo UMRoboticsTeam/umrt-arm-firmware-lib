@@ -19,3 +19,8 @@ jobs:
         uses: threeal/cmake-action@v2.1.0
         with:
           build-dir: output-build
+
+      - name: Package
+        run: |
+          cd output-build
+          cpack -G DEB
