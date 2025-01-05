@@ -20,7 +20,100 @@ jobs:
         with:
           build-dir: output-build
 
-      - name: Package
+      - name: Package into a debian
+        working-directory: ./output-build
+        run: cpack -G DEB
+          
+      - name: Encrypt deb
+        working-directory: ./output-packages
         run: |
-          cd output-build
-          cpack -G DEB
+          echo -n "$APT_SIGNING_PUBKEY" | gpg --import
+          gpg --encrypt --recipient exec.umrt@gmail.com --trust-model tofu --use-embedded-filename *.deb
+        env:
+          APT_SIGNING_PUBKEY: ${{ secrets.APT_SIGNING_PUBKEY }}
+
+      - name: Pass encrypted deb to publishing container
+        uses: actions/upload-artifact@v4
+        with:
+          name: encrypted-deb
+          path: "*.deb.gpg"
+
+  publish:
+    needs: build
+
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/umroboticsteam/umrt-apt-image:initial-setup
+
+    permissions:
+      contents: write
+      packages: read
+
+    steps:
+      - name: Download deb
+        uses: actions/download-artifact@v4
+        with:
+          name: encrypted-deb
+          path: ./deb
+
+      - name: Delete deb artifact
+        uses: geekyeggo/delete-artifact@v5
+        with:
+          name: encrypted-deb
+
+      - name: Checkout apt repo
+        uses: actions/checkout@v4
+        with:
+          repository: 'UMRoboticsTeam/umrt-apt-repo'
+          path: ./apt
+          ref: 'testing-ci-cd'
+          # Note that this is persisted in the local Git config until the post-job task
+          persist-credentials: true
+          ssh-key: ${{ secrets.APT_DEPLOY_KEY }}
+
+      - name: Load signing key and decrypt deb
+        working-directory: ./deb
+        run: |
+          echo -n "$APT_SIGNING_KEY" | gpg --import
+          gpg --decrypt --use-embedded-filename *.deb.gpg
+          rm *.deb.gpg
+        env:
+          APT_SIGNING_KEY: ${{ secrets.APT_SIGNING_KEY }}
+
+      - name: Checkout source for tagging
+        uses: actions/checkout@v4
+        with:
+          path: ./src
+
+      - name: Parse version number
+        working-directory: ./src
+        # Save version number into an environment variable for use in different steps
+        run: echo "PKG_VERSION=$(xml_grep --text_only 'package/version' package.xml)" >> "$GITHUB_ENV"
+        shell: bash
+
+      - name: Publish debians
+        working-directory: ./apt
+        run: reprepro --section arm --component main --priority 0 includedeb humble ../deb/*.deb
+
+      - name: Push apt repo
+        working-directory: ./apt
+        shell: bash
+        run: |
+          git config user.name 'University of Manitoba Robotics Team Build Server'
+          git config user.email 'exec.umrt@gmail.com'
+          git config user.signingkey "$(gpg --list-signatures $(git config --get user.email) | sed -n '/^\s/s/\s*//p')"
+          git add --all
+          git commit -S -m "Uploaded version ${{ env.PKG_VERSION }} of ${{ github.repository }}"
+          git push origin
+
+      - name: Create version tag
+        uses: actions/github-script@v5
+        with:
+          script: |
+            const {PKG_VERSION} = process.env   
+            github.rest.git.createRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: `refs/tags/v${PKG_VERSION}`,
+              sha: context.sha
+            })
