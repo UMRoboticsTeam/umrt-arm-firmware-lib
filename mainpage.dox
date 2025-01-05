@@ -38,4 +38,7 @@ high-level computer.
 The C++ implementation, CommunicationTest.h, tests the full functionality of arm-firmware-lib.
 It uses openFrameworksArduino's Firmata implementation to create a StepperController, and uses the event system to
 verify that the correct responses (and therefore correct callbacks) are fired when the low-level controller responds.
+
+<hr>
+The Doxygen tagfile for this documentation is available <a href="arm-firmware-lib.tag.xml">here</a>.
 */

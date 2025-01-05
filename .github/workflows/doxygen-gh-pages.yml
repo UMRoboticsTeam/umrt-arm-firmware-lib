@@ -15,19 +15,19 @@ jobs:
       - name: Doxygen generation
         uses: mattnotmitt/doxygen-action@v1.9.8
 
+      - name: Prepare tagfile
+        run: sudo mv output-doxygen/tag.xml "output-doxygen/${{ github.event.repository.name }}.tag.xml"
+
       - name: Create HTML artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: output-doxygen/html
 
-      - name: Prepare tagfile
-        run: sudo mv output-doxygen/tag.xml "output-doxygen/${{ github.event.repository.name }}.tag.xml"
-
       - name: Create tagfile artifact
         uses: actions/upload-artifact@v4
         with:
             name: "${{ github.event.repository.name }}.tag.xml"
-            path: "output-doxygen/${{ github.event.repository.name }}.tag.xml"
+            path: "output-doxygen/html/${{ github.event.repository.name }}.tag.xml"
 
   deploy:
     needs: build
