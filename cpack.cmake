@@ -1,5 +1,4 @@
-set(MAINTAINER_NAME "Noah Reeder")
-set(MAINTAINER_EMAIL "noahreederatc@gmail.com")
+set(MAINTAINER_NAME "Noah Reeder <noahreederatc@gmail.com>")
 set(PROJECT_VERSION_MAJOR 0)
 set(PROJECT_VERSION_MINOR 3)
 set(PROJECT_VERSION_PATCH 0)
