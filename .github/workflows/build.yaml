@@ -93,16 +93,6 @@ jobs:
           name: encrypted-deb-amd64
           path: ./deb
 
-      - name: Delete amd64 deb artifact
-        uses: geekyeggo/delete-artifact@v5
-        with:
-          name: encrypted-deb-amd64
-
-      - name: Delete arm64 deb artifact
-        uses: geekyeggo/delete-artifact@v5
-        with:
-          name: encrypted-deb-arm64
-
 #      - name: Checkout apt repo
 #        uses: actions/checkout@v4
 #        with:
@@ -159,3 +149,24 @@ jobs:
 #              ref: `refs/tags/v${PKG_VERSION}`,
 #              sha: context.sha
 #            })
+
+  cleanup:
+    # Always run after all these jobs, regardless of if they succeed
+    if: ${{ always() }}
+    needs:
+      - build-amd64
+      - build-arm64
+      - publish
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Delete amd64 deb artifact
+        uses: geekyeggo/delete-artifact@v5
+        with:
+          name: encrypted-deb-amd64
+
+      - name: Delete arm64 deb artifact
+        uses: geekyeggo/delete-artifact@v5
+        with:
+          name: encrypted-deb-arm64
