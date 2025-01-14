@@ -23,6 +23,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
         with:
+          path: ./src-repo
           submodules: 'true'
 
       - name: Log in to the container registry
@@ -43,7 +44,7 @@ jobs:
             -w ${{ github.workspace }} \
             --platform linux/${{ matrix.arch }} \
             ${{ env.BUILD_IMAGE }}
-            cmake -DCMAKE_BUILD_TYPE=Release -S /path/to/source-dir -B /path/to/build-dir && \
+            cmake -DCMAKE_BUILD_TYPE=Release -S src-repo -B output-build && \
             cmake --build output-build &&
             cd output-build &&
             cpack -G DEB
