@@ -11,8 +11,6 @@ jobs:
           - amd64
           - arm64
     runs-on: ubuntu-latest
-    container:
-      image: ghcr.io/umroboticsteam/umrt-build:testing-docker-build
 
     steps:
       - name: Checkout
