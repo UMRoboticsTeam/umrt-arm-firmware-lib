@@ -4,7 +4,7 @@ on:
   push
 
 jobs:
-  build:
+  build-amd64:
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/umroboticsteam/umrt-build:testing-docker-build
@@ -35,11 +35,48 @@ jobs:
       - name: Pass encrypted deb to publishing container
         uses: actions/upload-artifact@v4
         with:
-          name: encrypted-deb
+          name: encrypted-deb-amd64
           path: "output-packages/*.deb.gpg"
 
+    build-arm64:
+      runs-on: ubuntu-latest
+      container:
+        image: ghcr.io/umroboticsteam/umrt-build:testing-docker-build
+        options: --platform linux/arm64
+
+      steps:
+        - name: Checkout
+          uses: actions/checkout@v2
+          with:
+            submodules: 'true'
+
+        - name: Build
+          uses: threeal/cmake-action@v2.1.0
+          with:
+            build-dir: output-build
+
+        - name: Package into a debian
+          working-directory: ./output-build
+          run: cpack -G DEB
+
+        - name: Encrypt deb
+          working-directory: ./output-packages
+          run: |
+            echo -n "$APT_SIGNING_PUBKEY" | gpg --import
+            gpg --encrypt --recipient exec.umrt@gmail.com --trust-model tofu --use-embedded-filename *.deb
+          env:
+            APT_SIGNING_PUBKEY: ${{ secrets.APT_SIGNING_PUBKEY }}
+
+        - name: Pass encrypted deb to publishing container
+          uses: actions/upload-artifact@v4
+          with:
+            name: encrypted-deb-arm64
+            path: "output-packages/*.deb.gpg"
+
   publish:
-    needs: build
+    needs:
+      - build-amd64
+      - build-arm64
 
     runs-on: ubuntu-latest
     container:
@@ -53,13 +90,18 @@ jobs:
       - name: Download deb
         uses: actions/download-artifact@v4
         with:
-          name: encrypted-deb
+          name: encrypted-deb-amd64
           path: ./deb
 
-      - name: Delete deb artifact
+      - name: Delete amd64 deb artifact
         uses: geekyeggo/delete-artifact@v5
         with:
-          name: encrypted-deb
+          name: encrypted-deb-amd64
+
+      - name: Delete arm64 deb artifact
+        uses: geekyeggo/delete-artifact@v5
+        with:
+          name: encrypted-deb-arm64
 
       - name: Checkout apt repo
         uses: actions/checkout@v4
