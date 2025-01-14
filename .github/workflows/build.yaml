@@ -4,7 +4,12 @@ on:
   push
 
 jobs:
-  build-amd64:
+  build:
+    strategy:
+      matrix:
+        arch:
+          - amd64
+          - arm64
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/umroboticsteam/umrt-build:testing-docker-build
@@ -14,50 +19,22 @@ jobs:
         uses: actions/checkout@v2
         with:
           submodules: 'true'
-        
-      - name: Build
-        uses: threeal/cmake-action@v2.1.0
-        with:
-          build-dir: output-build
 
-      - name: Package into a debian
-        working-directory: ./output-build
-        run: cpack -G DEB
-          
-      - name: Encrypt deb
-        working-directory: ./output-packages
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Build and package in potentially emulated Docker container
         run: |
-          echo -n "$APT_SIGNING_PUBKEY" | gpg --import
-          gpg --encrypt --recipient exec.umrt@gmail.com --trust-model tofu --use-embedded-filename *.deb
-        env:
-          APT_SIGNING_PUBKEY: ${{ secrets.APT_SIGNING_PUBKEY }}
-
-      - name: Pass encrypted deb to publishing container
-        uses: actions/upload-artifact@v4
-        with:
-          name: encrypted-deb-amd64
-          path: "output-packages/*.deb.gpg"
-
-  build-arm64:
-    runs-on: ubuntu-latest
-    container:
-      image: ghcr.io/umroboticsteam/umrt-build:testing-docker-build
-      options: --platform linux/arm64
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-        with:
-          submodules: 'true'
-
-      - name: Build
-        uses: threeal/cmake-action@v2.1.0
-        with:
-          build-dir: output-build
-
-      - name: Package into a debian
-        working-directory: ./output-build
-        run: cpack -G DEB
+          docker run \
+            --rm \
+            -v $(pwd):/${{ github.workspace }} \
+            -w ${{ github.workspace }} \
+            --platform linux/${{ matrix.arch }} \
+            ghcr.io/umroboticsteam/umrt-build:testing-docker-build
+            cmake -DCMAKE_BUILD_TYPE=Release -S /path/to/source-dir -B /path/to/build-dir && \
+            cmake --build output-build &&
+            cd output-build &&
+            cpack -G DEB
 
       - name: Encrypt deb
         working-directory: ./output-packages
@@ -70,13 +47,11 @@ jobs:
       - name: Pass encrypted deb to publishing container
         uses: actions/upload-artifact@v4
         with:
-          name: encrypted-deb-arm64
+          name: encrypted-deb-${{ matrix.arch }}
           path: "output-packages/*.deb.gpg"
 
   publish:
-    needs:
-      - build-amd64
-      - build-arm64
+    needs: build
 
     runs-on: ubuntu-latest
     container:
@@ -154,8 +129,7 @@ jobs:
     # Always run after all these jobs, regardless of if they succeed
     if: ${{ always() }}
     needs:
-      - build-amd64
-      - build-arm64
+      - build
       - publish
 
     runs-on: ubuntu-latest
