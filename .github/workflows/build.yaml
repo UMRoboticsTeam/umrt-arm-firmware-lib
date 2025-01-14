@@ -3,6 +3,10 @@ name: Build library
 on:
   push
 
+env:
+  REGISTRY: ghcr.io
+  BUILD_IMAGE: ghcr.io/umroboticsteam/umrt-build:testing-docker-build
+
 jobs:
   build:
     strategy:
@@ -38,7 +42,7 @@ jobs:
             -v $(pwd):/${{ github.workspace }} \
             -w ${{ github.workspace }} \
             --platform linux/${{ matrix.arch }} \
-            ghcr.io/umroboticsteam/umrt-build:testing-docker-build
+            ${{ env.BUILD_IMAGE }}
             cmake -DCMAKE_BUILD_TYPE=Release -S /path/to/source-dir -B /path/to/build-dir && \
             cmake --build output-build &&
             cd output-build &&
