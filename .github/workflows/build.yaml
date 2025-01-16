@@ -99,7 +99,7 @@ jobs:
           ssh-key: ${{ secrets.APT_DEPLOY_KEY }}
 
       - name: Load signing key and decrypt debs
-        working-directory: ./deb
+        working-directory: ./debs
         run: |
           echo -n "$APT_SIGNING_KEY" | gpg --import
           gpg --decrypt --multifile --use-embedded-filename *.deb.gpg
@@ -120,7 +120,7 @@ jobs:
 
       - name: Publish debians
         working-directory: ./apt
-        run: reprepro --section arm --component main --priority 0 includedeb humble ../deb/*.deb
+        run: reprepro --section arm --component main --priority 0 includedeb humble ../debs/*.deb
 
       - name: Push apt repo
         working-directory: ./apt
