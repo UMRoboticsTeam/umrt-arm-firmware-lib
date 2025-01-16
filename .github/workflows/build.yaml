@@ -68,7 +68,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: encrypted-deb-${{ matrix.arch }}
-          path: "output-packages/*.deb.gpg"
+          path: "output-build/output-packages/*.deb.gpg"
 
   publish:
     needs: build
