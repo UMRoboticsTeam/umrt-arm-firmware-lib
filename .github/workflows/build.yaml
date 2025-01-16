@@ -44,8 +44,7 @@ jobs:
             -w ${{ github.workspace }} \
             --platform linux/${{ matrix.arch }} \
             ${{ env.BUILD_IMAGE }} \
-            bash -c \ 
-            " \
+            bash -c "\
             cmake -DCMAKE_BUILD_TYPE=Release -S src-repo -B output-build && \
             cmake --build output-build && \
             cd output-build && \
