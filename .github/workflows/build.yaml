@@ -88,62 +88,62 @@ jobs:
           name: encrypted-deb-amd64
           path: ./deb
 
-#      - name: Checkout apt repo
-#        uses: actions/checkout@v4
-#        with:
-#          repository: 'UMRoboticsTeam/umrt-apt-repo'
-#          path: ./apt
-#          ref: 'testing-ci-cd'
-#          # Note that this is persisted in the local Git config until the post-job task
-#          persist-credentials: true
-#          ssh-key: ${{ secrets.APT_DEPLOY_KEY }}
-#
-#      - name: Load signing key and decrypt deb
-#        working-directory: ./deb
-#        run: |
-#          echo -n "$APT_SIGNING_KEY" | gpg --import
-#          gpg --decrypt --use-embedded-filename *.deb.gpg
-#          rm *.deb.gpg
-#        env:
-#          APT_SIGNING_KEY: ${{ secrets.APT_SIGNING_KEY }}
-#
-#      - name: Checkout source for tagging
-#        uses: actions/checkout@v4
-#        with:
-#          path: ./src
-#
-#      - name: Parse version number
-#        working-directory: ./src
-#        # Save version number into an environment variable for use in different steps
-#        run: echo "PKG_VERSION=$(echo "$(grep -Po 'PROJECT_VERSION_MAJOR \K\d+' cpack.cmake).$(grep -Po 'PROJECT_VERSION_MINOR \K\d+' cpack.cmake).$(grep -Po 'PROJECT_VERSION_PATCH \K\d+' cpack.cmake)")" >> "$GITHUB_ENV"
-#        shell: bash
-#
-#      - name: Publish debians
-#        working-directory: ./apt
-#        run: reprepro --section arm --component main --priority 0 includedeb humble ../deb/*.deb
-#
-#      - name: Push apt repo
-#        working-directory: ./apt
-#        shell: bash
-#        run: |
-#          git config user.name 'University of Manitoba Robotics Team Build Server'
-#          git config user.email 'exec.umrt@gmail.com'
-#          git config user.signingkey "$(gpg --list-signatures $(git config --get user.email) | sed -n '/^\s/s/\s*//p')"
-#          git add --all
-#          git commit -S -m "Uploaded version ${{ env.PKG_VERSION }} of ${{ github.repository }}"
-#          git push origin
-#
-#      - name: Create version tag
-#        uses: actions/github-script@v5
-#        with:
-#          script: |
-#            const {PKG_VERSION} = process.env
-#            github.rest.git.createRef({
-#              owner: context.repo.owner,
-#              repo: context.repo.repo,
-#              ref: `refs/tags/v${PKG_VERSION}`,
-#              sha: context.sha
-#            })
+      - name: Checkout apt repo
+        uses: actions/checkout@v4
+        with:
+          repository: 'UMRoboticsTeam/umrt-apt-repo'
+          path: ./apt
+          ref: 'testing-ci-cd'
+          # Note that this is persisted in the local Git config until the post-job task
+          persist-credentials: true
+          ssh-key: ${{ secrets.APT_DEPLOY_KEY }}
+
+      - name: Load signing key and decrypt deb
+        working-directory: ./deb
+        run: |
+          echo -n "$APT_SIGNING_KEY" | gpg --import
+          gpg --decrypt --use-embedded-filename *.deb.gpg
+          rm *.deb.gpg
+        env:
+          APT_SIGNING_KEY: ${{ secrets.APT_SIGNING_KEY }}
+
+      - name: Checkout source for tagging
+        uses: actions/checkout@v4
+        with:
+          path: ./src
+
+      - name: Parse version number
+        working-directory: ./src
+        # Save version number into an environment variable for use in different steps
+        run: echo "PKG_VERSION=$(echo "$(grep -Po 'PROJECT_VERSION_MAJOR \K\d+' cpack.cmake).$(grep -Po 'PROJECT_VERSION_MINOR \K\d+' cpack.cmake).$(grep -Po 'PROJECT_VERSION_PATCH \K\d+' cpack.cmake)")" >> "$GITHUB_ENV"
+        shell: bash
+
+      - name: Publish debians
+        working-directory: ./apt
+        run: reprepro --section arm --component main --priority 0 includedeb humble ../deb/*.deb
+
+      - name: Push apt repo
+        working-directory: ./apt
+        shell: bash
+        run: |
+          git config user.name 'University of Manitoba Robotics Team Build Server'
+          git config user.email 'exec.umrt@gmail.com'
+          git config user.signingkey "$(gpg --list-signatures $(git config --get user.email) | sed -n '/^\s/s/\s*//p')"
+          git add --all
+          git commit -S -m "Uploaded version ${{ env.PKG_VERSION }} of ${{ github.repository }}"
+          git push origin
+
+      - name: Create version tag
+        uses: actions/github-script@v5
+        with:
+          script: |
+            const {PKG_VERSION} = process.env
+            github.rest.git.createRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: `refs/tags/v${PKG_VERSION}`,
+              sha: context.sha
+            })
 
   cleanup:
     # Always run after all these jobs, regardless of if they succeed
