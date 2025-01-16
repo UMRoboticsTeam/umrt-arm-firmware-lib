@@ -82,11 +82,11 @@ jobs:
       packages: read
 
     steps:
-      - name: Download deb
+      - name: Download debs
         uses: actions/download-artifact@v4
         with:
-          name: encrypted-deb-amd64
-          path: ./deb
+          pattern: encrypted-deb-*
+          path: ./debs
 
       - name: Checkout apt repo
         uses: actions/checkout@v4
@@ -98,7 +98,7 @@ jobs:
           persist-credentials: true
           ssh-key: ${{ secrets.APT_DEPLOY_KEY }}
 
-      - name: Load signing key and decrypt deb
+      - name: Load signing key and decrypt debs
         working-directory: ./deb
         run: |
           echo -n "$APT_SIGNING_KEY" | gpg --import
