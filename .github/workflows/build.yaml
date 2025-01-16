@@ -43,10 +43,10 @@ jobs:
             -v $(pwd):/${{ github.workspace }} \
             -w ${{ github.workspace }} \
             --platform linux/${{ matrix.arch }} \
-            ${{ env.BUILD_IMAGE }}
+            ${{ env.BUILD_IMAGE }} \
             cmake -DCMAKE_BUILD_TYPE=Release -S src-repo -B output-build && \
-            cmake --build output-build &&
-            cd output-build &&
+            cmake --build output-build && \
+            cd output-build && \
             cpack -G DEB
 
       - name: Encrypt deb
@@ -151,9 +151,5 @@ jobs:
       - name: Delete amd64 deb artifact
         uses: geekyeggo/delete-artifact@v5
         with:
-          name: encrypted-deb-amd64
-
-      - name: Delete arm64 deb artifact
-        uses: geekyeggo/delete-artifact@v5
-        with:
-          name: encrypted-deb-arm64
+          name: |
+            encrypted-deb-*
