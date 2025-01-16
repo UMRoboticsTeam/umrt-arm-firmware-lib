@@ -36,6 +36,11 @@ jobs:
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
 
+      - name: Prepare workspace
+        # Create folders now so that the docker container doesn't make them with the wrong permissions
+        run: |
+          mkdir -p output-build/output-packages/
+
       - name: Build and package in potentially emulated Docker container
         run: |
           docker run \
