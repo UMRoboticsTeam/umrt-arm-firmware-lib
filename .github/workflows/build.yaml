@@ -52,7 +52,7 @@ jobs:
             "
 
       - name: Encrypt deb
-        working-directory: ./output-packages
+        working-directory: ./output-build/output-packages
         run: |
           echo -n "$APT_SIGNING_PUBKEY" | gpg --import
           gpg --encrypt --recipient exec.umrt@gmail.com --trust-model tofu --use-embedded-filename *.deb
