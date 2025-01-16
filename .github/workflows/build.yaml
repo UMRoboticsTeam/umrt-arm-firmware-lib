@@ -87,6 +87,7 @@ jobs:
         with:
           pattern: encrypted-deb-*
           path: ./debs
+          merge-multiple: true
 
       - name: Checkout apt repo
         uses: actions/checkout@v4
