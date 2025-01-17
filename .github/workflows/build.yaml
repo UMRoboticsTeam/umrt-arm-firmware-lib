@@ -1,7 +1,9 @@
 name: Build library
 
 on:
-  push
+  push:
+    branches:
+      - main
 
 env:
   REGISTRY: ghcr.io
