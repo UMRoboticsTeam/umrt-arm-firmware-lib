@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.22.1)
-project(arm-firmware-lib)
+project(umrt-arm-firmware-lib)
 
 # ********** Setup CMake **********
 
@@ -27,17 +27,17 @@ include_directories(${Boost_INCLUDE_DIRS})
 # Setup openFrameworksArduino
 add_subdirectory(include/openFrameworksArduino)
 
-# ********** Setup arm_firmware_lib library **********
+# ********** Setup umrt_arm_firmware_lib library **********
 
-set(arm_firmware_lib_sources
+set(umrt_arm_firmware_lib_sources
         src/StepperController.cpp
         )
 set_source_files_properties(
-        ${arm_firmware_lib_sources}
+        ${umrt_arm_firmware_lib_sources}
         PROPERTIES language "CXX")
 add_library(
         ${PROJECT_NAME}
-        ${arm_firmware_lib_sources})
+        ${umrt_arm_firmware_lib_sources})
 target_include_directories(${PROJECT_NAME} PUBLIC
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/${PROJECT_NAME}>"
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/openFrameworksArduino/openFrameworksArduino/src>"
@@ -53,9 +53,9 @@ target_link_libraries(${PROJECT_NAME}
         )
 
 set(public_headers
-        include/arm-firmware-lib/StepperController.h
-        include/arm-firmware-lib/SYSEX_COMMANDS.h
-        include/arm-firmware-lib/Utils.h
+        include/umrt-arm-firmware-lib/StepperController.h
+        include/umrt-arm-firmware-lib/SYSEX_COMMANDS.h
+        include/umrt-arm-firmware-lib/Utils.h
         )
 
 set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE CXX)
