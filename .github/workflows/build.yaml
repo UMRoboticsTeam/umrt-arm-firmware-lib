@@ -7,7 +7,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  BUILD_IMAGE: ghcr.io/umroboticsteam/umrt-build:testing-docker-build
+  BUILD_IMAGE: ghcr.io/umroboticsteam/umrt-build:v0.0.11
 
 jobs:
   build:
@@ -77,7 +77,7 @@ jobs:
 
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/umroboticsteam/umrt-apt-image:initial-setup
+      image: ghcr.io/umroboticsteam/umrt-apt-image:latest
 
     permissions:
       contents: write
@@ -96,7 +96,7 @@ jobs:
         with:
           repository: 'UMRoboticsTeam/umrt-apt-repo'
           path: ./apt
-          ref: 'testing-ci-cd'
+          ref: 'main'
           # Note that this is persisted in the local Git config until the post-job task
           persist-credentials: true
           ssh-key: ${{ secrets.APT_DEPLOY_KEY }}
