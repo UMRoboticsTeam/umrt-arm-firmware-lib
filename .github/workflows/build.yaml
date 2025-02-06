@@ -1,0 +1,165 @@
+name: Build library
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  REGISTRY: ghcr.io
+  BUILD_IMAGE: ghcr.io/umroboticsteam/umrt-build:v0.0.11
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        arch:
+          - amd64
+          - arm64
+    runs-on: ubuntu-latest
+
+    permissions:
+      packages: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          path: ./src
+          submodules: 'true'
+
+      - name: Log in to the container registry
+        uses: docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Prepare workspace
+        # Create folders now so that the docker container doesn't make them with the wrong permissions
+        run: |
+          mkdir -p output-build/output-packages/
+
+      - name: Build and package in potentially emulated Docker container
+        run: |
+          docker run \
+            --rm \
+            -v $(pwd):/${{ github.workspace }} \
+            -w ${{ github.workspace }} \
+            --platform linux/${{ matrix.arch }} \
+            ${{ env.BUILD_IMAGE }} \
+            bash -c "\
+            cmake -DCMAKE_BUILD_TYPE=Release -S src -B output-build && \
+            cmake --build output-build && \
+            cd output-build && \
+            cpack -G DEB \
+            "
+
+      - name: Encrypt deb
+        working-directory: ./output-build/output-packages
+        run: |
+          echo -n "$APT_SIGNING_PUBKEY" | gpg --import
+          gpg --encrypt --recipient exec.umrt@gmail.com --trust-model tofu --use-embedded-filename *.deb
+        env:
+          APT_SIGNING_PUBKEY: ${{ secrets.APT_SIGNING_PUBKEY }}
+
+      - name: Pass encrypted deb to publishing container
+        uses: actions/upload-artifact@v4
+        with:
+          name: encrypted-deb-${{ matrix.arch }}
+          path: "output-build/output-packages/*.deb.gpg"
+
+  publish:
+    needs: build
+
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/umroboticsteam/umrt-apt-image:latest
+
+    permissions:
+      contents: write
+      packages: read
+
+    steps:
+      - name: Download debs
+        uses: actions/download-artifact@v4
+        with:
+          pattern: encrypted-deb-*
+          path: ./debs
+          merge-multiple: true
+
+      - name: Checkout apt repo
+        uses: actions/checkout@v4
+        with:
+          repository: 'UMRoboticsTeam/umrt-apt-repo'
+          path: ./apt
+          ref: 'main'
+          # Note that this is persisted in the local Git config until the post-job task
+          persist-credentials: true
+          ssh-key: ${{ secrets.APT_DEPLOY_KEY }}
+
+      - name: Load signing key and decrypt debs
+        working-directory: ./debs
+        run: |
+          echo -n "$APT_SIGNING_KEY" | gpg --import
+          gpg --decrypt --multifile --use-embedded-filename *.deb.gpg
+          rm *.deb.gpg
+        env:
+          APT_SIGNING_KEY: ${{ secrets.APT_SIGNING_KEY }}
+
+      - name: Checkout source for tagging
+        uses: actions/checkout@v4
+        with:
+          path: ./src
+
+      - name: Parse version number
+        working-directory: ./src
+        # Save version number into an environment variable for use in different steps
+        run: echo "PKG_VERSION=$(echo "$(grep -Po 'PROJECT_VERSION_MAJOR \K\d+' cpack.cmake).$(grep -Po 'PROJECT_VERSION_MINOR \K\d+' cpack.cmake).$(grep -Po 'PROJECT_VERSION_PATCH \K\d+' cpack.cmake)")" >> "$GITHUB_ENV"
+        shell: bash
+
+      - name: Publish debians
+        working-directory: ./apt
+        run: reprepro --section arm --component main --priority 0 includedeb humble ../debs/*.deb
+
+      - name: Push apt repo
+        working-directory: ./apt
+        shell: bash
+        run: |
+          git config user.name 'University of Manitoba Robotics Team Build Server'
+          git config user.email 'exec.umrt@gmail.com'
+          git config user.signingkey "$(gpg --list-signatures $(git config --get user.email) | sed -n '/^\s/s/\s*//p')"
+          git add --all
+          git commit -S -m "Uploaded version ${{ env.PKG_VERSION }} of ${{ github.repository }}"
+          git push origin
+
+      - name: Create version tag
+        uses: actions/github-script@v5
+        with:
+          script: |
+            const {PKG_VERSION} = process.env
+            github.rest.git.createRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: `refs/tags/v${PKG_VERSION}`,
+              sha: context.sha
+            })
+
+  cleanup:
+    # Always run after all these jobs, regardless of if they succeed
+    if: ${{ always() }}
+    needs:
+      - build
+      - publish
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Delete amd64 deb artifact
+        uses: geekyeggo/delete-artifact@v5
+        with:
+          name: |
+            encrypted-deb-*

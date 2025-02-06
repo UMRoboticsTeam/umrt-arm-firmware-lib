@@ -35,7 +35,10 @@ The Python implementation, CommunicationMaster.py, was the communication system'
 It is entirely self-contained, and serves as the minimum working example of how to control the arm's motors from a
 high-level computer.
 
-The C++ implementation, CommunicationTest.h, tests the full functionality of arm-firmware-lib.
+The C++ implementation, CommunicationTest.h, tests the full functionality of umrt-arm-firmware-lib.
 It uses openFrameworksArduino's Firmata implementation to create a StepperController, and uses the event system to
 verify that the correct responses (and therefore correct callbacks) are fired when the low-level controller responds.
+
+<hr>
+The Doxygen tagfile for this documentation is available <a href="umrt-arm-firmware-lib.tag.xml">here</a>.
 */

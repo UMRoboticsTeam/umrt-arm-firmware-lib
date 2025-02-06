@@ -1,0 +1,48 @@
+name: Assert version is incremented
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  check-version:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/umroboticsteam/umrt-apt-image:latest
+
+    steps:
+      - name: Checkout pr branch
+        uses: actions/checkout@v4
+        with:
+          path: ./pr
+
+      - name: Checkout base branch
+        uses: actions/checkout@v4
+        with:
+          path: ./base
+          ref: main
+
+      - name: Extract version numbers
+        working-directory: .
+        id: extract-versions
+        run: |
+          echo "PR_PKG_VERSION=$(echo "$(grep -Po 'PROJECT_VERSION_MAJOR \K\d+' pr/cpack.cmake).$(grep -Po 'PROJECT_VERSION_MINOR \K\d+' pr/cpack.cmake).$(grep -Po 'PROJECT_VERSION_PATCH \K\d+' pr/cpack.cmake)")" >> "$GITHUB_ENV"
+          echo "BASE_PKG_VERSION=$(echo "$(grep -Po 'PROJECT_VERSION_MAJOR \K\d+' base/cpack.cmake).$(grep -Po 'PROJECT_VERSION_MINOR \K\d+' base/cpack.cmake).$(grep -Po 'PROJECT_VERSION_PATCH \K\d+' base/cpack.cmake)")" >> "$GITHUB_ENV"
+        shell: bash
+
+      - name: Compare semantic versions
+        uses: aleoyakas/check-semver-increased-action@v1
+        id: check-version
+        with:
+          current-version: ${{ env.PR_PKG_VERSION }}
+          previous-version: ${{ env.BASE_PKG_VERSION }}
+
+      - name: Validated?
+        if: steps.check-version.outputs.is-version-increased != 'true'
+        run: |
+          echo "::error::Version is not incremented, $PR_PKG_VERSION is not greater than $BASE_PKG_VERSION"
+          exit 1
+        env:
+          PR_PKG_VERSION: ${{ env.PR_PKG_VERSION }}
+          BASE_PKG_VERSION: ${{ env.BASE_PKG_VERSION }}
