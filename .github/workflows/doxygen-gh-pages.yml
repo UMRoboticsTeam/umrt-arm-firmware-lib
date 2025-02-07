@@ -16,7 +16,7 @@ jobs:
         uses: mattnotmitt/doxygen-action@v1.9.8
 
       - name: Prepare tagfile
-        run: sudo mv output-doxygen/tag.xml "output-doxygen/${{ github.event.repository.name }}.tag.xml"
+        run: sudo mv output-doxygen/tag.xml "output-doxygen/html/${{ github.event.repository.name }}.tag.xml"
 
       - name: Create HTML artifact
         uses: actions/upload-pages-artifact@v3
