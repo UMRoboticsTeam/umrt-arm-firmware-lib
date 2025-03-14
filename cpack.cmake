@@ -1,7 +1,7 @@
 set(MAINTAINER_NAME "Noah Reeder <noahreederatc@gmail.com>")
 set(PROJECT_VERSION_MAJOR 0)
 set(PROJECT_VERSION_MINOR 3)
-set(PROJECT_VERSION_PATCH 2)
+set(PROJECT_VERSION_PATCH 3)
 
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Shared code for University of Manitoba Robotics Team's robotic arm"
         CACHE STRING "Package description for the package metadata"
