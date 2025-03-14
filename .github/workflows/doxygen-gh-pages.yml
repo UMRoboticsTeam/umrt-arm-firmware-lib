@@ -8,6 +8,9 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/umroboticsteam/umrt-build:latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v2
