@@ -118,7 +118,7 @@ jobs:
       - name: Parse version number
         working-directory: ./src
         # Save version number into an environment variable for use in different steps
-        run: echo "PKG_VERSION=$(echo "$(grep -Po 'PROJECT_VERSION_MAJOR \K\d+' cpack.cmake).$(grep -Po 'PROJECT_VERSION_MINOR \K\d+' cpack.cmake).$(grep -Po 'PROJECT_VERSION_PATCH \K\d+' cpack.cmake)")" >> "$GITHUB_ENV"
+        run: echo "PKG_VERSION=$(cat version)" >> "$GITHUB_ENV"
         shell: bash
 
       - name: Publish debians
