@@ -27,8 +27,8 @@ jobs:
         working-directory: .
         id: extract-versions
         run: |
-          echo "PR_PKG_VERSION=$(echo "$(grep -Po 'PROJECT_VERSION_MAJOR \K\d+' pr/cpack.cmake).$(grep -Po 'PROJECT_VERSION_MINOR \K\d+' pr/cpack.cmake).$(grep -Po 'PROJECT_VERSION_PATCH \K\d+' pr/cpack.cmake)")" >> "$GITHUB_ENV"
-          echo "BASE_PKG_VERSION=$(echo "$(grep -Po 'PROJECT_VERSION_MAJOR \K\d+' base/cpack.cmake).$(grep -Po 'PROJECT_VERSION_MINOR \K\d+' base/cpack.cmake).$(grep -Po 'PROJECT_VERSION_PATCH \K\d+' base/cpack.cmake)")" >> "$GITHUB_ENV"
+          echo "PR_PKG_VERSION=$(cat pr/version)" >> "$GITHUB_ENV"
+          echo "BASE_PKG_VERSION=$(cat base/version)" >> "$GITHUB_ENV"
         shell: bash
 
       - name: Compare semantic versions
