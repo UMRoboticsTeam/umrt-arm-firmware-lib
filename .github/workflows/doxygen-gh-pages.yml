@@ -8,12 +8,15 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/umroboticsteam/umrt-build:latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v2
 
       - name: Doxygen generation
-        uses: mattnotmitt/doxygen-action@v1.9.8
+        run: doxygen
 
       - name: Prepare tagfile
         run: sudo mv output-doxygen/tag.xml "output-doxygen/html/${{ github.event.repository.name }}.tag.xml"
