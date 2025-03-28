@@ -8,4 +8,4 @@ on:
 
 jobs:
   doxygen:
-    uses: UMRoboticsTeam/umrt-ci-cd/.github/workflows/doxygen-gh-pages.yaml@doxygen
+    uses: UMRoboticsTeam/umrt-ci-cd/.github/workflows/doxygen-gh-pages.yml@doxygen
