@@ -13,3 +13,4 @@ jobs:
     permissions:
       pages: write
       id-token: write
+      packages: read
