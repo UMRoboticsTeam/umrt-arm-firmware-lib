@@ -7,7 +7,7 @@ on:
 
 jobs:
   doxygen:
-    uses: UMRoboticsTeam/umrt-ci-cd/.github/workflows/doxygen-gh-pages.yml@main
+    uses: UMRoboticsTeam/umrt-ci-cd/.github/workflows/doxygen-gh-pages.yaml@main
 
     permissions:
       pages: write
