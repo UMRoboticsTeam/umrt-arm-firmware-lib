@@ -6,44 +6,10 @@ on:
       - main
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    container:
-      image: ghcr.io/umroboticsteam/umrt-build:latest
+  doxygen:
+    uses: UMRoboticsTeam/umrt-ci-cd/.github/workflows/doxygen-gh-pages.yaml@main
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-
-      - name: Doxygen generation
-        run: doxygen
-
-      - name: Prepare tagfile
-        run: sudo mv output-doxygen/tag.xml "output-doxygen/html/${{ github.event.repository.name }}.tag.xml"
-
-      - name: Create HTML artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: output-doxygen/html
-
-      - name: Create tagfile artifact
-        uses: actions/upload-artifact@v4
-        with:
-            name: "${{ github.event.repository.name }}.tag.xml"
-            path: "output-doxygen/html/${{ github.event.repository.name }}.tag.xml"
-
-  deploy:
-    needs: build
-
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-
-    runs-on: ubuntu-latest
     permissions:
       pages: write
       id-token: write
-
-    steps:
-      - name: Deploy to GitHub Pages
-        uses: actions/deploy-pages@v4
+      packages: read
