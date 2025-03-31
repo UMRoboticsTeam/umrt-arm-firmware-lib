@@ -10,4 +10,4 @@ jobs:
     permissions:
       packages: read
 
-    uses: UMRoboticsTeam/umrt-ci-cd/.github/workflows/standard-semver.yml
+    uses: UMRoboticsTeam/umrt-ci-cd/.github/workflows/standard-semver.yml@main

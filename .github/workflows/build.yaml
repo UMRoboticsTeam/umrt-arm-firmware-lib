@@ -11,7 +11,7 @@ jobs:
       contents: write
       packages: read
 
-    uses: UMRoboticsTeam/umrt-ci-cd/.github/workflows/cmake-build.yml
+    uses: UMRoboticsTeam/umrt-ci-cd/.github/workflows/cmake-build.yml@main
     with:
       build_image: ghcr.io/umroboticsteam/umrt-build:v0.0.12
       publish_image: ghcr.io/umroboticsteam/umrt-apt-image:latest
