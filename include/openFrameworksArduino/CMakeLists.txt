@@ -1,1 +1,0 @@
-add_library(openFrameworksArduino openFrameworksArduino/src/ofArduino.cpp openFrameworksArduino/src/ofSerial.cpp)

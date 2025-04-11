@@ -7,9 +7,8 @@
 #define UMRT_ARM_FIRMWARE_LIB_STEPPER_CONTROLLER_H
 
 #include <vector>
-
-#include "StdAfx.h"
-#include "ofArduino.h"
+#include <openFrameworksArduino/StdAfx.h>
+#include <openFrameworksArduino/ofArduino.h>
 #include <boost/signals2.hpp>
 
 /**

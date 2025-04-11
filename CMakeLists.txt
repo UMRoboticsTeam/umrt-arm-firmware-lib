@@ -25,7 +25,7 @@ find_package(Boost REQUIRED COMPONENTS log log_setup)
 include_directories(${Boost_INCLUDE_DIRS})
 
 # Setup openFrameworksArduino
-add_subdirectory(include/openFrameworksArduino)
+find_package(openFrameworksArduino CONFIG REQUIRED)
 
 # ********** Setup umrt_arm_firmware_lib library **********
 
@@ -40,16 +40,13 @@ add_library(
         ${umrt_arm_firmware_lib_sources})
 target_include_directories(${PROJECT_NAME} PUBLIC
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/${PROJECT_NAME}>"
-        "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/openFrameworksArduino/openFrameworksArduino/src>"
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include/${PROJECT_NAME}>"
-        "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include/openFrameworksArduino/openFrameworksArduino/src>"
-        "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>"
-        "$<INSTALL_INTERFACE:include/openFrameworksArduino/openFrameworksArduino/src>")
+        "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
 
 
-target_link_libraries(${PROJECT_NAME}
+target_link_libraries(${PROJECT_NAME} PRIVATE
         ${Boost_LIBRARIES}
-        openFrameworksArduino
+        openFrameworksArduino::openFrameworksArduino
         )
 
 set(public_headers
