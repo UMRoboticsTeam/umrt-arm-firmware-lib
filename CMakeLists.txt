@@ -25,84 +25,97 @@ find_package(Boost REQUIRED COMPONENTS log log_setup)
 include_directories(${Boost_INCLUDE_DIRS})
 
 # Setup openFrameworksArduino
-add_subdirectory(include/openFrameworksArduino)
+find_package(openFrameworksArduino CONFIG REQUIRED)
 
 # ********** Setup umrt_arm_firmware_lib library **********
 
-set(umrt_arm_firmware_lib_sources
+set(lib_target ${PROJECT_NAME})
+
+add_library(${lib_target})
+
+target_sources(${lib_target} PRIVATE # These files will only be available during building
         src/StepperController.cpp
         )
-set_source_files_properties(
-        ${umrt_arm_firmware_lib_sources}
-        PROPERTIES language "CXX")
-add_library(
-        ${PROJECT_NAME}
-        ${umrt_arm_firmware_lib_sources})
-target_include_directories(${PROJECT_NAME} PUBLIC
-        "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/${PROJECT_NAME}>"
-        "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/openFrameworksArduino/openFrameworksArduino/src>"
-        "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include/${PROJECT_NAME}>"
-        "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include/openFrameworksArduino/openFrameworksArduino/src>"
-        "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>"
-        "$<INSTALL_INTERFACE:include/openFrameworksArduino/openFrameworksArduino/src>")
 
-
-target_link_libraries(${PROJECT_NAME}
-        ${Boost_LIBRARIES}
-        openFrameworksArduino
-        )
-
-set(public_headers
+# Locate headers
+# Using FILE_SET would be much cleaner, but needs CMake 3.23+ and ROS Humble ships with 3.22
+set(public_headers # These files will be installed with the library
         include/umrt-arm-firmware-lib/StepperController.h
         include/umrt-arm-firmware-lib/SYSEX_COMMANDS.h
         include/umrt-arm-firmware-lib/Utils.h
         )
+set_property(TARGET ${lib_target} PROPERTY PUBLIC_HEADER ${public_headers})
+target_include_directories(${lib_target} PUBLIC # Everything in this folder will be available during building
+        "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/${PROJECT_NAME}>"
+        "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include/${PROJECT_NAME}>"
+        "$<INSTALL_INTERFACE:include/>")
 
-set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE CXX)
-set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER "${public_headers}")
+target_link_libraries(${lib_target} PUBLIC
+        # Consumers need to know about openFrameworksArduino since we reference it in StepperController.h
+        openFrameworksArduino::openFrameworksArduino
+        )
+
+target_link_libraries(${lib_target} PRIVATE
+        Boost::log_setup
+        Boost::log
+        )
 
 # ********** Setup communication_test_script executable **********
 
 set(communication_test_target communication_test_script)
-set(communication_test_script_sources
+
+add_executable(${communication_test_target})
+
+target_sources(${communication_test_target} PRIVATE
         src/CommunicationTestScript.cpp
         )
-set_source_files_properties(
-        ${communication_test_script_sources}
-        PROPERTIES language "CXX")
-add_executable(
-        ${communication_test_target}
-        ${communication_test_script_sources})
-target_include_directories(${communication_test_target} PUBLIC
-        "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
-        "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/openFrameworksArduino/openFrameworksArduino/src>"
-        "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>"
-        "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include/openFrameworksArduino/openFrameworksArduino/src>"
-        "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>"
-        "$<INSTALL_INTERFACE:include/openFrameworksArduino/openFrameworksArduino/src>")
 
-target_link_libraries(${communication_test_target}
-        ${PROJECT_NAME}
+target_link_libraries(${communication_test_target} PRIVATE
+        Boost::log_setup
+        Boost::log
+        ${lib_target}
         )
-
-set_target_properties(${communication_test_target} PROPERTIES LINKER_LANGUAGE CXX)
 
 # ********** Setup packaging **********
 
 include(GNUInstallDirs)
-install(TARGETS ${PROJECT_NAME}
-        EXPORT "${PROJECT_NAME}Targets"
-        COMPONENT ${PROJECT_NAME}
-        PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}
-        INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+include(CMakePackageConfigHelpers)
+
+# Parse version number from the file
+file(READ "version" version_input)
+string(REGEX MATCH "([0-9]+)\.([0-9]+)\.([0-9]+)" _ ${version_input})
+
+# Fill in cmake variables in config template
+configure_file(
+        ${CMAKE_CURRENT_SOURCE_DIR}/config.in.cmake
+        ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake
+        @ONLY
+)
+
+write_basic_package_version_file(
+        ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake
+        VERSION ${version_input}
+        COMPATIBILITY AnyNewerVersion
+)
+
+install(FILES
+        ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake
+        ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake
+        DESTINATION ${CMAKE_INSTALL_DATADIR}/${PROJECT_NAME}
         )
 
-install(TARGETS ${communication_test_target}
-        EXPORT "${communication_test_target}Targets"
-        COMPONENT ${communication_test_target}
+install(
+        TARGETS ${lib_target} ${communication_test_target} # These targets will be packaged
+        EXPORT ${PROJECT_NAME}Targets
         PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}
-        INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-        )
+)
+
+install(
+        EXPORT ${PROJECT_NAME}Targets
+        NAMESPACE ${PROJECT_NAME}::
+        DESTINATION ${CMAKE_INSTALL_DATADIR}/${PROJECT_NAME}
+)
 
 message(STATUS "Components to pack: ${CPACK_COMPONENTS_ALL}")
 include(cpack.cmake)
+

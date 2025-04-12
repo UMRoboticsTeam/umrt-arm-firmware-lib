@@ -1,9 +1,5 @@
 set(MAINTAINER_NAME "Noah Reeder <noahreederatc@gmail.com>")
 
-# Parse version number from file
-file(READ "version" version_input)
-string(REGEX MATCH "([0-9]+)\.([0-9]+)\.([0-9]+)" _ ${version_input})
-
 set(PROJECT_VERSION_MAJOR ${CMAKE_MATCH_1})
 set(PROJECT_VERSION_MINOR ${CMAKE_MATCH_2})
 set(PROJECT_VERSION_PATCH ${CMAKE_MATCH_3})

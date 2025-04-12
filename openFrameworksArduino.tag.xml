@@ -1,0 +1,43 @@
+<?xml version='1.0' encoding='UTF-8' standalone='yes' ?>
+<tagfile doxygen_version="1.9.1">
+  <compound kind="class">
+    <name>ArduinoTest</name>
+    <filename>classArduinoTest.html</filename>
+    <base>ofArduino</base>
+  </compound>
+  <compound kind="class">
+    <name>FirmataClass</name>
+    <filename>classFirmataClass.html</filename>
+  </compound>
+  <compound kind="class">
+    <name>ofArduino</name>
+    <filename>classofArduino.html</filename>
+  </compound>
+  <compound kind="class">
+    <name>ofCommanderData</name>
+    <filename>classofCommanderData.html</filename>
+  </compound>
+  <compound kind="class">
+    <name>ofDynamixelData</name>
+    <filename>classofDynamixelData.html</filename>
+  </compound>
+  <compound kind="class">
+    <name>ofSerial</name>
+    <filename>classofSerial.html</filename>
+  </compound>
+  <compound kind="class">
+    <name>ofSerialDeviceInfo</name>
+    <filename>classofSerialDeviceInfo.html</filename>
+  </compound>
+  <compound kind="class">
+    <name>PlaybackMovements</name>
+    <filename>classPlaybackMovements.html</filename>
+    <base>ofArduino</base>
+  </compound>
+  <compound kind="page">
+    <name>index</name>
+    <title>openFrameworksArduino</title>
+    <filename>index.html</filename>
+    <docanchor file="index.html">md_README</docanchor>
+  </compound>
+</tagfile>

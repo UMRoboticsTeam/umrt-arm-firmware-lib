@@ -2138,7 +2138,8 @@ SKIP_FUNCTION_MACROS   = YES
 # run, you must also specify the path to the tagfile here.
 
 TAGFILES               = cppreference-doxygen-web.tag.xml=http://en.cppreference.com/w/ \
-                         highpowersteppermotordriver.tag.xml=https://pololu.github.io/high-power-stepper-driver-arduino/
+                         highpowersteppermotordriver.tag.xml=https://pololu.github.io/high-power-stepper-driver-arduino/ \
+                         openFrameworksArduino.tag.xml=https://umroboticsteam.github.io/openFrameworksArduino/
 
 # When a file name is specified after GENERATE_TAGFILE, doxygen will create a
 # tag file that is based on the input files it reads. See section "Linking to

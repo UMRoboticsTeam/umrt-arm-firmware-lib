@@ -13,7 +13,7 @@ jobs:
 
     uses: UMRoboticsTeam/umrt-ci-cd/.github/workflows/cmake-build.yaml@main
     with:
-      build_image: ghcr.io/umroboticsteam/umrt-build:v0.0.12
+      build_image: ghcr.io/umroboticsteam/umrt-build:v0.0.15
       publish_image: ghcr.io/umroboticsteam/umrt-apt-image:latest
       publish_repo: UMRoboticsTeam/umrt-apt-repo
     secrets:

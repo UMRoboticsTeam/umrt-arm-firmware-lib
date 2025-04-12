@@ -1,3 +1,0 @@
-[submodule "openFrameworksArduino/openFrameworksArduino"]
-	path = include/openFrameworksArduino/openFrameworksArduino
-	url = https://github.com/NeuroRoboticTech/openFrameworksArduino

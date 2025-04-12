@@ -7,9 +7,8 @@
 #define UMRT_ARM_FIRMWARE_LIB_STEPPER_CONTROLLER_H
 
 #include <vector>
-
-#include "StdAfx.h"
-#include "ofArduino.h"
+#include <openFrameworksArduino/StdAfx.h>
+#include <openFrameworksArduino/ofArduino.h>
 #include <boost/signals2.hpp>
 
 /**
@@ -73,7 +72,7 @@ public:
      * Sends a @ref SysexCommands::SEEK_POS command to move a motor to specific step position. Since this command
      * seeks a position, the sign of the speed is ignored.
      *
-     * @param motor_id the ID of the motor to move
+     * @param motor the ID of the motor to move
      * @param position the target position in number of steps from the motor's zero point
      * @param speed the signed target speed to move the motor at, in 1/10 RPM. Note that the absolute value is taken.
      * * @return `true` if successfully written to the serial connection
