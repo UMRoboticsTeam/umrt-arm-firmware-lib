@@ -50,9 +50,14 @@ target_include_directories(${lib_target} PUBLIC # Everything in this folder will
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include/${PROJECT_NAME}>"
         "$<INSTALL_INTERFACE:include/>")
 
-target_link_libraries(${lib_target} PRIVATE
-        ${Boost_LIBRARIES}
+target_link_libraries(${lib_target} PUBLIC
+        # Consumers need to know about openFrameworksArduino since we reference it in StepperController.h
         openFrameworksArduino::openFrameworksArduino
+        )
+
+target_link_libraries(${lib_target} PRIVATE
+        Boost::log_setup
+        Boost::log
         )
 
 # ********** Setup communication_test_script executable **********
@@ -65,7 +70,9 @@ target_sources(${communication_test_target} PRIVATE
         src/CommunicationTestScript.cpp
         )
 
-target_link_libraries(${communication_test_target}
+target_link_libraries(${communication_test_target} PRIVATE
+        Boost::log_setup
+        Boost::log
         ${lib_target}
         )
 
