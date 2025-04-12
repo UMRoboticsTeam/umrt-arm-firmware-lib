@@ -26,6 +26,7 @@ SYSEX_COMMAND_SEEK_POS = 0x04
 SYSEX_COMMAND_GET_POS = 0x05
 SYSEX_COMMAND_SET_GRIPPER = 0x06
 
+
 # [Test Params]
 
 
@@ -44,11 +45,12 @@ def pack_32(integer):
     """
     
     return bytearray([
-    integer & 0xFF,       # bits [7, 0]
-    integer >> 8 & 0xFF,  # bits [15, 8]
-    integer >> 16 & 0xFF, # bits [23, 16]
-    integer >> 24 & 0xFF  # bits [31, 24]
+        integer & 0xFF,  # bits [7, 0]
+        integer >> 8 & 0xFF,  # bits [15, 8]
+        integer >> 16 & 0xFF,  # bits [23, 16]
+        integer >> 24 & 0xFF  # bits [31, 24]
     ])
+
 
 def pack_16(integer):
     """
@@ -64,9 +66,10 @@ def pack_16(integer):
     :return: the packed representation
     """
     return bytearray([
-    integer & 0xFF,     # bits [7, 0]
-    integer >> 8 & 0xFF # bits [15, 8]
+        integer & 0xFF,  # bits [7, 0]
+        integer >> 8 & 0xFF  # bits [15, 8]
     ])
+
 
 def firmatify(pack):
     """
@@ -89,6 +92,7 @@ def firmatify(pack):
         b.append((p & 0x80) >> 7)
     return b
 
+
 def defirmatify(data):
     """
     Decode Firmata 7-bit packets into a bytearray of 8-bit packets.
@@ -104,6 +108,7 @@ def defirmatify(data):
         b.append(data[i] | data[i + 1] << 7)
     return b
 
+
 def decode_32(data, offset=0, signed=True):
     """
     Decode a portion of a packed bytearray to a 32-bit integer.
@@ -113,7 +118,8 @@ def decode_32(data, offset=0, signed=True):
     :param signed: `true` if the integer is signed
     :return: the integer represented by data[offset:offset+4]
     """
-    return int.from_bytes(data[offset:offset+4], byteorder='little', signed=signed)
+    return int.from_bytes(data[offset:offset + 4], byteorder='little', signed=signed)
+
 
 def decode_16(data, offset=0, signed=True):
     """
@@ -124,7 +130,8 @@ def decode_16(data, offset=0, signed=True):
     :param signed: `true` if the integer is signed
     :return: the integer represented by data[offset:offset+2]
     """
-    return int.from_bytes(data[offset:offset+2], byteorder='little', signed=signed)
+    return int.from_bytes(data[offset:offset + 2], byteorder='little', signed=signed)
+
 
 def decode_8(data, offset=0, signed=True):
     """
@@ -135,77 +142,97 @@ def decode_8(data, offset=0, signed=True):
     :param signed: `true` if the integer is signed
     :return: the integer represented by data[offset:offset+1]
     """
-    return int.from_bytes(data[offset:offset+1], byteorder='little', signed=signed)
+    return int.from_bytes(data[offset:offset + 1], byteorder='little', signed=signed)
+
 
 def on_echo_text(*data):
     """
     Print text data to the console.
+    
     :param data: a Firmata text packet
     """
     print(util.two_byte_iter_to_str(data))
 
+
 def on_echo_int32(*data):
     """
     Print a 32-bit integer to the console.
+    
     :param data: a Firmata-encoded 32-bit integer
     """
     data = defirmatify(data)
     print(decode_32(data, 0))
 
+
 def on_echo_int16(*data):
     """
     Print a 16-bit integer to the console.
+    
     :param data: a Firmata-encoded 16-bit integer
     """
     data = defirmatify(data)
     print(decode_16(data, 0))
 
+
 def on_echo_raw(*data):
     """
     Print a raw Firmata message to the console.
+    
     :param data: some Firmata-encoded data
     """
     print(data)
 
+
 def on_set_speed(*data):
     """
     Extract and print the info returned by a SET_SPEED command.
+    
     :param data: a Firmata message from a SET_SPEED command response
     """
     data = defirmatify(data)
     print(f'(Requested) Motor: {decode_8(data, 0, False)}, speed: {decode_16(data, 1)}')
 
+
 def on_get_speed(*data):
     """
     Extract and print the info returned by a GET_SPEED command.
+    
     :param data: a Firmata message from a GET_SPEED command response
     """
     data = defirmatify(data)
     print(f'(Queried)   Motor: {decode_8(data, 0, False)}, speed: {decode_16(data, 1)}')
 
+
 def on_send_step(*data):
     """
     Extract and print the info returned by a SEND_STEP command.
+    
     :param data: a Firmata message from a SEND_STEP command response
     """
     data = defirmatify(data)
-    print(f'(Requested) Motor: {decode_8(data, 0, False)}, steps: {decode_16(data, 1, False)}, speed: {decode_16(data, 3)}')
+    print(
+        f'(Requested) Motor: {decode_8(data, 0, False)}, steps: {decode_16(data, 1, False)}, speed: {decode_16(data, 3)}')
+
 
 def on_seek_position(*data):
     """
     Extract and print the info returned by a SEEK_POSITION command
+    
     :param data: a Firmata message from a SEEK_POSITION command response
     """
     data = defirmatify(data)
     print(f'(Requested) Motor: {decode_8(data, 0, False)}, position: {decode_32(data, 1)}, speed: {decode_16(data, 5)}')
 
+
 def on_get_position(*data):
     """
     Extract and print the info returned by a GET_POSITION command
+    
     :param data: a Firmata message from a GET_POSITION command response
     """
     data = defirmatify(data)
     print(f'(Queried)   Motor: {decode_8(data, 0, False)}, position: {decode_32(data, 1)}')
+
 
 # [Test Script]
 
@@ -250,7 +277,7 @@ for motor in MOTOR_IDS:
     b.send_sysex(SYSEX_COMMAND_SET_SPEED, firmatify(bytearray([motor]) + pack_16(20)))
     b.send_sysex(SYSEX_COMMAND_GET_SPEED, firmatify(bytearray([motor])))
     time.sleep(5)
-    b.send_sysex(SYSEX_COMMAND_SET_SPEED,  firmatify(bytearray([motor]) + pack_16(-10)))
+    b.send_sysex(SYSEX_COMMAND_SET_SPEED, firmatify(bytearray([motor]) + pack_16(-10)))
     b.send_sysex(SYSEX_COMMAND_GET_SPEED, firmatify(bytearray([motor])))
     time.sleep(5)
     b.send_sysex(SYSEX_COMMAND_SET_SPEED, firmatify(bytearray([motor]) + pack_16(0)))
