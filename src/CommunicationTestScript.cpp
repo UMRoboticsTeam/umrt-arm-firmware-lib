@@ -1,10 +1,8 @@
 #include <boost/log/trivial.hpp>
 #include <boost/log/utility/setup/common_attributes.hpp>
 #include <boost/log/utility/setup/file.hpp>
-#include <iostream>
 #include <string>
 
-#include "StepperController.h"
 #include "CommunicationTest.h"
 
 const std::string DEVICE = "/dev/umrt-arm";
