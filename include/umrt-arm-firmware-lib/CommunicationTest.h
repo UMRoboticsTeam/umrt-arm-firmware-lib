@@ -7,7 +7,6 @@
 
 #include "StepperController.h"
 #include "Utils.h"
-#include <boost/log/trivial.hpp>
 #include <string>
 #include <thread>
 
