@@ -14,7 +14,7 @@ constexpr uint32_t TOTAL_LOG_SIZE = 100 * 1024 * 1024; // 100 MiB
 int main() {
     // Setup logging
     boost::log::add_file_log(
-            boost::log::keywords::file_name = "[%TimeStamp%]_%N.log",
+            boost::log::keywords::file_name = "/home/rosdev/%Y-%m-%d-%T_%N.log",
             boost::log::keywords::rotation_size = TOTAL_LOG_SIZE,
             boost::log::keywords::format = "[%TimeStamp%]: %Message%",
             boost::log::keywords::auto_flush = true
