@@ -57,10 +57,6 @@ target_link_libraries(${lib_target} PUBLIC
         Boost::log_setup
         )
 
-target_link_libraries(${lib_target} PRIVATE
-        Boost::filesystem
-        )
-
 # ********** Setup communication_test_script executable **********
 
 set(communication_test_target communication_test_script)
