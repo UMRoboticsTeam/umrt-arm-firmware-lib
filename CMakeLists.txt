@@ -53,11 +53,11 @@ target_include_directories(${lib_target} PUBLIC # Everything in this folder will
 target_link_libraries(${lib_target} PUBLIC
         # Consumers need to know about openFrameworksArduino since we reference it in StepperController.h
         openFrameworksArduino::openFrameworksArduino
+        Boost::log
+        Boost::log_setup
         )
 
 target_link_libraries(${lib_target} PRIVATE
-        Boost::log_setup
-        Boost::log
         Boost::filesystem
         )
 
