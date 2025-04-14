@@ -21,7 +21,7 @@ if(NOT WIN32)
 endif()
 
 # Setup Boost
-find_package(Boost REQUIRED COMPONENTS log log_setup)
+find_package(Boost REQUIRED COMPONENTS log log_setup filesystem)
 include_directories(${Boost_INCLUDE_DIRS})
 
 # Setup openFrameworksArduino
@@ -58,6 +58,7 @@ target_link_libraries(${lib_target} PUBLIC
 target_link_libraries(${lib_target} PRIVATE
         Boost::log_setup
         Boost::log
+        Boost::filesystem
         )
 
 # ********** Setup communication_test_script executable **********
@@ -73,6 +74,7 @@ target_sources(${communication_test_target} PRIVATE
 target_link_libraries(${communication_test_target} PRIVATE
         Boost::log_setup
         Boost::log
+        Boost::filesystem
         ${lib_target}
         )
 
