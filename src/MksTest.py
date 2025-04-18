@@ -730,6 +730,22 @@ def squeeze_msg(msg: can.Message):
         out |= preformatting[i] << (8 * (l - i))  # We want big endian
     return out
 
+def motor_speed(driver_can_id: int, bus: can.Bus = None):
+    payload = [Commands.MOTOR_SPEED]
+    
+    # Calculate checksum
+    payload.append(Commands.checksum(driver_can_id, payload))
+    
+    msg = can.Message(arbitration_id=driver_can_id,
+                      data=payload,
+                      is_extended_id=False)
+    
+    if bus is not None:
+        try:
+            bus.send(msg)
+        except can.CanError:
+            print("Error sending CAN message")
+    return msg, None
 
 def current_pos(driver_can_id: int, bus: can.Bus = None):
     payload = [Commands.CURRENT_POS]
@@ -829,6 +845,16 @@ def seek_pos_by_steps(driver_can_id: int, speed: int, accel: int, pos: int, bus:
     return msg
 
 
+def on_motor_speed(msg):
+    if msg is not None and len(msg.data) == 2 + 2:  # Length is code + crc + payload
+        if msg.data[0] == Commands.CURRENT_POS:
+            if Commands.checksum(driver_can_id, msg.data[:-1]) != msg.data[-1]:
+                print(f"Checksum error in message: {msg}")
+            
+            speed = int.from_bytes(msg.data[1:3], 'big', signed=True)
+            print(f"Speed: {speed}")
+
+
 def on_current_pos(msg):
     if msg is not None and len(msg.data) == 2 + 4:  # Length is code + crc + payload
         if msg.data[0] == Commands.CURRENT_POS:
@@ -836,7 +862,7 @@ def on_current_pos(msg):
                 print(f"Checksum error in message: {msg}")
                 
             pos = int.from_bytes(msg.data[1:6], 'big', signed=True)
-            print(pos)
+            print(f"Position: {pos}")
 
 
 def test(driver_can_id, can_device, bitrate):
