@@ -67,7 +67,9 @@ MAX_ACCEL = 255
 
 class Commands(IntEnum):
     """
-    CAN commands for the MKS stepper controllers
+    CAN commands for the MKS stepper controllers.
+    Each message must have its checksum appended.
+    Uses big-endian encoding.
     """
     
     ## Encoder value, split into number of turns and angle.
@@ -687,6 +689,15 @@ class Commands(IntEnum):
     # @param steps          [int24] position to move to, in steps from the zero point
     # @return status        [uint8] the status code described above
     SEEK_POS_BY_ANGLE = 0xF5
+    
+    @staticmethod
+    def checksum(device_id, payload):
+        """MKS SERVO57D/42D/35D/28D drivers use an 8-bit sum-of-bytes checksum."""
+        cs = device_id
+        for n in payload:
+            cs = (cs + n) & 0xFF
+        return cs
+
 
 
 if __name__ == "__main__":
