@@ -731,7 +731,7 @@ def squeeze_msg(msg: can.Message):
     return out
 
 
-def current_pos(driver_can_id: int, bus: can.Bus = None, timeout=1):
+def current_pos(driver_can_id: int, bus: can.Bus = None):
     payload = [Commands.CURRENT_POS]
     
     # Calculate checksum
@@ -744,19 +744,6 @@ def current_pos(driver_can_id: int, bus: can.Bus = None, timeout=1):
     if bus is not None:
         try:
             bus.send(msg)
-            
-            # Wait for response
-            try:
-                abort_time = time.time() + timeout
-                while time.time() < abort_time:
-                    msg = bus.recv(1)
-                    if msg is not None and len(msg.data) == 2 + 4:  # Length is code + crc + payload
-                        if msg.data[0] == Commands.CURRENT_POS:
-                            if Commands.checksum(driver_can_id, msg.data[:-1]) != msg.data[-1]:
-                                print(f"Checksum error in message: {msg}")
-                            return msg, int.from_bytes(msg.data[1:6], 'big', signed=True)
-            except KeyboardInterrupt:
-                return None
         except can.CanError:
             print("Error sending CAN message")
     return msg, None
@@ -842,6 +829,16 @@ def seek_pos_by_steps(driver_can_id: int, speed: int, accel: int, pos: int, bus:
     return msg
 
 
+def on_current_pos(msg):
+    if msg is not None and len(msg.data) == 2 + 4:  # Length is code + crc + payload
+        if msg.data[0] == Commands.CURRENT_POS:
+            if Commands.checksum(driver_can_id, msg.data[:-1]) != msg.data[-1]:
+                print(f"Checksum error in message: {msg}")
+                
+            pos = int.from_bytes(msg.data[1:6], 'big', signed=True)
+            print(pos)
+
+
 def test(driver_can_id, can_device, bitrate):
     # Compare to manual examples without sending actual commands
     # SET_SPEED
@@ -856,6 +853,10 @@ def test(driver_can_id, can_device, bitrate):
     
     # Motor testing sequence
     with can.Bus(interface='socketcan', channel=can_device, bitrate=bitrate) as bus:
+        # Register message handlers
+        notifier = can.Notifier(bus, [])
+        notifier.add_listener(on_current_pos)
+        
         # Send speed of 2 RPM for 5 seconds, then 1 RPM in other direction for 5 seconds, then stop
         # b.send_sysex(SYSEX_COMMAND_GET_POS, firmatify(bytearray([motor])))
         set_speed(driver_can_id, False, 2, 0, bus)
@@ -884,6 +885,7 @@ def test(driver_can_id, can_device, bitrate):
         # b.send_sysex(SYSEX_COMMAND_GET_POS, firmatify(bytearray([motor])))
         
         time.sleep(1)
+        notifier.stop()
 
 
 if __name__ == "__main__":
