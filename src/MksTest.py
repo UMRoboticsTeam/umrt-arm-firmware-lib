@@ -787,13 +787,13 @@ def send_step(driver_can_id: int, dir: bool, speed: int, accel: int, steps: int,
     return msg
 
 
-def seek_pos_by_steps(driver_can_id: int, speed: int, accel: int, steps: int, bus: can.Bus = None):
+def seek_pos_by_steps(driver_can_id: int, speed: int, accel: int, pos: int, bus: can.Bus = None):
     payload = [Commands.SEEK_POS_BY_STEPS]
     
     # Encode properties
     payload.extend(speed.to_bytes(2, 'big'))
     payload.extend(accel.to_bytes(1, 'big'))
-    payload.extend(steps.to_bytes(3, 'big', signed=True))
+    payload.extend(pos.to_bytes(3, 'big', signed=True))
     
     # Calculate checksum
     payload.append(Commands.checksum(driver_can_id, payload))
@@ -848,7 +848,7 @@ def test(driver_can_id, can_device, bitrate):
         time.sleep(1)
     
         # Seek back to position 0 from wherever we ended up at 10 RPM
-        #b.send_sysex(SYSEX_COMMAND_SEEK_POS, firmatify(bytearray([motor]) + pack_32(0) + pack_16(100)))
+        seek_pos_by_steps(driver_can_id, 10, 0, 0, bus)
         #time.sleep(1)
         #b.send_sysex(SYSEX_COMMAND_GET_POS, firmatify(bytearray([motor])))
     
