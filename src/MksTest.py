@@ -796,6 +796,37 @@ def test(driver_can_id, can_device, bitrate):
     print(0x01_FD_01_40_02_00_FA_00_3B == squeeze_msg(send_step(1, False, 320, 2, 20 * 200 * 16)))
     print(0x01_FD_81_40_02_00_FA_00_BB == squeeze_msg(send_step(1, True, 320, 2, 20 * 200 * 16)))
     
+    # Motor testing sequence
+    with can.Bus(interface='socketcan', channel=can_device, bitrate=bitrate) as bus:
+        # Send speed of 2 RPM for 5 seconds, then 1 RPM in other direction for 5 seconds, then stop
+        #b.send_sysex(SYSEX_COMMAND_GET_POS, firmatify(bytearray([motor])))
+        set_speed(driver_can_id, False, 2, 0, bus)
+        #b.send_sysex(SYSEX_COMMAND_GET_SPEED, firmatify(bytearray([motor])))
+        time.sleep(5)
+        set_speed(driver_can_id, True, 1, 0, bus)
+        #b.send_sysex(SYSEX_COMMAND_GET_SPEED, firmatify(bytearray([motor])))
+        time.sleep(5)
+        set_speed(driver_can_id, False, 0, 0, bus)
+        #b.send_sysex(SYSEX_COMMAND_GET_SPEED, firmatify(bytearray([motor])))
+    
+        # Step forward 20 steps at 10 RPM, then back 10 steps at 5 RPM
+        #b.send_sysex(SYSEX_COMMAND_GET_POS, firmatify(bytearray([motor])))
+        send_step(driver_can_id, False, 10, 0, 20, bus)
+        time.sleep(1)
+        #b.send_sysex(SYSEX_COMMAND_GET_POS, firmatify(bytearray([motor])))
+        send_step(driver_can_id, True, 5, 0, 20, bus)
+        time.sleep(1)
+        #b.send_sysex(SYSEX_COMMAND_GET_POS, firmatify(bytearray([motor])))
+    
+        time.sleep(1)
+    
+        # Seek back to position 0 from wherever we ended up at 10 RPM
+        #b.send_sysex(SYSEX_COMMAND_SEEK_POS, firmatify(bytearray([motor]) + pack_32(0) + pack_16(100)))
+        #time.sleep(1)
+        #b.send_sysex(SYSEX_COMMAND_GET_POS, firmatify(bytearray([motor])))
+    
+        time.sleep(1)
+
 
 if __name__ == "__main__":
     can_device = sys.argv[1]
