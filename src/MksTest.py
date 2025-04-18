@@ -6,6 +6,8 @@ COM_PORT = '/dev/ttyACM3'
 DEVICE_ADDR = 0x01
 
 from enum import IntEnum
+import can
+import sys
 
 ## The maximum speed the driver can spin a motor, depending on the work mode.
 # The values are nominally:
@@ -698,6 +700,62 @@ class Commands(IntEnum):
             cs = (cs + n) & 0xFF
         return cs
 
+
+def set_speed(driver_can_id: int, dir: bool, speed: int, accel: int, bus: can.Bus = None):
+    payload = [Commands.SET_SPEED]
+    
+    # Encode speed properties
+    speed_properties_low = (speed & 0xF00) >> 8 | (dir & 0x1) << 7
+    speed_properties_high = speed & 0xFF
+    payload.append(speed_properties_low)
+    payload.append(speed_properties_high)
+    
+    # Encode acceleration
+    payload.extend(accel.to_bytes(1, 'big'))
+    
+    # Calculate checksum
+    payload.append(Commands.checksum(driver_can_id, payload))
+    
+    msg = can.Message(arbitration_id=driver_can_id,
+                      data=payload,
+                      is_extended_id=False)
+    
+    if bus is not None:
+        try:
+            bus.send(msg)
+        except can.CanError:
+            print("Error sending CAN message")
+    return msg
+
+
+def send_step(driver_can_id: int, dir: bool, speed: int, accel: int, steps: int, bus: can.Bus = None):
+    payload = [Commands.SEND_STEP]
+    
+    # Encode speed properties
+    speed_properties_low = (speed & 0xF00) >> 8 | (dir & 0x1) << 7
+    speed_properties_high = speed & 0xFF
+    payload.append(speed_properties_low)
+    payload.append(speed_properties_high)
+    
+    # Encode acceleration
+    payload.extend(accel.to_bytes(1, 'big'))
+    
+    # Encode steps
+    payload.extend(steps.to_bytes(3, 'big'))
+    
+    # Calculate checksum
+    payload.append(Commands.checksum(driver_can_id, payload))
+    
+    msg = can.Message(arbitration_id=driver_can_id,
+                      data=payload,
+                      is_extended_id=False)
+    
+    if bus is not None:
+        try:
+            bus.send(msg)
+        except can.CanError:
+            print("Error sending CAN message")
+    return msg
 
 
 if __name__ == "__main__":
