@@ -730,7 +730,8 @@ def squeeze_msg(msg: can.Message):
         out |= preformatting[i] << (8 * (l - i))  # We want big endian
     return out
 
-def motor_speed(driver_can_id: int, bus: can.Bus = None):
+
+def get_motor_speed(driver_can_id: int, bus: can.Bus = None):
     payload = [Commands.MOTOR_SPEED]
     
     # Calculate checksum
@@ -747,7 +748,8 @@ def motor_speed(driver_can_id: int, bus: can.Bus = None):
             print("Error sending CAN message")
     return msg, None
 
-def current_pos(driver_can_id: int, bus: can.Bus = None):
+
+def get_current_pos(driver_can_id: int, bus: can.Bus = None):
     payload = [Commands.CURRENT_POS]
     
     # Calculate checksum
@@ -860,7 +862,7 @@ def on_current_pos(msg):
         if msg.data[0] == Commands.CURRENT_POS:
             if Commands.checksum(driver_can_id, msg.data[:-1]) != msg.data[-1]:
                 print(f"Checksum error in message: {msg}")
-                
+            
             pos = int.from_bytes(msg.data[1:5], 'big', signed=True)
             print(f"Position: {pos}")
 
@@ -885,31 +887,31 @@ def test(driver_can_id, can_device, bitrate):
         notifier.add_listener(on_current_pos)
         
         # Send speed of 2 RPM for 5 seconds, then 1 RPM in other direction for 5 seconds, then stop
-        current_pos(driver_can_id, bus)
+        get_current_pos(driver_can_id, bus)
         set_speed(driver_can_id, False, 2, 0, bus)
-        motor_speed(driver_can_id, bus)
+        get_motor_speed(driver_can_id, bus)
         time.sleep(5)
         set_speed(driver_can_id, True, 1, 0, bus)
-        motor_speed(driver_can_id, bus)
+        get_motor_speed(driver_can_id, bus)
         time.sleep(5)
         set_speed(driver_can_id, False, 0, 0, bus)
-        motor_speed(driver_can_id, bus)
+        get_motor_speed(driver_can_id, bus)
         
         # Step forward 20 steps at 10 RPM, then back 10 steps at 5 RPM
-        current_pos(driver_can_id, bus)
+        get_current_pos(driver_can_id, bus)
         send_step(driver_can_id, False, 10, 0, 20, bus)
         time.sleep(1)
-        current_pos(driver_can_id, bus)
+        get_current_pos(driver_can_id, bus)
         send_step(driver_can_id, True, 5, 0, 20, bus)
         time.sleep(1)
-        current_pos(driver_can_id, bus)
+        get_current_pos(driver_can_id, bus)
         
         time.sleep(1)
         
         # Seek back to position 0 from wherever we ended up at 10 RPM
         seek_pos_by_steps(driver_can_id, 10, 0, 0, bus)
         time.sleep(1)
-        current_pos(driver_can_id, bus)
+        get_current_pos(driver_can_id, bus)
         
         time.sleep(1)
         notifier.stop()
