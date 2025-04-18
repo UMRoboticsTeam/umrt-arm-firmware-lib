@@ -102,11 +102,11 @@ class Commands(IntEnum):
     # @return speed [int16] the current speed in RPM
     MOTOR_SPEED = 0x32
     
-    ## The number of pulses received by the driver.
-    # Taken from the manual, unsure what this means (possibly step count?).
+    ## The current position of the motor, in steps
+    # As an alternative to the encoder value, this command allows position tracking by step counting.
     #
-    # @return num_pulses    [int32] the angular offset from the sero point, in 1/2^14 of a rotation
-    NUM_PULSES = 0x33
+    # @return steps [int32] the angular offset from the sero point, in steps
+    CURRENT_POS = 0x33
     
     ## Status of the IO ports.
     # Returns a byte, with each bit representing:
