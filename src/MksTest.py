@@ -787,6 +787,29 @@ def send_step(driver_can_id: int, dir: bool, speed: int, accel: int, steps: int,
     return msg
 
 
+def seek_pos_by_steps(driver_can_id: int, speed: int, accel: int, steps: int, bus: can.Bus = None):
+    payload = [Commands.SEEK_POS_BY_STEPS]
+    
+    # Encode properties
+    payload.extend(speed.to_bytes(2, 'big'))
+    payload.extend(accel.to_bytes(1, 'big'))
+    payload.extend(steps.to_bytes(3, 'big', signed=True))
+    
+    # Calculate checksum
+    payload.append(Commands.checksum(driver_can_id, payload))
+    
+    msg = can.Message(arbitration_id=driver_can_id,
+                      data=payload,
+                      is_extended_id=False)
+    
+    if bus is not None:
+        try:
+            bus.send(msg)
+        except can.CanError:
+            print("Error sending CAN message")
+    return msg
+
+
 def test(driver_can_id, can_device, bitrate):
     # Compare to manual examples without sending actual commands
     # SET_SPEED
@@ -795,7 +818,11 @@ def test(driver_can_id, can_device, bitrate):
     # SEND_STEP
     print(0x01_FD_01_40_02_00_FA_00_3B == squeeze_msg(send_step(1, False, 320, 2, 20 * 200 * 16)))
     print(0x01_FD_81_40_02_00_FA_00_BB == squeeze_msg(send_step(1, True, 320, 2, 20 * 200 * 16)))
-    
+    # SEEK_POS_BY_STEP
+    print(0x01_FE_02_58_02_00_40_00_9B == squeeze_msg(seek_pos_by_steps(1, 600, 2, 0x4000)))
+    print(0x01_FE_02_58_02_FF_C0_00_1A == squeeze_msg(seek_pos_by_steps(1, 600, 2, -0x4000)))
+
+
     # Motor testing sequence
     with can.Bus(interface='socketcan', channel=can_device, bitrate=bitrate) as bus:
         # Send speed of 2 RPM for 5 seconds, then 1 RPM in other direction for 5 seconds, then stop
