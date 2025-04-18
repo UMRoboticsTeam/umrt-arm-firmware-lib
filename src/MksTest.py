@@ -8,6 +8,7 @@ DEVICE_ADDR = 0x01
 from enum import IntEnum
 import can
 import sys
+import time
 
 ## The maximum speed the driver can spin a motor, depending on the work mode.
 # The values are nominally:
@@ -701,6 +702,34 @@ class Commands(IntEnum):
         return cs
 
 
+def format_canmsg(msg: can.Message):
+    """
+    Formats a CAN message into the format used in the manual.
+    The output is a list with the first entry the device address, followed by the message payload.
+    :param msg: CAN message to format
+    :return: msg formatted as a list
+    """
+    out = [msg.arbitration_id]
+    out.extend(msg.data)
+    return out
+
+
+def squeeze_msg(msg: can.Message):
+    """
+    Formats a CAN message as @ref format_canmsg, but squeezes the list into a single integer.
+    Useful for comparing to expected output without having to write out lists.
+    E.g. using this a message can be compared to 0x01_FD_01_40_02_00_FA_00_3B instead of
+        [0x01, 0xFD, 0x01, 0x40, 0x02, 0x00, 0xFA, 0x00, 0x3B].
+    :param msg: CAN message to format
+    :return: msg formatted as an int
+    """
+    preformatting = format_canmsg(msg)
+    out = 0
+    l = len(preformatting) - 1
+    for i in range(len(preformatting)):
+        out |= preformatting[i] << (8 * (l - i))  # We want big endian
+    return out
+
 def set_speed(driver_can_id: int, dir: bool, speed: int, accel: int, bus: can.Bus = None):
     payload = [Commands.SET_SPEED]
     
@@ -758,5 +787,18 @@ def send_step(driver_can_id: int, dir: bool, speed: int, accel: int, steps: int,
     return msg
 
 
+def test(driver_can_id, can_device, bitrate):
+    # Compare to manual examples without sending actual commands
+    # SET_SPEED
+    print(0x01_F6_01_40_02_3A == squeeze_msg(set_speed(1, False, 320, 2)))
+    print(0x01_F6_81_40_02_BA == squeeze_msg(set_speed(1, True, 320, 2)))
+    # SEND_STEP
+    print(0x01_FD_01_40_02_00_FA_00_3B == squeeze_msg(send_step(1, False, 320, 2, 20 * 200 * 16)))
+    print(0x01_FD_81_40_02_00_FA_00_BB == squeeze_msg(send_step(1, True, 320, 2, 20 * 200 * 16)))
+    
+
 if __name__ == "__main__":
-    pass
+    can_device = sys.argv[1]
+    driver_can_id = sys.argv[2] if len(sys.argv) >= 3 else 0x01
+    bitrate = sys.argv[3] if len(sys.argv) >= 4 else 500_000
+    test(driver_can_id, can_device, bitrate)
