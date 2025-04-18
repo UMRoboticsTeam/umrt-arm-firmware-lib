@@ -75,7 +75,7 @@ public:
      * @param motor the ID of the motor to move
      * @param position the target position in number of steps from the motor's zero point
      * @param speed the signed target speed to move the motor at, in 1/10 RPM. Note that the absolute value is taken.
-     * * @return `true` if successfully written to the serial connection
+     * @return `true` if successfully written to the serial connection
      */
     bool seekPosition(const uint8_t motor, const int32_t position, const int16_t speed);
 
