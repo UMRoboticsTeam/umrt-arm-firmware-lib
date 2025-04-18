@@ -861,7 +861,7 @@ def on_current_pos(msg):
             if Commands.checksum(driver_can_id, msg.data[:-1]) != msg.data[-1]:
                 print(f"Checksum error in message: {msg}")
                 
-            pos = int.from_bytes(msg.data[1:6], 'big', signed=True)
+            pos = int.from_bytes(msg.data[1:5], 'big', signed=True)
             print(f"Position: {pos}")
 
 
