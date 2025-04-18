@@ -730,6 +730,38 @@ def squeeze_msg(msg: can.Message):
         out |= preformatting[i] << (8 * (l - i))  # We want big endian
     return out
 
+
+def current_pos(driver_can_id: int, bus: can.Bus = None, timeout=1):
+    payload = [Commands.CURRENT_POS]
+    
+    # Calculate checksum
+    payload.append(Commands.checksum(driver_can_id, payload))
+    
+    msg = can.Message(arbitration_id=driver_can_id,
+                      data=payload,
+                      is_extended_id=False)
+    
+    if bus is not None:
+        try:
+            bus.send(msg)
+            
+            # Wait for response
+            try:
+                abort_time = time.time() + timeout
+                while time.time() < abort_time:
+                    msg = bus.recv(1)
+                    if msg is not None and len(msg.data) == 2 + 4:  # Length is code + crc + payload
+                        if msg.data[0] == Commands.CURRENT_POS:
+                            if Commands.checksum(driver_can_id, msg.data[:-1]) != msg.data[-1]:
+                                print(f"Checksum error in message: {msg}")
+                            return msg, int.from_bytes(msg.data[1:6], 'big', signed=True)
+            except KeyboardInterrupt:
+                return None
+        except can.CanError:
+            print("Error sending CAN message")
+    return msg, None
+
+
 def set_speed(driver_can_id: int, dir: bool, speed: int, accel: int, bus: can.Bus = None):
     payload = [Commands.SET_SPEED]
     
@@ -821,37 +853,36 @@ def test(driver_can_id, can_device, bitrate):
     # SEEK_POS_BY_STEP
     print(0x01_FE_02_58_02_00_40_00_9B == squeeze_msg(seek_pos_by_steps(1, 600, 2, 0x4000)))
     print(0x01_FE_02_58_02_FF_C0_00_1A == squeeze_msg(seek_pos_by_steps(1, 600, 2, -0x4000)))
-
-
+    
     # Motor testing sequence
     with can.Bus(interface='socketcan', channel=can_device, bitrate=bitrate) as bus:
         # Send speed of 2 RPM for 5 seconds, then 1 RPM in other direction for 5 seconds, then stop
-        #b.send_sysex(SYSEX_COMMAND_GET_POS, firmatify(bytearray([motor])))
+        # b.send_sysex(SYSEX_COMMAND_GET_POS, firmatify(bytearray([motor])))
         set_speed(driver_can_id, False, 2, 0, bus)
-        #b.send_sysex(SYSEX_COMMAND_GET_SPEED, firmatify(bytearray([motor])))
+        # b.send_sysex(SYSEX_COMMAND_GET_SPEED, firmatify(bytearray([motor])))
         time.sleep(5)
         set_speed(driver_can_id, True, 1, 0, bus)
-        #b.send_sysex(SYSEX_COMMAND_GET_SPEED, firmatify(bytearray([motor])))
+        # b.send_sysex(SYSEX_COMMAND_GET_SPEED, firmatify(bytearray([motor])))
         time.sleep(5)
         set_speed(driver_can_id, False, 0, 0, bus)
-        #b.send_sysex(SYSEX_COMMAND_GET_SPEED, firmatify(bytearray([motor])))
-    
+        # b.send_sysex(SYSEX_COMMAND_GET_SPEED, firmatify(bytearray([motor])))
+        
         # Step forward 20 steps at 10 RPM, then back 10 steps at 5 RPM
-        #b.send_sysex(SYSEX_COMMAND_GET_POS, firmatify(bytearray([motor])))
+        # b.send_sysex(SYSEX_COMMAND_GET_POS, firmatify(bytearray([motor])))
         send_step(driver_can_id, False, 10, 0, 20, bus)
         time.sleep(1)
-        #b.send_sysex(SYSEX_COMMAND_GET_POS, firmatify(bytearray([motor])))
+        # b.send_sysex(SYSEX_COMMAND_GET_POS, firmatify(bytearray([motor])))
         send_step(driver_can_id, True, 5, 0, 20, bus)
         time.sleep(1)
-        #b.send_sysex(SYSEX_COMMAND_GET_POS, firmatify(bytearray([motor])))
-    
+        # b.send_sysex(SYSEX_COMMAND_GET_POS, firmatify(bytearray([motor])))
+        
         time.sleep(1)
-    
+        
         # Seek back to position 0 from wherever we ended up at 10 RPM
         seek_pos_by_steps(driver_can_id, 10, 0, 0, bus)
-        #time.sleep(1)
-        #b.send_sysex(SYSEX_COMMAND_GET_POS, firmatify(bytearray([motor])))
-    
+        # time.sleep(1)
+        # b.send_sysex(SYSEX_COMMAND_GET_POS, firmatify(bytearray([motor])))
+        
         time.sleep(1)
 
 
