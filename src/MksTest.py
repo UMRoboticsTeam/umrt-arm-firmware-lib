@@ -881,18 +881,19 @@ def test(driver_can_id, can_device, bitrate):
     with can.Bus(interface='socketcan', channel=can_device, bitrate=bitrate) as bus:
         # Register message handlers
         notifier = can.Notifier(bus, [])
+        notifier.add_listener(on_motor_speed)
         notifier.add_listener(on_current_pos)
         
         # Send speed of 2 RPM for 5 seconds, then 1 RPM in other direction for 5 seconds, then stop
         current_pos(driver_can_id, bus)
         set_speed(driver_can_id, False, 2, 0, bus)
-        # b.send_sysex(SYSEX_COMMAND_GET_SPEED, firmatify(bytearray([motor])))
+        motor_speed(driver_can_id, bus)
         time.sleep(5)
         set_speed(driver_can_id, True, 1, 0, bus)
-        # b.send_sysex(SYSEX_COMMAND_GET_SPEED, firmatify(bytearray([motor])))
+        motor_speed(driver_can_id, bus)
         time.sleep(5)
         set_speed(driver_can_id, False, 0, 0, bus)
-        # b.send_sysex(SYSEX_COMMAND_GET_SPEED, firmatify(bytearray([motor])))
+        motor_speed(driver_can_id, bus)
         
         # Step forward 20 steps at 10 RPM, then back 10 steps at 5 RPM
         current_pos(driver_can_id, bus)
