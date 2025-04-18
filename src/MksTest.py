@@ -858,7 +858,7 @@ def test(driver_can_id, can_device, bitrate):
         notifier.add_listener(on_current_pos)
         
         # Send speed of 2 RPM for 5 seconds, then 1 RPM in other direction for 5 seconds, then stop
-        # b.send_sysex(SYSEX_COMMAND_GET_POS, firmatify(bytearray([motor])))
+        current_pos(driver_can_id, bus)
         set_speed(driver_can_id, False, 2, 0, bus)
         # b.send_sysex(SYSEX_COMMAND_GET_SPEED, firmatify(bytearray([motor])))
         time.sleep(5)
@@ -869,20 +869,20 @@ def test(driver_can_id, can_device, bitrate):
         # b.send_sysex(SYSEX_COMMAND_GET_SPEED, firmatify(bytearray([motor])))
         
         # Step forward 20 steps at 10 RPM, then back 10 steps at 5 RPM
-        # b.send_sysex(SYSEX_COMMAND_GET_POS, firmatify(bytearray([motor])))
+        current_pos(driver_can_id, bus)
         send_step(driver_can_id, False, 10, 0, 20, bus)
         time.sleep(1)
-        # b.send_sysex(SYSEX_COMMAND_GET_POS, firmatify(bytearray([motor])))
+        current_pos(driver_can_id, bus)
         send_step(driver_can_id, True, 5, 0, 20, bus)
         time.sleep(1)
-        # b.send_sysex(SYSEX_COMMAND_GET_POS, firmatify(bytearray([motor])))
+        current_pos(driver_can_id, bus)
         
         time.sleep(1)
         
         # Seek back to position 0 from wherever we ended up at 10 RPM
         seek_pos_by_steps(driver_can_id, 10, 0, 0, bus)
-        # time.sleep(1)
-        # b.send_sysex(SYSEX_COMMAND_GET_POS, firmatify(bytearray([motor])))
+        time.sleep(1)
+        current_pos(driver_can_id, bus)
         
         time.sleep(1)
         notifier.stop()
