@@ -537,7 +537,6 @@ class Commands(IntEnum):
     #
     # For example, 0x81_40 indicates moving CW at v = 0x40 | (0x01 << 8) = 320 RPM.<br>
     # For another, 0x0A_BC indicates moving CCW at v = 0xBC | (0x0A << 8) = 2748 RPM.
-    # TODO: Compare against their program and candump for whether Speed_high and Speed_low are switched
     #
     # Note that the motor can be stopped by sending a speed of 0.
     # If an acceleration of 0 is used, the motor will stop, or more generally reach the target speed, immediately.
