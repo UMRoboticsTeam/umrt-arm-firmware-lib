@@ -221,9 +221,8 @@ class Commands(IntEnum):
     #
     # Accessible through the driver screen as "MStep", though only 1, 2, 4, 8, 16, 32, 64, 128, and 256 are available.
     #
-    # @param mode       [uint8] (microsteps - 1) per fullstep
+    # @param mode       [uint8] microsteps per fullstep, with 0x00 meaning 256-microstepping
     # @return succeeded [uint8] 1 if successfully set, 0 otherwise
-    # TODO: Presumably 0: full-step, 255:256-microstep?
     SET_MICROSTEP = 0x84
     
     ## Sets the En pin mode.
