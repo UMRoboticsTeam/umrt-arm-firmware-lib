@@ -310,11 +310,25 @@ class Commands(IntEnum):
     # @return succeeded [uint8] 1 if successfully set, 0 otherwise
     CAN_ID = 0x8B
     
-    ## Enable responses and active messages.
+    ## Change response mode.
     #
-    # @param enable_responses   [uint8]
-    # @param allow_active       [uint8]
-    # TODO: Write a description once I understand modes better
+    # There are three possible response modes:
+    # | Mode     | Description                                                                                   |
+    # | :------- | :-------------------------------------------------------------------------------------------- |
+    # | Disabled | The driver will not send message responses                                                    |
+    # |  ^       | TODO: Does this apply to read requests too?                                                   |
+    # | Passive  | The driver will immediately respond to commands, and not send any follow-ups                  |
+    # | Active   | The driver will immediately respond to commands, and send follow-up information as applicable |
+    #
+    # Some commands are capable of sending multiple responses.
+    # For example, @ref SEND_STEP could send one response with 0x01 indicating the motor has begun moving, followed by
+    #   another response with 0x02 indicating the motor has reached the target.
+    # Alternatively, it may only respond with 0x00 indicating that the command has been rejected.
+    # In this case, in active mode all of these responses could be sent, whereas in passive mode only the first response
+    #   would be.
+    #
+    # @param enable_responses   [uint8] set to 0 to disable responses, or 1 to enable
+    # @param allow_active       [uint8] provided enable_responses is 1, set to 0 to enter passive mode or 1 for active
     RESPONSE_MODE = 0x8C
     
     ## Disables the buttons on the driver.
