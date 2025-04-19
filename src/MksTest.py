@@ -296,7 +296,7 @@ class Commands(IntEnum):
     # </ul>
     # Accessible through the driver screen as "CanRate".
     #
-    # @param baud_rate  [uint8] The selected CAN baud rate
+    # @param baud_rate  [uint8] the selected CAN baud rate
     # @return succeeded [uint8] 1 if successfully set, 0 otherwise
     CAN_BAUD_RATE = 0x8A
     
@@ -306,7 +306,7 @@ class Commands(IntEnum):
     #
     # Accessible through the driver screen as "CanID".
     #
-    # @param new_id     [uint16] The requested CAN bus ID
+    # @param new_id     [uint16] the requested CAN bus ID
     # @return succeeded [uint8] 1 if successfully set, 0 otherwise
     CAN_ID = 0x8B
     
@@ -347,7 +347,7 @@ class Commands(IntEnum):
     #
     # Eligible IDs are 0x001-0x7FF.
     #
-    # @param group_id   [uint16] The requested group ID
+    # @param group_id   [uint16] the requested group ID
     # @return succeeded [uint8] 1 if successfully set, 0 otherwise
     # TODO: Make sure I understand the manual's example
     SET_GROUP_ID = 0x8D
@@ -365,7 +365,7 @@ class Commands(IntEnum):
     #     <li>0b02: Do not change the port's value</li>
     # </ul>
     #
-    # @param settings   [uint8] Flags byte following the above format
+    # @param settings   [uint8] flags byte following the above format
     # @return succeeded [uint8] 1 if successfully set, 0 otherwise
     # TODO: What is the difference between 0b00 and 0b02?
     WRITE_IO = 0x36
@@ -382,8 +382,8 @@ class Commands(IntEnum):
     # The manual states that it is necessary to issue a homing command after the settings have been changed.
     #
     # @param home_trigger [uint8] 1 for active high or 0 for active low
-    # @param home_dir     [uint8] The direction of home, 1 for CCW or 0 for CW
-    # @param home_speed   [uint16] Speed to move towards home at, in RPM
+    # @param home_dir     [uint8] the direction of home, 1 for CCW or 0 for CW
+    # @param home_speed   [uint16] speed to move towards home at, in RPM
     # @param lock_at_end  [uint8] 1 to automatically clear the rotor shaft lock after homing, 0 to not
     # @param mode         [uint8] 1 to use the blind-limit-sensing or 0 to use the end stop input
     # @return succeeded   [uint8] 1 if successfully set, 0 otherwise
@@ -453,8 +453,8 @@ class Commands(IntEnum):
     #
     # @param home_mode  [uint8] 0 to disable, 1 for directional, or 2 for minimum angle
     # @param enable     [uint8] 0 for clean zero, 1 for set zero, or 2 to do not modify zero
-    # @param speed      [uint8] A value from 0x00-0x04, where 0x04 is fastest and 0x00 is slowest
-    # @param dir        [uint8] Direction to seek if applicable, 0 for CW or 1 for CCW
+    # @param speed      [uint8] a value from 0x00-0x04, where 0x04 is fastest and 0x00 is slowest
+    # @param dir        [uint8] direction to seek if applicable, 0 for CW or 1 for CCW
     # @return succeeded [uint8] 1 if successfully set, 0 otherwise
     POWER_ON_HOMING_MODE = 0x9A
     
@@ -501,9 +501,9 @@ class Commands(IntEnum):
     # | :------ | :-: | :-: | :-: | :-: | :-: | :-: | :----------: | :---------------------: |
     # | Meaning |  Set to 0                    |||||| `en_trigger` | `poss_error_protection` |
     #
-    # @param settings   [uint8] Flags byte following the above format
-    # @param time       [uint16] Size of the position error protection time window, in ~15ms increments
-    # @param errors     [uint16] Error threshold for position error protection?
+    # @param settings   [uint8] flags byte following the above format
+    # @param time       [uint16] size of the position error protection time window, in ~15ms increments
+    # @param errors     [uint16] error threshold for position error protection?
     #
     SET_MISC_SETTINGS = 0x9D
     
