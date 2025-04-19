@@ -470,10 +470,42 @@ class Commands(IntEnum):
     # @return succeeded [uint8] 1 if successfully set, 0 otherwise
     REBOOT_DRIVER = 0x41
     
-    ## Modifies motor protection settings.
-    # TODO: Figure out what these are
+    ## Modifies motor protection settings and allows delayed homing when using the pulse interface.
+    # This command allows two distinct functions to be enabled.
     #
-    SET_PROTECTION_SETTINGS = 0x9D
+    # The first affects the driver's zeroing behaviour.
+    # @ref POWER_ON_HOMING_MODE can be used to automatically home the motor when power is restored, however in some
+    #   applications this may not be safe.
+    # When using the pulse interface, a @ref GO_HOME command cannot be sent to trigger the homing sequence.
+    # Through the `en_trigger` flag, the driver can be programmed to instead begin homing when a 200ms pulse is received
+    #   on the En pin.
+    # Note that @ref POWER_ON_HOMING_MODE must be programmed for this to occur as the driver needs to know which
+    #   direction, speed, etc. to move when the sequence is triggered.
+    #
+    # The second affects the driver's motor protection system.
+    # If the `pos_error_protection` flag is enabled, the driver will enter the locked rotor shaft state if the position
+    #   error is greater than a certain threshold within a time window.
+    # I am not entirely clear on what this means, but the manual states that: "within x time, if the motor position
+    # error is greater than y, the protection is started".
+    # My interpretation is that "errors" refers to missed steps, and the goal is to enter the protection state when a
+    #   certain number of steps are missed within a certain timeframe.
+    # For example, an application may find it  beneficial to lock the motor if 5 steps are missed in 100ms.
+    # The manual states that "when Errors = 28000, the motor is misaligned by 360°", but I do not understand what this
+    #   means or if it contradicts the above.
+    #
+    # If the position protection system is triggered, the driver screen displays "Wrong2".
+    # Note that "Wrong" is displayed on the screen when the stall protection system triggered.
+    #
+    # The flags are encoded into a byte according to:
+    # | Bit     |  7  |  6  |  5  |  4  |  3  |  2  |      1       |            0            |
+    # | :------ | :-: | :-: | :-: | :-: | :-: | :-: | :----------: | :---------------------: |
+    # | Meaning |  Set to 0                    |||||| `en_trigger` | `poss_error_protection` |
+    #
+    # @param settings   [uint8] Flags byte following the above format
+    # @param time       [uint16] Size of the position error protection time window, in ~15ms increments
+    # @param errors     [uint16] Error threshold for position error protection?
+    #
+    SET_MISC_SETTINGS = 0x9D
     
     ## Reads the current setting for a parameter.
     # Parameters are returned in the same format as they are set.
