@@ -4,11 +4,11 @@ Team's robotic arm.
 
 This includes:
     - Communication between the arm's high-level and low-level computer
-    - A small application for testing the communication link
+    - A small application for testing the low-level computer communication link
     - An abstraction for controlling the arm's stepper motors
-        - StepperController
+        - ArduinoStepperController
 
-\section communication-test-script Communication Test Script
+\section arduino-communication-test-script Arduino Communication Test Script
 
 A small program to test communication between the high-level and low-level computer has been implemented in both Python
 and C++.
@@ -35,7 +35,7 @@ The Python implementation, CommunicationMaster.py, was the communication system'
 It is entirely self-contained, and serves as the minimum working example of how to control the arm's motors from a
 high-level computer.
 
-The C++ implementation, CommunicationTest.h, tests the full functionality of umrt-arm-firmware-lib.
+The C++ implementation, arduino_communication_test.hpp, tests the full functionality of umrt-arm-firmware-lib.
 It uses openFrameworksArduino's Firmata implementation to create a StepperController, and uses the event system to
 verify that the correct responses (and therefore correct callbacks) are fired when the low-level controller responds.
 
