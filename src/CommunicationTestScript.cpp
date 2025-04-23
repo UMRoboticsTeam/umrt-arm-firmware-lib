@@ -3,7 +3,7 @@
 #include <boost/log/utility/setup/file.hpp>
 #include <string>
 
-#include "CommunicationTest.h"
+#include "ArduinoCommunicationTest.h"
 
 const std::string DEVICE = "/dev/umrt-arm";
 const int BAUD_RATE = 57600;
@@ -23,7 +23,7 @@ int main() {
     boost::log::add_common_attributes();
     BOOST_LOG_TRIVIAL(debug) << "Logging started";
 
-    CommunicationTest c(DEVICE, BAUD_RATE, {0, 1});
+    ArduinoCommunicationTest c(DEVICE, BAUD_RATE, {0, 1});
 
     // Run update loop forever
     // TODO: Look into a better way of doing the polling loop which isn't so intensive

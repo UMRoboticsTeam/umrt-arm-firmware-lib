@@ -13,9 +13,9 @@
 #include <vector>
 
 // TODO: Could use some docs, would be nice if we could get some sample output
-class CommunicationTest {
+class ArduinoCommunicationTest {
 public:
-    CommunicationTest(const std::string& device, const int baud, const std::vector<uint8_t>& motor_ids) : motor_ids(motor_ids) {
+    ArduinoCommunicationTest(const std::string& device, const int baud, const std::vector<uint8_t>& motor_ids) : motor_ids(motor_ids) {
         s.ESetup.connect([this] { this->onSetup(); });
         s.EStringReceived.connect([this](std::string&& str) { this->onString(std::forward<decltype(str)>(str)); });
         s.EArduinoEcho.connect([this](std::vector<uint8_t>&& p) { this->onEcho(std::forward<decltype(p)>(p)); });
@@ -114,7 +114,7 @@ protected:
         std::cout << "Arduino setup!" << std::endl;
 
         // Start the test procedure
-        test_thread = std::thread(&CommunicationTest::sendTestRoutine, this);
+        test_thread = std::thread(&ArduinoCommunicationTest::sendTestRoutine, this);
     }
 
     void onString(const std::string& str) {
