@@ -55,6 +55,27 @@ inline std::vector<uint8_t> pack_32_big(const uint32_t integer) {
 }
 
 /**
+ * Packs a 24-bit integer into a vector of 8-bit integers, in big-endian format.
+ *
+ * E.g. for `0AD_xBEEF`:
+ * ```
+ * input:        1010 1101 1011 1110 1110 1111
+ * bit grouping: 0000 0000 1111 1111 2222 2222
+ * output:       { 0xAD, 0xBE, 0xEF }
+ * ```
+ *
+ * @param integer the integer to pack, with bits [31, 24] ignored
+ * @return the byte representation of `integer`
+ */
+inline std::vector<uint8_t> pack_24_big(const uint32_t integer) {
+    return {
+        static_cast<uint8_t>(integer >> 16 & 0xFF), // bits [23, 16]
+        static_cast<uint8_t>(integer >> 8 & 0xFF),  // bits [15, 8]
+        static_cast<uint8_t>(integer & 0xFF)        // bits [7, 0]
+    };
+}
+
+/**
  * Packs a 16-bit integer into a vector of 8-bit integers, in little-endian format.
  *
  * E.g. for `0xBEEF`:
