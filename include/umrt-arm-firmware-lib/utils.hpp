@@ -25,10 +25,10 @@
  */
 inline std::vector<uint8_t> pack_32(const uint32_t integer) {
     return {
-            static_cast<unsigned char>(integer & 0xFF),       // bits [7, 0]
-            static_cast<unsigned char>(integer >> 8 & 0xFF),  // bits [15, 8]
-            static_cast<unsigned char>(integer >> 16 & 0xFF), // bits [23, 16]
-            static_cast<unsigned char>(integer >> 24 & 0xFF)  // bits [31, 24]
+        static_cast<uint8_t>(integer & 0xFF),       // bits [7, 0]
+        static_cast<uint8_t>(integer >> 8 & 0xFF),  // bits [15, 8]
+        static_cast<uint8_t>(integer >> 16 & 0xFF), // bits [23, 16]
+        static_cast<uint8_t>(integer >> 24 & 0xFF)  // bits [31, 24]
     };
 }
 
@@ -47,8 +47,8 @@ inline std::vector<uint8_t> pack_32(const uint32_t integer) {
  */
 inline std::vector<uint8_t> pack_16(const uint16_t integer) {
     return {
-            static_cast<unsigned char>(integer & 0xFF),     // bits [7, 0]
-            static_cast<unsigned char>(integer >> 8 & 0xFF) // bits [15, 8]
+        static_cast<uint8_t>(integer & 0xFF),     // bits [7, 0]
+        static_cast<uint8_t>(integer >> 8 & 0xFF) // bits [15, 8]
     };
 }
 
@@ -68,14 +68,14 @@ inline std::vector<uint8_t> pack_16(const uint16_t integer) {
  */
 inline std::vector<uint8_t> firmatify_32(const std::vector<uint8_t>::const_iterator& pack) {
     return {
-            static_cast<unsigned char>(pack[0] & 0x7F),
-            static_cast<unsigned char>((pack[0] & 0x80) >> 7),
-            static_cast<unsigned char>(pack[1] & 0x7F),
-            static_cast<unsigned char>((pack[1] & 0x80) >> 7),
-            static_cast<unsigned char>(pack[2] & 0x7F),
-            static_cast<unsigned char>((pack[2] & 0x80) >> 7),
-            static_cast<unsigned char>(pack[3] & 0x7F),
-            static_cast<unsigned char>((pack[3] & 0x80) >> 7),
+        static_cast<uint8_t>(pack[0] & 0x7F),
+        static_cast<uint8_t>((pack[0] & 0x80) >> 7),
+        static_cast<uint8_t>(pack[1] & 0x7F),
+        static_cast<uint8_t>((pack[1] & 0x80) >> 7),
+        static_cast<uint8_t>(pack[2] & 0x7F),
+        static_cast<uint8_t>((pack[2] & 0x80) >> 7),
+        static_cast<uint8_t>(pack[3] & 0x7F),
+        static_cast<uint8_t>((pack[3] & 0x80) >> 7),
     };
 }
 
@@ -103,14 +103,14 @@ inline std::vector<uint8_t> firmatify_32(const std::vector<uint8_t>& pack) { ret
  */
 inline std::vector<uint8_t> firmatify_16(const std::vector<uint8_t>::const_iterator& pack) {
     return {
-            static_cast<unsigned char>(pack[0] & 0x7F),
-            static_cast<unsigned char>((pack[0] & 0x80) >> 7),
-            static_cast<unsigned char>(pack[1] & 0x7F),
-            static_cast<unsigned char>((pack[1] & 0x80) >> 7),
-            static_cast<unsigned char>(pack[2] & 0x7F),
-            static_cast<unsigned char>((pack[2] & 0x80) >> 7),
-            static_cast<unsigned char>(pack[3] & 0x7F),
-            static_cast<unsigned char>((pack[3] & 0x80) >> 7),
+        static_cast<uint8_t>(pack[0] & 0x7F),
+        static_cast<uint8_t>((pack[0] & 0x80) >> 7),
+        static_cast<uint8_t>(pack[1] & 0x7F),
+        static_cast<uint8_t>((pack[1] & 0x80) >> 7),
+        static_cast<uint8_t>(pack[2] & 0x7F),
+        static_cast<uint8_t>((pack[2] & 0x80) >> 7),
+        static_cast<uint8_t>(pack[3] & 0x7F),
+        static_cast<uint8_t>((pack[3] & 0x80) >> 7),
     };
 }
 
@@ -134,7 +134,7 @@ inline std::vector<uint8_t> firmatify_16(const std::vector<uint8_t>& pack) { ret
  * @return the firmatified representation of `val`
  */
 inline std::vector<uint8_t> firmatify_8(const uint8_t val) {
-    return { static_cast<unsigned char>(val & 0x7F), static_cast<unsigned char>((val & 0x80) >> 7) };
+    return { static_cast<uint8_t>(val & 0x7F), static_cast<uint8_t>((val & 0x80) >> 7) };
 }
 
 /**
@@ -162,7 +162,7 @@ inline uint32_t decode_32(const std::vector<uint8_t>& data) { return decode_32(d
  * @return a 16-bit integer
  */
 inline uint16_t decode_16(const std::vector<uint8_t>::const_iterator& data) {
-    return data[0] | data[1] << 8;
+    return static_cast<uint16_t>(data[0]) | static_cast<uint16_t>(data[1] << 8);
 }
 
 /**
