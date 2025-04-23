@@ -29,6 +29,10 @@ find_package(openFrameworksArduino CONFIG REQUIRED)
 
 find_package(ros2_socketcan CONFIG REQUIRED)
 
+# Fixes intellisense not finding ros2 headers https://youtrack.jetbrains.com/issue/CPP-29747/Certain-ROS2-package-headers-missing-from-Intellisense-when-using-a-Docker-toolchain
+# (since it doesn't seem transfer target_include_directories paths for remote toolchains)
+include_directories(SYSTEM /opt/ros/$ENV{ROS_DISTRO}/include)
+
 # ********** Setup umrt_arm_firmware_lib library **********
 
 set(lib_target ${PROJECT_NAME})
