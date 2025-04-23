@@ -5,7 +5,7 @@
 #ifndef UMRT_ARM_FIRMWARE_LIB_COMMUNICATION_TEST_H
 #define UMRT_ARM_FIRMWARE_LIB_COMMUNICATION_TEST_H
 
-#include "StepperController.h"
+#include "ArduinoStepperController.h"
 #include "Utils.h"
 #include <string>
 #include <thread>
@@ -106,7 +106,7 @@ public:
     }
 
 protected:
-    StepperController s;
+    ArduinoStepperController s;
     std::thread test_thread;
     const std::vector<uint8_t> motor_ids;
 

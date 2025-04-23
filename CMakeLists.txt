@@ -46,7 +46,7 @@ target_sources(${lib_target} PRIVATE # These files will only be available during
 # Locate headers
 # Using FILE_SET would be much cleaner, but needs CMake 3.23+ and ROS Humble ships with 3.22
 set(public_headers # These files will be installed with the library
-        include/umrt-arm-firmware-lib/StepperController.h
+        include/umrt-arm-firmware-lib/ArduinoStepperController.h
         include/umrt-arm-firmware-lib/SYSEX_COMMANDS.h
         include/umrt-arm-firmware-lib/Utils.h
         )
@@ -57,7 +57,7 @@ target_include_directories(${lib_target} PUBLIC # Everything in this folder will
         "$<INSTALL_INTERFACE:include/>")
 
 target_link_libraries(${lib_target} PUBLIC
-        # Consumers need to know about openFrameworksArduino since we reference it in StepperController.h
+        # Consumers need to know about openFrameworksArduino since we reference it in ArduinoStepperController.h
         openFrameworksArduino::openFrameworksArduino
         Boost::log
         Boost::log_setup

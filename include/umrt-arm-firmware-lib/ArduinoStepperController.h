@@ -15,17 +15,17 @@
  * Manages the Firmata connection to an Arduino running the Stepper Controller program. Responses are conveyed through
  * <a href=https://www.boost.org/doc/libs/1_63_0/doc/html/signals.html>Boost signals</a>.
  */
-class StepperController : public ofArduino {
+class ArduinoStepperController : public ofArduino {
 public:
     /**
-     * Initializes a StepperController.
+     * Initializes an ArduinoStepperController.
      */
-    StepperController();
+    ArduinoStepperController();
 
     /**
-     * Destroys a StepperController.
+     * Destroys an ArduinoStepperController.
      */
-    ~StepperController() noexcept override;
+    ~ArduinoStepperController() noexcept override;
 
     /**
      * Sends a @ref SysexCommands::ARDUINO_ECHO command with the provided payload.
@@ -96,7 +96,7 @@ public:
      */
     bool setGripper(const uint8_t position);
 
-    // Checks if this StepperController is fully setup
+    // Checks if this ArduinoStepperController is fully setup
     /**
      * Returns whether the connection to the Stepper Controller Arduino has been fully established.
      * @return `true` if so
@@ -109,7 +109,7 @@ public:
 
     /**
      * <a href=https://www.boost.org/doc/libs/1_63_0/doc/html/signals.html>Boost signal</a> triggered once this
-     * StepperController is fully setup.
+     * ArduinoStepperController is fully setup.
      */
     boost::signals2::signal<void(void)> ESetup;
 

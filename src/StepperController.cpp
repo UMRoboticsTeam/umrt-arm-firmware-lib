@@ -7,39 +7,39 @@
 
 #include <boost/log/trivial.hpp>
 
+#include "ArduinoStepperController.h"
 #include "SYSEX_COMMANDS.h"
-#include "StepperController.h"
 #include "Utils.h"
 
-StepperController::StepperController() : setup_completed(false) {
-    BOOST_LOG_TRIVIAL(trace) << "StepperController construction begun";
+ArduinoStepperController::ArduinoStepperController() : setup_completed(false) {
+    BOOST_LOG_TRIVIAL(trace) << "ArduinoStepperController construction begun";
 
     // Bind to the initialization connection of the ofArduino, and call this->setupArduino(majorFirmwareVersion)
-    this->EInitialized.connect(boost::bind(&StepperController::setupArduino, this, _1));
+    this->EInitialized.connect(boost::bind(&ArduinoStepperController::setupArduino, this, _1));
 
     // Bind to the sysex received connection of the ofArduino, and call this->handleSysex(message)
-    this->ESysExReceived.connect(boost::bind(&StepperController::handleSysex, this, _1));
+    this->ESysExReceived.connect(boost::bind(&ArduinoStepperController::handleSysex, this, _1));
 
-    BOOST_LOG_TRIVIAL(debug) << "StepperController constructed";
+    BOOST_LOG_TRIVIAL(debug) << "ArduinoStepperController constructed";
 }
 
-StepperController::~StepperController() noexcept {
-    BOOST_LOG_TRIVIAL(debug) << "StepperController destructed";
+ArduinoStepperController::~ArduinoStepperController() noexcept {
+    BOOST_LOG_TRIVIAL(debug) << "ArduinoStepperController destructed";
 }
 
-void StepperController::setupArduino(const int& version) {
-    BOOST_LOG_TRIVIAL(trace) << "StepperController Arduino connection established";
+void ArduinoStepperController::setupArduino(const int& version) {
+    BOOST_LOG_TRIVIAL(trace) << "ArduinoStepperController Arduino connection established";
 
     // For now, do nothing
     // May want to do things like setting step mode in the future
 
     this->setup_completed = true;
 
-    BOOST_LOG_TRIVIAL(info) << "StepperController setup completed";
+    BOOST_LOG_TRIVIAL(info) << "ArduinoStepperController setup completed";
     this->ESetup();
 }
 
-bool StepperController::sendEcho(const std::vector<uint8_t>& payload) {
+bool ArduinoStepperController::sendEcho(const std::vector<uint8_t>& payload) {
     if (!isSetup()) { return false; }
 
     sendSysEx(SysexCommands::ARDUINO_ECHO, payload);
@@ -47,7 +47,7 @@ bool StepperController::sendEcho(const std::vector<uint8_t>& payload) {
     return true;
 }
 
-bool StepperController::setSpeed(const uint8_t motor, const int16_t speed) {
+bool ArduinoStepperController::setSpeed(const uint8_t motor, const int16_t speed) {
     if (!isSetup()) { return false; }
 
     std::vector<uint8_t> pack = { motor };
@@ -59,7 +59,7 @@ bool StepperController::setSpeed(const uint8_t motor, const int16_t speed) {
 }
 
 
-bool StepperController::getSpeed(const uint8_t motor) {
+bool ArduinoStepperController::getSpeed(const uint8_t motor) {
     if (!isSetup()) { return false; }
 
     sendSysEx(SysexCommands::GET_SPEED, std::vector<uint8_t>({ motor }));
@@ -67,7 +67,7 @@ bool StepperController::getSpeed(const uint8_t motor) {
     return true;
 }
 
-bool StepperController::sendStep(const uint8_t motor, const uint16_t num_steps, const int16_t speed) {
+bool ArduinoStepperController::sendStep(const uint8_t motor, const uint16_t num_steps, const int16_t speed) {
     if (!isSetup()) { return false; }
 
     std::vector<uint8_t> pack = { motor };
@@ -80,7 +80,7 @@ bool StepperController::sendStep(const uint8_t motor, const uint16_t num_steps, 
     return true;
 }
 
-bool StepperController::seekPosition(const uint8_t motor, const int32_t position, const int16_t speed) {
+bool ArduinoStepperController::seekPosition(const uint8_t motor, const int32_t position, const int16_t speed) {
     if (!isSetup()) { return false; }
 
     std::vector<uint8_t> pack = { motor };
@@ -93,7 +93,7 @@ bool StepperController::seekPosition(const uint8_t motor, const int32_t position
     return true;
 }
 
-bool StepperController::getPosition(const uint8_t motor) {
+bool ArduinoStepperController::getPosition(const uint8_t motor) {
     if (!isSetup()) { return false; }
 
     sendSysEx(SysexCommands::GET_POS, std::vector<uint8_t>({ motor }));
@@ -101,7 +101,7 @@ bool StepperController::getPosition(const uint8_t motor) {
     return true;
 }
 
-bool StepperController::setGripper(const uint8_t position) {
+bool ArduinoStepperController::setGripper(const uint8_t position) {
     if (!isSetup()) { return false; }
 
     sendSysEx(SysexCommands::SET_GRIPPER, std::vector<uint8_t>{ position });
@@ -109,12 +109,12 @@ bool StepperController::setGripper(const uint8_t position) {
     return true;
 }
 
-void StepperController::handleEArduinoEcho(const std::vector<unsigned char>& message) {
+void ArduinoStepperController::handleEArduinoEcho(const std::vector<unsigned char>& message) {
     BOOST_LOG_TRIVIAL(debug) << "ArduinoEcho received";
     this->EArduinoEcho(std::vector<uint8_t>(message.cbegin(), message.cend()));
 }
 
-void StepperController::handleESetSpeed(const std::vector<unsigned char>& message) {
+void ArduinoStepperController::handleESetSpeed(const std::vector<unsigned char>& message) {
     auto it = message.cbegin();
     uint8_t motor = *it;
     it += 1;
@@ -123,7 +123,7 @@ void StepperController::handleESetSpeed(const std::vector<unsigned char>& messag
     this->ESetSpeed(motor, speed);
 }
 
-void StepperController::handleEGetSpeed(const std::vector<unsigned char>& message) {
+void ArduinoStepperController::handleEGetSpeed(const std::vector<unsigned char>& message) {
     auto it = message.cbegin();
     uint8_t motor = *it;
     it += 1;
@@ -132,7 +132,7 @@ void StepperController::handleEGetSpeed(const std::vector<unsigned char>& messag
     this->EGetSpeed(motor, speed);
 }
 
-void StepperController::handleESendStep(const std::vector<unsigned char>& message) {
+void ArduinoStepperController::handleESendStep(const std::vector<unsigned char>& message) {
     auto it = message.cbegin();
     uint8_t motor = *it;
     it += 1;
@@ -144,7 +144,7 @@ void StepperController::handleESendStep(const std::vector<unsigned char>& messag
     this->ESendStep(motor, steps, speed);
 }
 
-void StepperController::handleESeekPosition(const std::vector<unsigned char>& message) {
+void ArduinoStepperController::handleESeekPosition(const std::vector<unsigned char>& message) {
     auto it = message.cbegin();
     uint8_t motor = *it;
     it += 1;
@@ -156,7 +156,7 @@ void StepperController::handleESeekPosition(const std::vector<unsigned char>& me
     this->ESeekPosition(motor, position, speed);
 }
 
-void StepperController::handleEGetPosition(const std::vector<unsigned char>& message) {
+void ArduinoStepperController::handleEGetPosition(const std::vector<unsigned char>& message) {
     auto it = message.cbegin();
     uint8_t motor = *it;
     it += 1;
@@ -165,12 +165,12 @@ void StepperController::handleEGetPosition(const std::vector<unsigned char>& mes
     this->EGetPosition(motor, position);
 }
 
-void StepperController::handleESetGripper(const std::vector<unsigned char>& message) {
+void ArduinoStepperController::handleESetGripper(const std::vector<unsigned char>& message) {
     BOOST_LOG_TRIVIAL(debug) << "SetGripper received";
     this->ESetGripper(message[0]);
 }
 
-void StepperController::handleSysex(const std::vector<unsigned char>& message) {
+void ArduinoStepperController::handleSysex(const std::vector<unsigned char>& message) {
     if (message.empty()) { // Must at least have command
         BOOST_LOG_TRIVIAL(error) << "SysEx received with no command byte";
         return;
