@@ -40,7 +40,7 @@ set(lib_target ${PROJECT_NAME})
 add_library(${lib_target})
 
 target_sources(${lib_target} PRIVATE # These files will only be available during building
-        src/stepper_controller.cpp
+        src/arduino_stepper_controller.cpp
         )
 
 # Locate headers
