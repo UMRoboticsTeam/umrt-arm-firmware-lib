@@ -27,6 +27,8 @@ include_directories(${Boost_INCLUDE_DIRS})
 # Setup openFrameworksArduino
 find_package(openFrameworksArduino CONFIG REQUIRED)
 
+find_package(ros2_socketcan CONFIG REQUIRED)
+
 # ********** Setup umrt_arm_firmware_lib library **********
 
 set(lib_target ${PROJECT_NAME})
@@ -55,6 +57,13 @@ target_link_libraries(${lib_target} PUBLIC
         openFrameworksArduino::openFrameworksArduino
         Boost::log
         Boost::log_setup
+        )
+
+target_link_libraries(${lib_target} PRIVATE
+        ${ros2_socketcan_LIBRARIES}
+        )
+target_include_directories(${lib_target} PRIVATE
+        ${ros2_socketcan_INCLUDE_DIRS}
         )
 
 # ********** Setup communication_test_script executable **********
