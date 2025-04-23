@@ -70,17 +70,17 @@ target_include_directories(${lib_target} PRIVATE
         ${ros2_socketcan_INCLUDE_DIRS}
         )
 
-# ********** Setup communication_test_script executable **********
+# ********** Setup arduino_communication_test_script executable **********
 
-set(communication_test_target communication_test_script)
+set(arduino_communication_test_target arduino_communication_test_script)
 
-add_executable(${communication_test_target} src/arduino_communication_test.cpp)
+add_executable(${arduino_communication_test_target} src/arduino_communication_test.cpp)
 
-target_sources(${communication_test_target} PRIVATE
+target_sources(${arduino_communication_test_target} PRIVATE
         src/arduino_communication_test_script.cpp
         )
 
-target_link_libraries(${communication_test_target} PRIVATE
+target_link_libraries(${arduino_communication_test_target} PRIVATE
         Boost::log_setup
         Boost::log
         Boost::filesystem
@@ -116,7 +116,7 @@ install(FILES
         )
 
 install(
-        TARGETS ${lib_target} ${communication_test_target} # These targets will be packaged
+        TARGETS ${lib_target} ${arduino_communication_test_target} # These targets will be packaged
         EXPORT ${PROJECT_NAME}Targets
         PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}
 )
