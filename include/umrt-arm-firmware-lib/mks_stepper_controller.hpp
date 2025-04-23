@@ -5,8 +5,15 @@
 #ifndef UMRT_ARM_FIRMWARE_LIB_MKS_STEPPER_CONTROLLER_HPP
 #define UMRT_ARM_FIRMWARE_LIB_MKS_STEPPER_CONTROLLER_HPP
 
-#include <vector>
 #include <boost/signals2.hpp>
+#include <string>
+#include <vector>
+
+// Forward declaring these classes so that ros2_socketcan can be a private dependency
+namespace drivers::socketcan {
+    class SocketCanReceiver;
+    class SocketCanSender;
+} // namespace drivers::socketcan
 
 /**
  * Abstracts CAN bus communication to MKS SERVO57D/42D/35D/28D stepper motor driver modules. Responses are conveyed through
@@ -16,8 +23,10 @@ class MksStepperController {
 public:
     /**
      * Initializes an MksStepperController.
+     *
+     * @param can_interface the SocketCAN network interface corresponding to the CAN bus
      */
-    MksStepperController();
+    MksStepperController(const std::string& can_interface);
 
     /**
      * Destroys an MksStepperController.
@@ -150,6 +159,9 @@ protected:
 
     void handleEGetPosition(const std::vector<unsigned char>& message);
     //@}
+
+    std::unique_ptr<drivers::socketcan::SocketCanReceiver> can_receiver;
+    std::unique_ptr<drivers::socketcan::SocketCanSender> can_sender;
 
 private:
     /**

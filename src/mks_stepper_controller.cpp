@@ -4,16 +4,21 @@
 
 #include <boost/log/trivial.hpp>
 
+#include <ros2_socketcan/socket_can_receiver.hpp>
+#include <ros2_socketcan/socket_can_sender.hpp>
+
+#include <numeric>
+
+#include "MKS_COMMANDS.hpp"
 #include "mks_stepper_controller.hpp"
 
-MksStepperController::MksStepperController() : setup_completed(false) {
+uint8_t checksum(uint8_t driver_id, const std::vector<uint8_t>& payload);
+
+MksStepperController::MksStepperController(const std::string& can_interface) : setup_completed(false) {
     BOOST_LOG_TRIVIAL(trace) << "ArduinoStepperController construction begun";
 
-    // Bind to the initialization connection of the ofArduino, and call this->setupArduino(majorFirmwareVersion)
-    this->EInitialized.connect(boost::bind(&ArduinoStepperController::setupArduino, this, _1));
-
-    // Bind to the sysex received connection of the ofArduino, and call this->handleSysex(message)
-    this->ESysExReceived.connect(boost::bind(&ArduinoStepperController::handleSysex, this, _1));
+    this->can_receiver = std::make_unique<drivers::socketcan::SocketCanReceiver>(can_interface);
+    this->can_sender = std::make_unique<drivers::socketcan::SocketCanSender>(can_interface);
 
     BOOST_LOG_TRIVIAL(debug) << "MksStepperController constructed";
 }
@@ -25,11 +30,24 @@ MksStepperController::~MksStepperController() noexcept {
 bool MksStepperController::setSpeed(const uint8_t motor, const int16_t speed, const uint8_t acceleration) {
     if (!isSetup()) { return false; }
 
-    std::vector<uint8_t> pack = { motor };
-    auto speed_packed = pack_16(speed);
-    pack.insert(pack.end(), speed_packed.cbegin(), speed_packed.cend());
-    sendSysEx(SysexCommands::SET_SPEED, pack);
+    std::vector<uint8_t> payload{ MksCommands::SET_SPEED };
 
+    uint8_t speed_properties_low = static_cast<uint8_t>((speed & 0xF00) >> 8) | (speed < 0 ? 1u << 7 : 0u);
+    uint8_t speed_properties_high = speed & 0xFF;
+    payload.insert(payload.end(), speed_properties_low);
+    payload.insert(payload.end(), speed_properties_high);
+    payload.insert(payload.end(), acceleration);
+    payload.insert(payload.end(), checksum(motor, payload));
+
+    // TODO: Is the driver expecting remote messages?
+    try {
+        drivers::socketcan::CanId can_id(motor, 0, drivers::socketcan::FrameType::DATA, drivers::socketcan::StandardFrame);
+        can_sender->send(payload.data(), payload.size(), can_id);
+    } catch (drivers::socketcan::SocketCanTimeout& e) {
+        // Won't bother with e.what(), it is always "CAN Send timeout"
+        BOOST_LOG_TRIVIAL(warning) << "MksStepperController setSpeed timeout: motor=" << motor << ", speed=" << speed << ", accel=" << acceleration;
+        return false;
+    }
     return true;
 }
 
@@ -162,4 +180,9 @@ void MksStepperController::handleCanMessage(const std::vector<unsigned char>& me
             BOOST_LOG_TRIVIAL(info) << "Unknown Sysex received with command=" << message[0];
             break;
     }
+}
+
+uint8_t checksum(uint8_t driver_id, const std::vector<uint8_t>& payload) {
+    // Note: Accumulate is going to work in uint8_t, and unsigned integer overflow is well-defined - no need for explicit modulo
+    return std::accumulate(payload.cbegin(), payload.cend(), driver_id);
 }
