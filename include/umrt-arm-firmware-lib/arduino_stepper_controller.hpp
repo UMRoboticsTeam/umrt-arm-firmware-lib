@@ -3,8 +3,8 @@
 // Based off of ArduinoTest from openFrameworksArduino (https://github.com/NeuroRoboticTech/openFrameworksArduino/blob/master/examples/ArduinoTest.h)
 //
 
-#ifndef UMRT_ARM_FIRMWARE_LIB_STEPPER_CONTROLLER_H
-#define UMRT_ARM_FIRMWARE_LIB_STEPPER_CONTROLLER_H
+#ifndef UMRT_ARM_FIRMWARE_LIB_ARDUINO_STEPPER_CONTROLLER_HPP
+#define UMRT_ARM_FIRMWARE_LIB_ARDUINO_STEPPER_CONTROLLER_HPP
 
 #include <boost/signals2.hpp>
 #include <openFrameworksArduino/StdAfx.h>
@@ -207,4 +207,4 @@ private:
     bool setup_completed;
 };
 
-#endif //UMRT_ARM_FIRMWARE_LIB_STEPPER_CONTROLLER_H
+#endif //UMRT_ARM_FIRMWARE_LIB_ARDUINO_STEPPER_CONTROLLER_HPP

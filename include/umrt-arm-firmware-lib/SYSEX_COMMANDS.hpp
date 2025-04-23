@@ -4,8 +4,8 @@
 * Firmata.
 */
 
-#ifndef UMRT_ARM_FIRMWARE_LIB_SYSEX_COMMANDS_H
-#define UMRT_ARM_FIRMWARE_LIB_SYSEX_COMMANDS_H
+#ifndef UMRT_ARM_FIRMWARE_LIB_SYSEX_COMMANDS_HPP
+#define UMRT_ARM_FIRMWARE_LIB_SYSEX_COMMANDS_HPP
 
 // Using stdint.h because Arduino interprets this file and doesn't have cstdint...
 #include <stdint.h> // NOLINT(modernize-deprecated-headers)
@@ -89,4 +89,4 @@ enum SysexCommands : uint8_t {
     SET_GRIPPER = 0x06
 };
 
-#endif //UMRT_ARM_FIRMWARE_LIB_SYSEX_COMMANDS_H
+#endif //UMRT_ARM_FIRMWARE_LIB_SYSEX_COMMANDS_HPP
