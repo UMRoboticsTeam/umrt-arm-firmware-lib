@@ -40,15 +40,15 @@ set(lib_target ${PROJECT_NAME})
 add_library(${lib_target})
 
 target_sources(${lib_target} PRIVATE # These files will only be available during building
-        src/StepperController.cpp
+        src/stepper_controller.cpp
         )
 
 # Locate headers
 # Using FILE_SET would be much cleaner, but needs CMake 3.23+ and ROS Humble ships with 3.22
 set(public_headers # These files will be installed with the library
-        include/umrt-arm-firmware-lib/ArduinoStepperController.h
-        include/umrt-arm-firmware-lib/SYSEX_COMMANDS.h
-        include/umrt-arm-firmware-lib/Utils.h
+        include/umrt-arm-firmware-lib/arduino_stepper_controller.hpp
+        include/umrt-arm-firmware-lib/SYSEX_COMMANDS.hpp
+        include/umrt-arm-firmware-lib/utils.hpp
         )
 set_property(TARGET ${lib_target} PROPERTY PUBLIC_HEADER ${public_headers})
 target_include_directories(${lib_target} PUBLIC # Everything in this folder will be available during building
@@ -77,7 +77,7 @@ set(communication_test_target communication_test_script)
 add_executable(${communication_test_target} src/arduino_communication_test.cpp)
 
 target_sources(${communication_test_target} PRIVATE
-        src/CommunicationTestScript.cpp
+        src/arduino_communication_test_script.cpp
         )
 
 target_link_libraries(${communication_test_target} PRIVATE

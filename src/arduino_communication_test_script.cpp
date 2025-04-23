@@ -3,7 +3,7 @@
 #include <boost/log/utility/setup/file.hpp>
 #include <string>
 
-#include "ArduinoCommunicationTest.h"
+#include "arduino_communication_test.hpp"
 
 const std::string DEVICE = "/dev/umrt-arm";
 const int BAUD_RATE = 57600;

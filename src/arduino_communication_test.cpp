@@ -2,7 +2,7 @@
 // Created by Noah on 2025-04-22.
 //
 
-#include "ArduinoCommunicationTest.h"
+#include "arduino_communication_test.hpp"
 
 ArduinoCommunicationTest::ArduinoCommunicationTest(const std::string& device, const int baud, const std::vector<uint8_t>& motor_ids) : motor_ids(motor_ids) {
     s.ESetup.connect([this] { this->onSetup(); });

@@ -5,8 +5,8 @@
 #ifndef UMRT_ARM_FIRMWARE_LIB_COMMUNICATION_TEST_H
 #define UMRT_ARM_FIRMWARE_LIB_COMMUNICATION_TEST_H
 
-#include "ArduinoStepperController.h"
-#include "Utils.h"
+#include "arduino_stepper_controller.hpp"
+#include "utils.hpp"
 #include <string>
 #include <thread>
 

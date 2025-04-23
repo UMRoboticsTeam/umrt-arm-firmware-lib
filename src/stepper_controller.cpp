@@ -7,9 +7,9 @@
 
 #include <boost/log/trivial.hpp>
 
-#include "ArduinoStepperController.h"
-#include "SYSEX_COMMANDS.h"
-#include "Utils.h"
+#include "SYSEX_COMMANDS.hpp"
+#include "arduino_stepper_controller.hpp"
+#include "utils.hpp"
 
 ArduinoStepperController::ArduinoStepperController() : setup_completed(false) {
     BOOST_LOG_TRIVIAL(trace) << "ArduinoStepperController construction begun";
