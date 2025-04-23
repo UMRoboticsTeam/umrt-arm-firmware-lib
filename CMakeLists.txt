@@ -41,12 +41,14 @@ add_library(${lib_target})
 
 target_sources(${lib_target} PRIVATE # These files will only be available during building
         src/arduino_stepper_controller.cpp
+        src/mks_stepper_controller.cpp
         )
 
 # Locate headers
 # Using FILE_SET would be much cleaner, but needs CMake 3.23+ and ROS Humble ships with 3.22
 set(public_headers # These files will be installed with the library
         include/umrt-arm-firmware-lib/arduino_stepper_controller.hpp
+        include/umrt-arm-firmware-lib/mks_stepper_controller.hpp
         include/umrt-arm-firmware-lib/SYSEX_COMMANDS.hpp
         include/umrt-arm-firmware-lib/utils.hpp
         )
