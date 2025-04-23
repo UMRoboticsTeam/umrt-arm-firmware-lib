@@ -74,10 +74,11 @@ target_include_directories(${lib_target} PRIVATE
 
 set(arduino_communication_test_target arduino_communication_test_script)
 
-add_executable(${arduino_communication_test_target} src/arduino_communication_test.cpp)
+add_executable(${arduino_communication_test_target})
 
 target_sources(${arduino_communication_test_target} PRIVATE
         src/arduino_communication_test_script.cpp
+        src/arduino_communication_test.cpp
         )
 
 target_link_libraries(${arduino_communication_test_target} PRIVATE
