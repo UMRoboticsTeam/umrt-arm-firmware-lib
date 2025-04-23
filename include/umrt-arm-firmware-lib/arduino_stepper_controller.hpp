@@ -6,10 +6,10 @@
 #ifndef UMRT_ARM_FIRMWARE_LIB_STEPPER_CONTROLLER_H
 #define UMRT_ARM_FIRMWARE_LIB_STEPPER_CONTROLLER_H
 
-#include <vector>
+#include <boost/signals2.hpp>
 #include <openFrameworksArduino/StdAfx.h>
 #include <openFrameworksArduino/ofArduino.h>
-#include <boost/signals2.hpp>
+#include <vector>
 
 /**
  * Manages the Firmata connection to an Arduino running the Stepper Controller program. Responses are conveyed through
@@ -96,12 +96,11 @@ public:
      */
     bool setGripper(const uint8_t position);
 
-    // Checks if this ArduinoStepperController is fully setup
     /**
-     * Returns whether the connection to the Stepper Controller Arduino has been fully established.
+     * Returns whether the connection to the stepper controller Arduino has been fully established.
      * @return `true` if so
      */
-    [[nodiscard]] bool isSetup() const { return this->setup_completed; };
+    [[nodiscard]] bool isSetup() const;
 
     // ==========================
     //           Events

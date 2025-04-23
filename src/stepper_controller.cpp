@@ -109,6 +109,8 @@ bool ArduinoStepperController::setGripper(const uint8_t position) {
     return true;
 }
 
+bool ArduinoStepperController::isSetup() const { return this->setup_completed; };
+
 void ArduinoStepperController::handleEArduinoEcho(const std::vector<unsigned char>& message) {
     BOOST_LOG_TRIVIAL(debug) << "ArduinoEcho received";
     this->EArduinoEcho(std::vector<uint8_t>(message.cbegin(), message.cend()));
