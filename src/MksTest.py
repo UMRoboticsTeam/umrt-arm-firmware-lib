@@ -10,71 +10,72 @@ import can
 import sys
 import time
 
-## The maximum speed the driver can spin a motor, depending on the work mode.
-# The values are nominally:
-# | Work Mode | Max Speed [RPM] |          Work Mode Description           |
-# | :-------- | :-------------: | :--------------------------------------- |
-# |  CR_OPEN  |       400       | Open loop, pulse interface               |
-# |  SR_OPEN  |       400       | Open loop, serial interface              |
-# |  CR_CLOSE |      1500       | Closed loop, pulse interface             |
-# |  SR_CLOSE |      1500       | Closed loop, serial interface            |
-# |  CR_vFOC  |      3000       | Field oriented control, pulse interface  |
-# |  SR_vFOC  |      3000       | Field oriented control, serial interface |
-#
-# However, these values actually indicate the maximum step rate, computed assuming the driver is set to 16-microstepping.
-# If another microstepping mode is used, the maximum speed will be adjusted.
-# Despite this, the motor speed cannot exceed 3000 RPM regardless of microstepping mode.
-#
-# For example, if using CR_OPEN at quarter-stepping, the maximum speed is 1600 RPM instead of 400 RPM.
-#
-# Note that if a speed greater than one of these is used, the motor will instead spin at the applicable maximum.
-#
-# TODO: It is not clear from the manual whether *_CLOSE and *_vFOC were computed using 16-microstepping, or perhaps 32-
-#       and 64-microstepping respectively.
-MAX_SPEED = {
-    0x00: 400,  # Open loop, pulse interface (CR_OPEN)
-    0x03: 400,  # Open loop, serial interface (SR_OPEN)
-    0x01: 1500,  # Closed loop, pulse interface (CR_CLOSE)
-    0x04: 1500,  # Closed loop, serial interface (SR_CLOSE)
-    0x02: 3000,  # Field oriented control, pulse interface (CR_vFOC)
-    0x05: 3000,  # Field oriented control, serial interface (SR_vFOC)
-}
 
-## The maximum acceleration ramp a motor can use.
-# When acceleration is set to 0, the motor instantaneously accelerates to the target speed.
-#
-# When not set to 0, the current speed of the motor increases by 1 RPM per tick, and the acceleration value controls the
-#   time between ticks.
-# Therefore, the speed of the motor is governed by:
-# \f[
-#   t_{next} - t_{now} = (256 - \alpha) * 50 [\mu s] \\
-#   v_{next} = \begin{cases}
-#               v_{now} + 1,   &   v_{now} \le v_{target} \\
-#               v_{now},       &   v_{now} = v_{target} \\
-#               v_{now} - 1,   &   v_{now} \gt v_{target}
-#              \end{cases}
-# \f]
-#
-# For example, to reach \f$v_{target}=5\f$ at \f$\alpha=246\f$:
-# | Time [ms] | Speed [RPM] |
-# | :-------: | :---------: |
-# |     0     |      0      |
-# |    0.5    |      1      |
-# |     1     |      2      |
-# |    1.5    |      3      |
-# |     2     |      4      |
-# |    2.5    |      5      |
-# |     3     |      5      |
-MAX_ACCEL = 255
-
-
-class Commands(IntEnum):
-    """
-    CAN commands for the MKS stepper controllers.
-    Each message must have its checksum appended.
-    Uses big-endian encoding.
-    """
+## Constants associated with MksTest.py.
+# Organised in a class to get Doxygen to generate links properly.
+class Constants:
+    ## The maximum speed the driver can spin a motor, depending on the work mode.
+    # The values are nominally:
+    # | Work Mode | Max Speed [RPM] |          Work Mode Description           |
+    # | :-------- | :-------------: | :--------------------------------------- |
+    # |  CR_OPEN  |       400       | Open loop, pulse interface               |
+    # |  SR_OPEN  |       400       | Open loop, serial interface              |
+    # |  CR_CLOSE |      1500       | Closed loop, pulse interface             |
+    # |  SR_CLOSE |      1500       | Closed loop, serial interface            |
+    # |  CR_vFOC  |      3000       | Field oriented control, pulse interface  |
+    # |  SR_vFOC  |      3000       | Field oriented control, serial interface |
+    #
+    # However, these values actually indicate the maximum step rate, computed assuming the driver is set to 16-microstepping.
+    # If another microstepping mode is used, the maximum speed will be adjusted.
+    # Despite this, the motor speed cannot exceed 3000 RPM regardless of microstepping mode.
+    #
+    # For example, if using CR_OPEN at quarter-stepping, the maximum speed is 1600 RPM instead of 400 RPM.
+    #
+    # Note that if a speed greater than one of these is used, the motor will instead spin at the applicable maximum.
+    #
+    # TODO: It is not clear from the manual whether *_CLOSE and *_vFOC were computed using 16-microstepping, or perhaps 32-
+    #       and 64-microstepping respectively.
+    MAX_SPEED = {
+        0x00: 400,  # Open loop, pulse interface (CR_OPEN)
+        0x03: 400,  # Open loop, serial interface (SR_OPEN)
+        0x01: 1500,  # Closed loop, pulse interface (CR_CLOSE)
+        0x04: 1500,  # Closed loop, serial interface (SR_CLOSE)
+        0x02: 3000,  # Field oriented control, pulse interface (CR_vFOC)
+        0x05: 3000,  # Field oriented control, serial interface (SR_vFOC)
+    }
     
+    ## The maximum acceleration ramp a motor can use.
+    # When acceleration is set to 0, the motor instantaneously accelerates to the target speed.
+    #
+    # When not set to 0, the current speed of the motor increases by 1 RPM per tick, and the acceleration value controls the
+    #   time between ticks.
+    # Therefore, the speed of the motor is governed by:
+    # \f[
+    #   t_{next} - t_{now} = (256 - \alpha) * 50 [\mu s] \\
+    #   v_{next} = \begin{cases}
+    #               v_{now} + 1,   &   v_{now} \le v_{target} \\
+    #               v_{now},       &   v_{now} = v_{target} \\
+    #               v_{now} - 1,   &   v_{now} \gt v_{target}
+    #              \end{cases}
+    # \f]
+    #
+    # For example, to reach \f$v_{target}=5\f$ at \f$\alpha=246\f$:
+    # | Time [ms] | Speed [RPM] |
+    # | :-------: | :---------: |
+    # |     0     |      0      |
+    # |    0.5    |      1      |
+    # |     1     |      2      |
+    # |    1.5    |      3      |
+    # |     2     |      4      |
+    # |    2.5    |      5      |
+    # |     3     |      5      |
+    MAX_ACCEL = 255
+
+
+## CAN commands for the MKS stepper controllers.
+# Each message must have its checksum appended.
+# Uses big-endian encoding.
+class Commands(IntEnum):
     ## Encoder value, split into number of turns and angle.
     # The angle is a 14-bit unsigned integer (0-0x3FFF), and follows the formula:<br>
     # &emsp;    angle = 360 * angle_value / 2^14
@@ -587,10 +588,10 @@ class Commands(IntEnum):
     # If an acceleration of 0 is used, the motor will stop, or more generally reach the target speed, immediately.
     #
     # Dir: 1 indicates CW, and 0 CCW<br>
-    # Speed: motor speed in RPM, see @ref MAX_SPEED for restrictions
+    # Speed: motor speed in RPM, see @ref Constants.MAX_SPEED for restrictions.
     #
     # @param packed_properties  [uint16] speed properties encoded as described above
-    # @param acceleration       [uint8] motor acceleration, see @ref MAX_ACCEL for description
+    # @param acceleration       [uint8] motor acceleration, see @ref Constants.MAX_ACCEL for description
     # @return succeeded         [uint8] 1 if command successfully issued, 0 otherwise
     SET_SPEED = 0xF6
     
@@ -618,7 +619,7 @@ class Commands(IntEnum):
     # &emsp;    Speed = Speed_low | (Speed_high << 8)
     #
     # Dir: 1 indicates CW, and 0 CCW<br>
-    # Speed: target motor speed in RPM, see @ref MAX_SPEED for restrictions<br>
+    # Speed: target motor speed in RPM, see @ref Constants.MAX_SPEED for restrictions<br>
     # For additional information about encoding, see @ref SET_SPEED.
     #
     # The motor can be stopped by sending another command with zero packed_properties and steps.
@@ -637,7 +638,7 @@ class Commands(IntEnum):
     # </ul>
     #
     # @param packed_properties  [uint16] speed properties encoded as described above
-    # @param acceleration       [uint8] motor acceleration, see @ref MAX_ACCEL for description
+    # @param acceleration       [uint8] motor acceleration, see @ref Constants.MAX_ACCEL for description
     # @param steps              [uint24] number of steps to move
     # @return status            [uint8] the status code described above
     SEND_STEP = 0xFD
@@ -665,8 +666,8 @@ class Commands(IntEnum):
     #     <li>0x03: An end limit has been reached</li>
     # </ul>
     #
-    # @param speed          [uint16] target motor speed in RPM, see @ref MAX_SPEED for restrictions
-    # @param acceleration   [uint8] motor acceleration, see @ref MAX_ACCEL for description
+    # @param speed          [uint16] target motor speed in RPM, see @ref Constants.MAX_SPEED for restrictions
+    # @param acceleration   [uint8] motor acceleration, see @ref Constants.MAX_ACCEL for description
     # @param steps          [int24] position to move to, in steps from the zero point
     # @return status        [uint8] the status code described above
     SEEK_POS_BY_STEPS = 0xFE
@@ -680,7 +681,7 @@ class Commands(IntEnum):
     # For example, if the motor is currently at 0x4000 (1 turn CW of zero), and 0xFFFF_FFFF_F000 (90° CCW) is sent, the
     #   motor will move to 0x3000 (270° CW of zero).
     #
-    # See @ref SEND_STEPS for a variation of this command which moves by a number of steps instead of an angle.
+    # See @ref SEND_STEP for a variation of this command which moves by a number of steps instead of an angle.
     #
     # The motor can be stopped by sending another command with zero speed and angle.
     # Note that this is different from simply sending another SEND_ANGLE command, as usually the commands are queued so
@@ -697,8 +698,8 @@ class Commands(IntEnum):
     #     <li>0x03: An end limit has been reached</li>
     # </ul>
     #
-    # @param speed          [uint16] target motor speed in RPM, see @ref MAX_SPEED for restrictions
-    # @param acceleration   [uint8] motor acceleration, see @ref MAX_ACCEL for description
+    # @param speed          [uint16] target motor speed in RPM, see @ref Constants.MAX_SPEED for restrictions
+    # @param acceleration   [uint8] motor acceleration, see @ref Constants.MAX_ACCEL for description
     # @param angle          [int24] angle to move by, in 1/2^14 of a rotation
     # @return status        [uint8] the status code described above
     SEND_ANGLE = 0xF4
@@ -731,8 +732,8 @@ class Commands(IntEnum):
     #     <li>0x03: An end limit has been reached</li>
     # </ul>
     #
-    # @param speed          [uint16] target motor speed in RPM, see @ref MAX_SPEED for restrictions
-    # @param acceleration   [uint8] motor acceleration, see @ref MAX_ACCEL for description
+    # @param speed          [uint16] target motor speed in RPM, see @ref Constants.MAX_SPEED for restrictions
+    # @param acceleration   [uint8] motor acceleration, see @ref Constants.MAX_ACCEL for description
     # @param steps          [int24] position to move to, in steps from the zero point
     # @return status        [uint8] the status code described above
     SEEK_POS_BY_ANGLE = 0xF5
