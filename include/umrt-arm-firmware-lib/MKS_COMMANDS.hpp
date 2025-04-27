@@ -657,7 +657,7 @@ enum MksCommands : uint8_t {
      *
      * @param speed          [uint16] target motor speed in RPM, see @ref Constants.MAX_SPEED for restrictions
      * @param acceleration   [uint8] motor acceleration, see @ref Constants.MAX_ACCEL for description
-     * @param steps          [int24] position to move to, in steps from the zero point
+     * @param position       [int24] position to move to, in steps from the zero point
      * @return status        [uint8] the status code described above
      */
     SEEK_POS_BY_STEPS = 0xFE,
