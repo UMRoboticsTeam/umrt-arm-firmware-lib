@@ -100,13 +100,25 @@ bool MksStepperController::sendStep(const uint8_t motor, const uint32_t num_step
 bool MksStepperController::seekPosition(const uint8_t motor, const int32_t position, const int16_t speed, const uint8_t acceleration) {
     if (!isSetup()) { return false; }
 
-    std::vector<uint8_t> pack = { motor };
-    auto position_packed = pack_32(position);
-    auto speed_packed = pack_16(speed);
-    pack.insert(pack.end(), position_packed.cbegin(), position_packed.cend());
-    pack.insert(pack.end(), speed_packed.cbegin(), speed_packed.cend());
-    sendSysEx(SysexCommands::SEEK_POS, pack);
+    std::vector<uint8_t> payload{ MksCommands::SEEK_POS_BY_STEPS };
 
+    uint8_t speed_properties_low = static_cast<uint8_t>((speed & 0xF00) >> 8) | (speed < 0 ? 1u << 7 : 0u);
+    uint8_t speed_properties_high = speed & 0xFF;
+    auto steps_packed = pack_24_big(position);
+    payload.insert(payload.end(), speed_properties_low);
+    payload.insert(payload.end(), speed_properties_high);
+    payload.insert(payload.end(), acceleration);
+    // With move iterators the compiler might invoke copy elision? Not entirely sure
+    payload.insert(payload.end(), std::make_move_iterator(steps_packed.begin()), std::make_move_iterator(steps_packed.end()));
+    payload.insert(payload.end(), checksum(motor, payload));
+
+    try {
+        drivers::socketcan::CanId can_id(motor, 0, drivers::socketcan::FrameType::DATA, drivers::socketcan::StandardFrame);
+        can_sender->send(payload.data(), payload.size(), can_id);
+    } catch (drivers::socketcan::SocketCanTimeout& e) {
+        BOOST_LOG_TRIVIAL(warning) << "MksStepperController sendStep timeout: motor=" << motor << ", num_steps=" << num_steps << ", speed=" << speed << ", accel=" << acceleration;
+        return false;
+    }
     return true;
 }
 
@@ -204,6 +216,17 @@ void MksStepperController::handleCanMessage(const std::vector<unsigned char>& me
             BOOST_LOG_TRIVIAL(info) << "Unknown Sysex received with command=" << message[0];
             break;
     }
+}
+
+/**
+ * Converts 16-bit unsigned integer to bytes in big-endian format.
+ * @return big-endian representation
+ */
+std::vector<uint8_t> to_bytes(uint32_t integer) {
+    return {
+        static_cast<uint8_t>(integer >> 8 & 0xFF), // bits [15, 8]
+        static_cast<uint8_t>(integer & 0xFF)       // bits [7, 0]
+    };
 }
 
 uint8_t checksum(uint8_t driver_id, const std::vector<uint8_t>& payload) {

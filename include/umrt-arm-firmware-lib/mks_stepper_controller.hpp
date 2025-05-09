@@ -72,7 +72,7 @@ public:
      * Since this command seeks a position, the sign of the speed is ignored.
      *
      * @param motor the ID of the motor to move
-     * @param position the target position in number of steps from the motor's zero point
+     * @param position the target position in number of steps from the motor's zero point, maximum of 2^23 - 1
      * @param speed the signed target speed to set the motor to, in RPM; note that the absolute value is taken
      * @param acceleration the speed ramp profile, see @ref MksTest.Constants.MAX_ACCEL; defaults to instantaneous
      * @return `true` if transmitted over the CAN bus

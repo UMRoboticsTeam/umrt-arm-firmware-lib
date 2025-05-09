@@ -11,7 +11,7 @@
 #include <stdint.h> // NOLINT(modernize-deprecated-headers)
 
 /**
-* Lists the command IDs and associated requirements which can be sent over Firmata to a Stepper Controller.
+ * Lists the command IDs and associated requirements which can be sent over Firmata to a Stepper Controller.
 */
 // TODO: Consider adding a keep-alive
 // Note: Only allowed to use 0x00-0x0F, beyond that would have to nest commands
