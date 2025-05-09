@@ -15,11 +15,14 @@
 
 uint8_t checksum(uint8_t driver_id, const std::vector<uint8_t>& payload);
 
-MksStepperController::MksStepperController(const std::string& can_interface) : setup_completed(false) {
+MksStepperController::MksStepperController(const std::string& can_interface, const uint8_t norm_factor) : norm_factor(norm_factor),
+                                                                                                          setup_completed(false) {
     BOOST_LOG_TRIVIAL(trace) << "ArduinoStepperController construction begun";
 
     this->can_receiver = std::make_unique<drivers::socketcan::SocketCanReceiver>(can_interface);
     this->can_sender = std::make_unique<drivers::socketcan::SocketCanSender>(can_interface);
+
+    //TODO: Write norm_factor as microstepping factor to the driver
 
     BOOST_LOG_TRIVIAL(debug) << "MksStepperController constructed";
 }
@@ -31,10 +34,12 @@ MksStepperController::~MksStepperController() noexcept {
 bool MksStepperController::setSpeed(const uint8_t motor, const int16_t speed, const uint8_t acceleration) {
     if (!isSetup()) { return false; }
 
+    int16_t normalised_speed = speed * norm_factor;
+
     std::vector<uint8_t> payload{ MksCommands::SET_SPEED };
 
-    uint8_t speed_properties_low = static_cast<uint8_t>((speed & 0xF00) >> 8) | (speed < 0 ? 1u << 7 : 0u);
-    uint8_t speed_properties_high = speed & 0xFF;
+    uint8_t speed_properties_low = static_cast<uint8_t>((normalised_speed & 0xF00) >> 8) | (normalised_speed < 0 ? 1u << 7 : 0u);
+    uint8_t speed_properties_high = normalised_speed & 0xFF;
     payload.insert(payload.end(), speed_properties_low);
     payload.insert(payload.end(), speed_properties_high);
     payload.insert(payload.end(), acceleration);
@@ -46,7 +51,7 @@ bool MksStepperController::setSpeed(const uint8_t motor, const int16_t speed, co
         can_sender->send(payload.data(), payload.size(), can_id);
     } catch (drivers::socketcan::SocketCanTimeout& e) {
         // Won't bother with e.what(), it is always "CAN Send timeout"
-        BOOST_LOG_TRIVIAL(warning) << "MksStepperController setSpeed timeout: motor=" << motor << ", speed=" << speed << ", accel=" << acceleration;
+        BOOST_LOG_TRIVIAL(warning) << "MksStepperController setSpeed timeout: motor=" << motor << ", speed=" << normalised_speed << ", accel=" << acceleration;
         return false;
     }
     return true;
@@ -73,13 +78,16 @@ bool MksStepperController::getSpeed(const uint8_t motor) {
 bool MksStepperController::sendStep(const uint8_t motor, const uint32_t num_steps, const int16_t speed, const uint8_t acceleration) {
     if (!isSetup()) { return false; }
 
+    int16_t normalised_speed = speed * norm_factor;
+    uint32_t normalised_steps = num_steps * norm_factor;
+
     std::vector<uint8_t> payload{ MksCommands::SEND_STEP };
 
     uint16_t abs_speed = std::abs<int16_t>(speed); // TODO: Don't use signed speed
 
-    uint8_t speed_properties_low = static_cast<uint8_t>((speed & 0xF00) >> 8) | (speed < 0 ? 1u << 7 : 0u);
-    uint8_t speed_properties_high = speed & 0xFF;
-    auto steps_packed = pack_24_big(num_steps);
+    uint8_t speed_properties_low = static_cast<uint8_t>((normalised_speed & 0xF00) >> 8) | (normalised_speed < 0 ? 1u << 7 : 0u);
+    uint8_t speed_properties_high = normalised_speed & 0xFF;
+    auto steps_packed = pack_24_big(normalised_speed);
     payload.insert(payload.end(), speed_properties_low);
     payload.insert(payload.end(), speed_properties_high);
     payload.insert(payload.end(), acceleration);
@@ -91,7 +99,7 @@ bool MksStepperController::sendStep(const uint8_t motor, const uint32_t num_step
         drivers::socketcan::CanId can_id(motor, 0, drivers::socketcan::FrameType::DATA, drivers::socketcan::StandardFrame);
         can_sender->send(payload.data(), payload.size(), can_id);
     } catch (drivers::socketcan::SocketCanTimeout& e) {
-        BOOST_LOG_TRIVIAL(warning) << "MksStepperController sendStep timeout: motor=" << motor << ", num_steps=" << num_steps << ", speed=" << speed << ", accel=" << acceleration;
+        BOOST_LOG_TRIVIAL(warning) << "MksStepperController sendStep timeout: motor=" << motor << ", num_steps=" << num_steps << ", speed=" << normalised_speed << ", accel=" << acceleration;
         return false;
     }
     return true;
@@ -100,11 +108,14 @@ bool MksStepperController::sendStep(const uint8_t motor, const uint32_t num_step
 bool MksStepperController::seekPosition(const uint8_t motor, const int32_t position, const int16_t speed, const uint8_t acceleration) {
     if (!isSetup()) { return false; }
 
+    int16_t normalised_speed = speed * norm_factor;
+    int32_t normalised_position = position * norm_factor;
+
     std::vector<uint8_t> payload{ MksCommands::SEEK_POS_BY_STEPS };
 
-    uint8_t speed_properties_low = static_cast<uint8_t>((speed & 0xF00) >> 8) | (speed < 0 ? 1u << 7 : 0u);
-    uint8_t speed_properties_high = speed & 0xFF;
-    auto steps_packed = pack_24_big(position);
+    uint8_t speed_properties_low = static_cast<uint8_t>((normalised_speed & 0xF00) >> 8) | (normalised_speed < 0 ? 1u << 7 : 0u);
+    uint8_t speed_properties_high = normalised_speed & 0xFF;
+    auto steps_packed = pack_24_big(normalised_position);
     payload.insert(payload.end(), speed_properties_low);
     payload.insert(payload.end(), speed_properties_high);
     payload.insert(payload.end(), acceleration);
@@ -116,7 +127,7 @@ bool MksStepperController::seekPosition(const uint8_t motor, const int32_t posit
         drivers::socketcan::CanId can_id(motor, 0, drivers::socketcan::FrameType::DATA, drivers::socketcan::StandardFrame);
         can_sender->send(payload.data(), payload.size(), can_id);
     } catch (drivers::socketcan::SocketCanTimeout& e) {
-        BOOST_LOG_TRIVIAL(warning) << "MksStepperController sendStep timeout: motor=" << motor << ", num_steps=" << num_steps << ", speed=" << speed << ", accel=" << acceleration;
+        BOOST_LOG_TRIVIAL(warning) << "MksStepperController sendStep timeout: motor=" << motor << ", position=" << normalised_position << ", speed=" << normalised_speed << ", accel=" << acceleration;
         return false;
     }
     return true;

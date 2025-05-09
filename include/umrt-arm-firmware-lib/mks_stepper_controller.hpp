@@ -18,6 +18,16 @@ namespace drivers::socketcan {
 /**
  * Abstracts CAN bus communication to MKS SERVO57D/42D/35D/28D stepper motor driver modules. Responses are conveyed through
  * <a href=https://www.boost.org/doc/libs/1_63_0/doc/html/signals.html>Boost signals</a>.
+ *
+ * # Interpolated Normalisation {#internorm}
+ * To get around the limitations introduced by specifying speeds under [nominal](@ref noc) conditions, a technique
+ * which will be referred to as "interpolated normalisation" is used to normalise the units of speed to RPM, assuming
+ * 200 full-steps per revolution. In other words, the unit of speed shifts from 160/3 steps/s to 200 steps/min.
+ *
+ * This is achieved by micro-stepping the motor at a specified interpolation factor. For example, if an interpolation
+ * factor of 16 is used, and the motor is requested to move at 2 RPM, the motor will actually move at 6400 steps/min.
+ *
+ * An interpolation factor of 1 can be used to disable interpolation.
  */
 class MksStepperController {
 public:
@@ -25,8 +35,9 @@ public:
      * Initializes an MksStepperController.
      *
      * @param can_interface the SocketCAN network interface corresponding to the CAN bus
+     * @param norm_factor the interpolation normalisation factor to use, see @ref internorm; defaults to off
      */
-    MksStepperController(const std::string& can_interface);
+    MksStepperController(const std::string& can_interface, const uint8_t norm_factor = 1);
 
     /**
      * Destroys an MksStepperController.
@@ -162,6 +173,7 @@ protected:
 
     std::unique_ptr<drivers::socketcan::SocketCanReceiver> can_receiver;
     std::unique_ptr<drivers::socketcan::SocketCanSender> can_sender;
+    const uint8_t norm_factor;
 
 private:
     /**
