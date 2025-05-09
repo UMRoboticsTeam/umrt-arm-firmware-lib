@@ -11,6 +11,7 @@
 
 #include "MKS_COMMANDS.hpp"
 #include "mks_stepper_controller.hpp"
+#include "utils.hpp"
 
 uint8_t checksum(uint8_t driver_id, const std::vector<uint8_t>& payload);
 
@@ -69,16 +70,30 @@ bool MksStepperController::getSpeed(const uint8_t motor) {
     return true;
 }
 
-bool MksStepperController::sendStep(const uint8_t motor, const uint16_t num_steps, const int16_t speed, const uint8_t acceleration) {
+bool MksStepperController::sendStep(const uint8_t motor, const uint32_t num_steps, const int16_t speed, const uint8_t acceleration) {
     if (!isSetup()) { return false; }
 
-    std::vector<uint8_t> pack = { motor };
-    auto steps_packed = pack_16(num_steps);
-    auto speed_packed = pack_16(speed);
-    pack.insert(pack.end(), steps_packed.cbegin(), steps_packed.cend());
-    pack.insert(pack.end(), speed_packed.cbegin(), speed_packed.cend());
-    sendSysEx(SysexCommands::SEND_STEP, pack);
+    std::vector<uint8_t> payload{ MksCommands::SEND_STEP };
 
+    uint16_t abs_speed = std::abs<int16_t>(speed); // TODO: Don't use signed speed
+
+    uint8_t speed_properties_low = static_cast<uint8_t>((speed & 0xF00) >> 8) | (speed < 0 ? 1u << 7 : 0u);
+    uint8_t speed_properties_high = speed & 0xFF;
+    auto steps_packed = pack_24_big(num_steps);
+    payload.insert(payload.end(), speed_properties_low);
+    payload.insert(payload.end(), speed_properties_high);
+    payload.insert(payload.end(), acceleration);
+    // With move iterators the compiler might invoke copy elision? Not entirely sure
+    payload.insert(payload.end(), std::make_move_iterator(steps_packed.begin()), std::make_move_iterator(steps_packed.end()));
+    payload.insert(payload.end(), checksum(motor, payload));
+
+    try {
+        drivers::socketcan::CanId can_id(motor, 0, drivers::socketcan::FrameType::DATA, drivers::socketcan::StandardFrame);
+        can_sender->send(payload.data(), payload.size(), can_id);
+    } catch (drivers::socketcan::SocketCanTimeout& e) {
+        BOOST_LOG_TRIVIAL(warning) << "MksStepperController sendStep timeout: motor=" << motor << ", num_steps=" << num_steps << ", speed=" << speed << ", accel=" << acceleration;
+        return false;
+    }
     return true;
 }
 

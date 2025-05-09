@@ -60,12 +60,12 @@ public:
      * Response callbacks are available through @ref ESendStep.
      *
      * @param motor the ID of the motor to move
-     * @param num_steps the number of steps to move
+     * @param num_steps the number of steps to move, maximum of 2^24 - 1
      * @param speed the signed target speed to set the motor to, in RPM
      * @param acceleration the speed ramp profile, see @ref MksTest.Constants.MAX_ACCEL; defaults to instantaneous
      * @return `true` if transmitted over the CAN bus
      */
-    bool sendStep(const uint8_t motor, const uint16_t num_steps, const int16_t speed, const uint8_t acceleration = 0);
+    bool sendStep(const uint8_t motor, const uint32_t num_steps, const int16_t speed, const uint8_t acceleration = 0);
 
     /**
      * Sends a @ref MksTest.Commands.SEEK_POS_BY_STEPS command to move a motor to specific step position.
