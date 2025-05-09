@@ -55,7 +55,16 @@ bool MksStepperController::setSpeed(const uint8_t motor, const int16_t speed, co
 bool MksStepperController::getSpeed(const uint8_t motor) {
     if (!isSetup()) { return false; }
 
-    sendSysEx(SysexCommands::GET_SPEED, std::vector<uint8_t>({ motor }));
+    std::vector<uint8_t> payload{ MksCommands::MOTOR_SPEED };
+    payload.insert(payload.end(), checksum(motor, payload));
+
+    try {
+        drivers::socketcan::CanId can_id(motor, 0, drivers::socketcan::FrameType::DATA, drivers::socketcan::StandardFrame);
+        can_sender->send(payload.data(), payload.size(), can_id);
+    } catch (drivers::socketcan::SocketCanTimeout& e) {
+        BOOST_LOG_TRIVIAL(warning) << "MksStepperController getSpeed timeout: motor=" << motor;
+        return false;
+    }
 
     return true;
 }
