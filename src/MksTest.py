@@ -26,9 +26,9 @@ class Constants:
     # |  CR_vFOC  |      3000       | Field oriented control, pulse interface  |
     # |  SR_vFOC  |      3000       | Field oriented control, serial interface |
     #
-    # However, these values actually indicate the maximum step rate, computed assuming the driver is set to 16-microstepping.
+    # However, these values actually indicate the maximum step rate, computed under [nominal](@ref noc) conditions.
     # If another microstepping mode is used, the maximum speed will be adjusted.
-    # Despite this, the motor speed cannot exceed 3000 RPM regardless of microstepping mode.
+    # Despite this, the motor speed cannot exceed 3000 RPM regardless of microstepping mode. TODO: Why?
     #
     # For example, if using CR_OPEN at quarter-stepping, the maximum speed is 1600 RPM instead of 400 RPM.
     #

@@ -1,6 +1,10 @@
 //
 // Created by Noah on 2025-04-23.
 //
+/**
+* @file
+* Describes the commands which are available to send MKS SERVO57D/42D/35D/28D stepper motor driver modules.
+*/
 
 #ifndef UMRT_ARM_FIRMWARE_LIB_MKS_COMMANDS_HPP
 #define UMRT_ARM_FIRMWARE_LIB_MKS_COMMANDS_HPP
@@ -18,6 +22,17 @@
  *     cs = (cs + n) & 0xFF
  * return cs
  * @endcode
+ *
+ *
+ * # Nominal Operating Conditions {#noc}
+ * When used, "nominal conditions" refers to a stepper driver configured to be in 16-microstepping mode along
+ * with a 200 step/rev motor.
+ * These are the conditions the manual authors assumed, and thus many hard-coded computations are based on it.
+ * Particularly, the manual documents the motor speed units to be "RPM".
+ * This is only true for these conditions; a speed of "1 RPM" actually corresponds to 3200 steps per minute.
+ * If a 200 step/rev motor is being used in full-step mode, a speed command of "1 RPM" will instead move the
+ * motor at \f$v = 1 * \left(\frac{3200\ steps}{min}\right) \left(\frac{1\ full-step}{step}\right) \left(\frac{1\ rev}{200\ full-steps}\right) = 16\ RPM\f$
+ *
  * TODO: Update Doxygen references to point here instead of MksTest.py
  */
 enum MksCommands : uint8_t {
@@ -49,6 +64,7 @@ enum MksCommands : uint8_t {
      * Represented as a signed integer, where positive denotes CCW and negative denotes CW.
      *
      * @return speed [int16] the current speed in RPM
+     * TODO: Units probably wrong, but also getting weird responses
      */
     MOTOR_SPEED = 0x32,
 
@@ -357,7 +373,7 @@ enum MksCommands : uint8_t {
      *
      * @param home_trigger [uint8] 1 for active high or 0 for active low
      * @param home_dir     [uint8] the direction of home, 1 for CCW or 0 for CW
-     * @param home_speed   [uint16] speed to move towards home at, in RPM
+     * @param home_speed   [uint16] speed to move towards home at, in units of 160/3 steps/s, see @ref Constants.MAX_SPEED for restrictions
      * @param lock_at_end  [uint8] 1 to automatically clear the rotor shaft lock after homing, 0 to not
      * @param mode         [uint8] 1 to use the blind-limit-sensing or 0 to use the end stop input
      * @return succeeded   [uint8] 1 if successfully set, 0 otherwise
@@ -567,14 +583,14 @@ enum MksCommands : uint8_t {
      * |  Bits   |  7  |   6-4    | 3-0 | 7-0 |
      * | Meaning | Dir | Reserved |  Speed   ||
      *
-     * For example, 0x81_40 indicates moving CW at v = 0x40 | (0x01 << 8) = 320 RPM.<br>
-     * For another, 0x0A_BC indicates moving CCW at v = 0xBC | (0x0A << 8) = 2748 RPM.
+     * For example, 0x81_40 indicates moving CW at v = 0x40 | (0x01 << 8) = 320 * (160/3 steps/s) = 51 200 steps/s [320 [nominal](@ref noc) RPM].<br>
+     * For another, 0x0A_BC indicates moving CCW at v = 0xBC | (0x0A << 8) = 2748 * (160/3 steps/s) = 146 560 steps/s [2748 [nominal](@ref noc) RPM].
      *
      * Note that the motor can be stopped by sending a speed of 0.
      * If an acceleration of 0 is used, the motor will stop, or more generally reach the target speed, immediately.
      *
      * Dir: 1 indicates CW, and 0 CCW<br>
-     * Speed: motor speed in RPM, see @ref Constants.MAX_SPEED for restrictions.
+     * Speed: motor speed in units of 160/3 steps/s, see @ref Constants.MAX_SPEED for restrictions.
      *
      * @param packed_properties  [uint16] speed properties encoded as described above
      * @param acceleration       [uint8] motor acceleration, see @ref Constants.MAX_ACCEL for description
@@ -607,7 +623,7 @@ enum MksCommands : uint8_t {
      * &emsp;    Speed = Speed_low | (Speed_high << 8)
      *
      * Dir: 1 indicates CW, and 0 CCW<br>
-     * Speed: target motor speed in RPM, see @ref Constants.MAX_SPEED for restrictions<br>
+     * Speed: target motor speed in units of 160/3 steps/s, see @ref Constants.MAX_SPEED for restrictions<br>
      * For additional information about encoding, see @ref SET_SPEED.
      *
      * The motor can be stopped by sending another command with zero packed_properties and steps.
@@ -655,7 +671,7 @@ enum MksCommands : uint8_t {
      *     <li>0x03: An end limit has been reached</li>
      * </ul>
      *
-     * @param speed          [uint16] target motor speed in RPM, see @ref Constants.MAX_SPEED for restrictions
+     * @param speed          [uint16] target motor speed in units of 160/3 steps/s, see @ref Constants.MAX_SPEED for restrictions
      * @param acceleration   [uint8] motor acceleration, see @ref Constants.MAX_ACCEL for description
      * @param position       [int24] position to move to, in steps from the zero point
      * @return status        [uint8] the status code described above
@@ -688,7 +704,7 @@ enum MksCommands : uint8_t {
      *     <li>0x03: An end limit has been reached</li>
      * </ul>
      *
-     * @param speed          [uint16] target motor speed in RPM, see @ref Constants.MAX_SPEED for restrictions
+     * @param speed          [uint16] target motor speed in units of 160/3 steps/s, see @ref Constants.MAX_SPEED for restrictions
      * @param acceleration   [uint8] motor acceleration, see @ref Constants.MAX_ACCEL for description
      * @param angle          [int24] angle to move by, in 1/2^14 of a rotation
      * @return status        [uint8] the status code described above
@@ -723,7 +739,7 @@ enum MksCommands : uint8_t {
      *     <li>0x03: An end limit has been reached</li>
      * </ul>
      *
-     * @param speed          [uint16] target motor speed in RPM, see @ref Constants.MAX_SPEED for restrictions
+     * @param speed          [uint16] target motor speed in units of 160/3 steps/s, see @ref Constants.MAX_SPEED for restrictions
      * @param acceleration   [uint8] motor acceleration, see @ref Constants.MAX_ACCEL for description
      * @param steps          [int24] position to move to, in steps from the zero point
      * @return status        [uint8] the status code described above
