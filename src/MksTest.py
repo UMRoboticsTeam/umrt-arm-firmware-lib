@@ -163,13 +163,16 @@ def get_current_pos(driver_can_id: int, bus: can.Bus = None):
     return msg, None
 
 
-def set_speed(driver_can_id: int, dir: bool, speed: int, accel: int, bus: can.Bus = None):
-    payload = [Commands.SET_SPEED]
+def set_speed(driver_can_id: int, dir: bool, speed: int, accel: int, bus: can.Bus = None, norm_factor: int = 1):
     payload = [SET_SPEED]
+
+    normalised_speed = speed * norm_factor
     
     # Encode speed properties
-    speed_properties_low = (speed & 0xF00) >> 8 | (dir & 0x1) << 7
-    speed_properties_high = speed & 0xFF
+    speed_properties_low = (normalised_speed & 0xF00) >> 8 | (dir & 0x1) << 7
+    speed_properties_high = normalised_speed & 0xFF
+    #speed_properties_low = (normalised_speed & 0x0F) | (dir & 0x1) << 7
+    #speed_properties_high = normalised_speed & 0xFF0 >> 4
     payload.append(speed_properties_low)
     payload.append(speed_properties_high)
     
@@ -191,13 +194,15 @@ def set_speed(driver_can_id: int, dir: bool, speed: int, accel: int, bus: can.Bu
     return msg
 
 
-def send_step(driver_can_id: int, dir: bool, speed: int, accel: int, steps: int, bus: can.Bus = None):
-    payload = [Commands.SEND_STEP]
+def send_step(driver_can_id: int, dir: bool, speed: int, accel: int, steps: int, bus: can.Bus = None, norm_factor: int = 1):
     payload = [SEND_STEP]
+
+    normalised_speed = speed * norm_factor
+    normalised_steps = steps * norm_factor
     
     # Encode speed properties
-    speed_properties_low = (speed & 0xF00) >> 8 | (dir & 0x1) << 7
-    speed_properties_high = speed & 0xFF
+    speed_properties_low = (normalised_speed & 0xF00) >> 8 | (dir & 0x1) << 7
+    speed_properties_high = normalised_speed & 0xFF
     payload.append(speed_properties_low)
     payload.append(speed_properties_high)
     
@@ -205,7 +210,7 @@ def send_step(driver_can_id: int, dir: bool, speed: int, accel: int, steps: int,
     payload.extend(accel.to_bytes(1, 'big'))
     
     # Encode steps
-    payload.extend(steps.to_bytes(3, 'big'))
+    payload.extend(normalised_steps.to_bytes(3, 'big'))
     
     # Calculate checksum
     payload.append(Commands.checksum(driver_can_id, payload))
@@ -222,14 +227,16 @@ def send_step(driver_can_id: int, dir: bool, speed: int, accel: int, steps: int,
     return msg
 
 
-def seek_pos_by_steps(driver_can_id: int, speed: int, accel: int, pos: int, bus: can.Bus = None):
-    payload = [Commands.SEEK_POS_BY_STEPS]
+def seek_pos_by_steps(driver_can_id: int, speed: int, accel: int, pos: int, bus: can.Bus = None, norm_factor: int = 1):
     payload = [SEEK_POS_BY_STEPS]
+
+    normalised_speed = speed * norm_factor
+    normalised_position = pos * norm_factor
     
     # Encode properties
-    payload.extend(speed.to_bytes(2, 'big'))
+    payload.extend(normalised_speed.to_bytes(2, 'big'))
     payload.extend(accel.to_bytes(1, 'big'))
-    payload.extend(pos.to_bytes(3, 'big', signed=True))
+    payload.extend(normalised_position.to_bytes(3, 'big', signed=True))
     
     # Calculate checksum
     payload.append(Commands.checksum(driver_can_id, payload))
@@ -252,7 +259,7 @@ def on_motor_speed(msg):
             if Commands.checksum(driver_can_id, msg.data[:-1]) != msg.data[-1]:
                 print(f"Checksum error in message: {msg}")
             
-            speed = int.from_bytes(msg.data[1:3], 'big', signed=True)
+            speed = int.from_bytes(msg.data[1:3], 'little', signed=True)
             print(f"Speed: {speed}")
 
 
@@ -280,34 +287,79 @@ def test(driver_can_id, can_device, bitrate):
     
     # Motor testing sequence
     with can.Bus(interface='socketcan', channel=can_device, bitrate=bitrate) as bus:
+    #if True:
         # Register message handlers
         notifier = can.Notifier(bus, [])
         notifier.add_listener(on_motor_speed)
         notifier.add_listener(on_current_pos)
-        
-        # Send speed of 2 RPM for 5 seconds, then 1 RPM in other direction for 5 seconds, then stop
+
+        set_speed(driver_can_id, False, 6, 0, bus, 1)
+        #set_speed(1, False, 1, 2, bus)
+        get_motor_speed(driver_can_id, bus)
         get_current_pos(driver_can_id, bus)
-        set_speed(driver_can_id, False, 2, 0, bus)
-        get_motor_speed(driver_can_id, bus)
         time.sleep(5)
-        set_speed(driver_can_id, True, 1, 0, bus)
         get_motor_speed(driver_can_id, bus)
-        time.sleep(5)
+        get_current_pos(driver_can_id, bus)
+        time.sleep(4)
+        get_motor_speed(driver_can_id, bus)
+        get_current_pos(driver_can_id, bus)
+        time.sleep(1)
         set_speed(driver_can_id, False, 0, 0, bus)
-        get_motor_speed(driver_can_id, bus)
-        
-        # Step forward 20 steps at 10 RPM, then back 10 steps at 5 RPM
-        get_current_pos(driver_can_id, bus)
-        send_step(driver_can_id, False, 10, 0, 20, bus)
-        time.sleep(1)
-        get_current_pos(driver_can_id, bus)
-        send_step(driver_can_id, True, 5, 0, 20, bus)
-        time.sleep(1)
-        get_current_pos(driver_can_id, bus)
-        
-        time.sleep(1)
-        
+        time.sleep(5)
+        #
+        # set_speed(driver_can_id, True, 2, 0, bus)
+        # get_motor_speed(driver_can_id, bus)
+        # get_current_pos(driver_can_id, bus)
+        # time.sleep(2)
+        # get_motor_speed(driver_can_id, bus)
+        # get_current_pos(driver_can_id, bus)
+        # time.sleep(2)
+        # get_motor_speed(driver_can_id, bus)
+        # get_current_pos(driver_can_id, bus)
+        # time.sleep(1)
+        # set_speed(driver_can_id, False, 0, 0, bus)
+        # time.sleep(5)
+
+        # set_speed(1, False, 32, 2, bus)
+        # get_motor_speed(driver_can_id, bus)
+        # time.sleep(5)
+        # set_speed(1, False, 0, 2, bus)
+
+        # seek_pos_by_steps(driver_can_id, 1, 0, 200*8, bus)
+        # get_motor_speed(driver_can_id, bus)
+        # get_current_pos(driver_can_id, bus)
+        # time.sleep(2)
+        # get_motor_speed(driver_can_id, bus)
+        # get_current_pos(driver_can_id, bus)
+        # time.sleep(2)
+        # get_motor_speed(driver_can_id, bus)
+        # get_current_pos(driver_can_id, bus)
+        # time.sleep(1)
+
+        # Send speed of 2 RPM for 5 seconds, then 1 RPM in other direction for 5 seconds, then stop
+        # get_current_pos(driver_can_id, bus)
+        # set_speed(driver_can_id, False, 2, 0, bus)
+        # get_motor_speed(driver_can_id, bus)
+        # time.sleep(5)
+        # set_speed(driver_can_id, True, 1, 0, bus)
+        # get_motor_speed(driver_can_id, bus)
+        # time.sleep(5)
+        # set_speed(driver_can_id, False, 0, 0, bus)
+        # get_motor_speed(driver_can_id, bus)
+        #
+        # # Step forward 20 steps at 10 RPM, then back 10 steps at 5 RPM
+        # get_current_pos(driver_can_id, bus)
+        # send_step(driver_can_id, False, 10, 0, 20, bus)
+        # time.sleep(1)
+        # get_current_pos(driver_can_id, bus)
+        # send_step(driver_can_id, True, 5, 0, 20, bus)
+        # time.sleep(1)
+        # get_current_pos(driver_can_id, bus)
+        #
+        # time.sleep(1)
+        #
         # Seek back to position 0 from wherever we ended up at 10 RPM
+        #seek_pos_by_steps(driver_can_id, 10, 0, 0, bus)
         seek_pos_by_steps(driver_can_id, 10, 0, 0, bus)
         time.sleep(1)
         get_current_pos(driver_can_id, bus)
