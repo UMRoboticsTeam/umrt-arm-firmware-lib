@@ -128,7 +128,7 @@ def squeeze_msg(msg: can.Message):
 
 
 def get_motor_speed(driver_can_id: int, bus: can.Bus = None):
-    payload = [Commands.MOTOR_SPEED]
+    payload = [MOTOR_SPEED]
     
     # Calculate checksum
     payload.append(Commands.checksum(driver_can_id, payload))
@@ -146,7 +146,7 @@ def get_motor_speed(driver_can_id: int, bus: can.Bus = None):
 
 
 def get_current_pos(driver_can_id: int, bus: can.Bus = None):
-    payload = [Commands.CURRENT_POS]
+    payload = [CURRENT_POS]
     
     # Calculate checksum
     payload.append(Commands.checksum(driver_can_id, payload))
@@ -165,6 +165,7 @@ def get_current_pos(driver_can_id: int, bus: can.Bus = None):
 
 def set_speed(driver_can_id: int, dir: bool, speed: int, accel: int, bus: can.Bus = None):
     payload = [Commands.SET_SPEED]
+    payload = [SET_SPEED]
     
     # Encode speed properties
     speed_properties_low = (speed & 0xF00) >> 8 | (dir & 0x1) << 7
@@ -192,6 +193,7 @@ def set_speed(driver_can_id: int, dir: bool, speed: int, accel: int, bus: can.Bu
 
 def send_step(driver_can_id: int, dir: bool, speed: int, accel: int, steps: int, bus: can.Bus = None):
     payload = [Commands.SEND_STEP]
+    payload = [SEND_STEP]
     
     # Encode speed properties
     speed_properties_low = (speed & 0xF00) >> 8 | (dir & 0x1) << 7
@@ -222,6 +224,7 @@ def send_step(driver_can_id: int, dir: bool, speed: int, accel: int, steps: int,
 
 def seek_pos_by_steps(driver_can_id: int, speed: int, accel: int, pos: int, bus: can.Bus = None):
     payload = [Commands.SEEK_POS_BY_STEPS]
+    payload = [SEEK_POS_BY_STEPS]
     
     # Encode properties
     payload.extend(speed.to_bytes(2, 'big'))
@@ -245,7 +248,7 @@ def seek_pos_by_steps(driver_can_id: int, speed: int, accel: int, pos: int, bus:
 
 def on_motor_speed(msg):
     if msg is not None and len(msg.data) == 2 + 2:  # Length is code + crc + payload
-        if msg.data[0] == Commands.CURRENT_POS:
+        if msg.data[0] == MOTOR_SPEED:
             if Commands.checksum(driver_can_id, msg.data[:-1]) != msg.data[-1]:
                 print(f"Checksum error in message: {msg}")
             
@@ -255,7 +258,7 @@ def on_motor_speed(msg):
 
 def on_current_pos(msg):
     if msg is not None and len(msg.data) == 2 + 4:  # Length is code + crc + payload
-        if msg.data[0] == Commands.CURRENT_POS:
+        if msg.data[0] == CURRENT_POS:
             if Commands.checksum(driver_can_id, msg.data[:-1]) != msg.data[-1]:
                 print(f"Checksum error in message: {msg}")
             
