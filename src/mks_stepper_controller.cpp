@@ -34,7 +34,11 @@ MksStepperController::~MksStepperController() noexcept {
 bool MksStepperController::setSpeed(const uint8_t motor, const int16_t speed, const uint8_t acceleration) {
     if (!isSetup()) { return false; }
 
-    int16_t normalised_speed = speed * norm_factor;
+    // Speed is normalised when norm_factor is 16
+    // That is, at 16 normalised_speed = speed
+    // At 1, normalised_speed = speed / 16
+    // At 32, normalised_speed = speed * 2
+    int16_t normalised_speed = static_cast<int16_t>(speed * (int32_t)16 / norm_factor);
 
     std::vector<uint8_t> payload{ MksCommands::SET_SPEED };
 
@@ -78,7 +82,7 @@ bool MksStepperController::getSpeed(const uint8_t motor) {
 bool MksStepperController::sendStep(const uint8_t motor, const uint32_t num_steps, const int16_t speed, const uint8_t acceleration) {
     if (!isSetup()) { return false; }
 
-    int16_t normalised_speed = speed * norm_factor;
+    int16_t normalised_speed = static_cast<int16_t>(speed * (int32_t)16 / norm_factor);
     uint32_t normalised_steps = num_steps * norm_factor;
 
     std::vector<uint8_t> payload{ MksCommands::SEND_STEP };
@@ -108,7 +112,7 @@ bool MksStepperController::sendStep(const uint8_t motor, const uint32_t num_step
 bool MksStepperController::seekPosition(const uint8_t motor, const int32_t position, const int16_t speed, const uint8_t acceleration) {
     if (!isSetup()) { return false; }
 
-    int16_t normalised_speed = speed * norm_factor;
+    int16_t normalised_speed = static_cast<int16_t>(speed * (int32_t)16 / norm_factor);
     int32_t normalised_position = position * norm_factor;
 
     std::vector<uint8_t> payload{ MksCommands::SEEK_POS_BY_STEPS };
