@@ -297,16 +297,16 @@ def test(driver_can_id, can_device, bitrate):
         notifier.add_listener(on_motor_speed)
         notifier.add_listener(on_current_pos)
 
-        set_speed(driver_can_id, False, 6, 0, bus, 128)
+        set_speed(driver_can_id, False, 6, 0, bus, 16)
         #set_speed(1, False, 1, 2, bus)
         get_motor_speed(driver_can_id, bus)
-        get_current_pos(driver_can_id, bus)
+        #get_current_pos(driver_can_id, bus)
         time.sleep(5)
         get_motor_speed(driver_can_id, bus)
-        get_current_pos(driver_can_id, bus)
+        #get_current_pos(driver_can_id, bus)
         time.sleep(4)
         get_motor_speed(driver_can_id, bus)
-        get_current_pos(driver_can_id, bus)
+        #get_current_pos(driver_can_id, bus)
         time.sleep(1)
         set_speed(driver_can_id, False, 0, 0, bus)
         time.sleep(5)
@@ -366,6 +366,7 @@ def test(driver_can_id, can_device, bitrate):
         # Step one full rotation in 5 seconds
         send_step(driver_can_id, False, 12, 0, 200, bus, 128)
         time.sleep(6)
+
 
         # Seek back to position 0 from wherever we ended up at 10 RPM
         #seek_pos_by_steps(driver_can_id, 10, 0, 0, bus)
