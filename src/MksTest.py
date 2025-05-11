@@ -163,10 +163,14 @@ def get_current_pos(driver_can_id: int, bus: can.Bus = None):
     return msg, None
 
 
-def set_speed(driver_can_id: int, dir: bool, speed: int, accel: int, bus: can.Bus = None, norm_factor: int = 1):
+def set_speed(driver_can_id: int, dir: bool, speed: int, accel: int, bus: can.Bus = None, norm_factor: int = 16):
     payload = [SET_SPEED]
 
-    normalised_speed = speed * norm_factor
+    # Speed is normalised when norm_factor is 16
+    # That is, at 16 normalised_speed = speed
+    # At 1, normalised_speed = speed / 16
+    # At 32, normalised_speed = speed * 2
+    normalised_speed = int(speed * norm_factor / 16)
     
     # Encode speed properties
     speed_properties_low = (normalised_speed & 0xF00) >> 8 | (dir & 0x1) << 7
@@ -194,10 +198,10 @@ def set_speed(driver_can_id: int, dir: bool, speed: int, accel: int, bus: can.Bu
     return msg
 
 
-def send_step(driver_can_id: int, dir: bool, speed: int, accel: int, steps: int, bus: can.Bus = None, norm_factor: int = 1):
+def send_step(driver_can_id: int, dir: bool, speed: int, accel: int, steps: int, bus: can.Bus = None, norm_factor: int = 16):
     payload = [SEND_STEP]
 
-    normalised_speed = speed * norm_factor
+    normalised_speed = int(speed * norm_factor / 16)
     normalised_steps = steps * norm_factor
     
     # Encode speed properties
@@ -227,10 +231,10 @@ def send_step(driver_can_id: int, dir: bool, speed: int, accel: int, steps: int,
     return msg
 
 
-def seek_pos_by_steps(driver_can_id: int, speed: int, accel: int, pos: int, bus: can.Bus = None, norm_factor: int = 1):
+def seek_pos_by_steps(driver_can_id: int, speed: int, accel: int, pos: int, bus: can.Bus = None, norm_factor: int = 16):
     payload = [SEEK_POS_BY_STEPS]
 
-    normalised_speed = speed * norm_factor
+    normalised_speed = int(speed * norm_factor / 16)
     normalised_position = pos * norm_factor
     
     # Encode properties
@@ -293,7 +297,7 @@ def test(driver_can_id, can_device, bitrate):
         notifier.add_listener(on_motor_speed)
         notifier.add_listener(on_current_pos)
 
-        set_speed(driver_can_id, False, 6, 0, bus, 1)
+        set_speed(driver_can_id, False, 6, 0, bus, 128)
         #set_speed(1, False, 1, 2, bus)
         get_motor_speed(driver_can_id, bus)
         get_current_pos(driver_can_id, bus)
@@ -358,6 +362,11 @@ def test(driver_can_id, can_device, bitrate):
         #
         # time.sleep(1)
         #
+
+        # Step one full rotation in 5 seconds
+        send_step(driver_can_id, False, 12, 0, 200, bus, 128)
+        time.sleep(6)
+
         # Seek back to position 0 from wherever we ended up at 10 RPM
         #seek_pos_by_steps(driver_can_id, 10, 0, 0, bus)
         seek_pos_by_steps(driver_can_id, 10, 0, 0, bus)
