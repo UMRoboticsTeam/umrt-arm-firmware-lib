@@ -90,6 +90,24 @@ target_link_libraries(${arduino_communication_test_target} PRIVATE
         ${lib_target}
         )
 
+# ********** Setup mks_test_script executable **********
+
+set(mks_test_target mks_test_script)
+
+add_executable(${mks_test_target})
+
+target_sources(${mks_test_target} PRIVATE
+        src/mks_test_script.cpp
+        src/mks_test.cpp
+)
+
+target_link_libraries(${mks_test_target} PRIVATE
+        Boost::log_setup
+        Boost::log
+        Boost::filesystem
+        ${lib_target}
+)
+
 # ********** Setup packaging **********
 
 include(GNUInstallDirs)
@@ -119,7 +137,7 @@ install(FILES
         )
 
 install(
-        TARGETS ${lib_target} ${arduino_communication_test_target} # These targets will be packaged
+        TARGETS ${lib_target} ${arduino_communication_test_target} ${mks_test_target} # These targets will be packaged
         EXPORT ${PROJECT_NAME}Targets
         PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}
 )
