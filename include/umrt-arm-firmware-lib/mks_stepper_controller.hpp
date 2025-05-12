@@ -54,7 +54,7 @@ public:
      * @param acceleration the speed ramp profile, see @ref MksTest.Constants.MAX_ACCEL; defaults to instantaneous
      * @return `true` if transmitted over the CAN bus
      */
-    bool setSpeed(const uint8_t motor, const int16_t speed, const uint8_t acceleration = 0);
+    bool setSpeed(const uint16_t motor, const int16_t speed, const uint8_t acceleration = 0);
 
     /**
      * Sends a @ref MksTest.Commands.MOTOR_SPEED command to query the speed of a motor.
@@ -63,7 +63,7 @@ public:
      * @param motor the ID of the motor to query
      * @return `true` if transmitted over the CAN bus
      */
-    bool getSpeed(const uint8_t motor);
+    bool getSpeed(const uint16_t motor);
 
     /**
      * Sends a @ref MksTest.Commands.SEND_STEP command to move a motor a fixed number of steps.
@@ -76,7 +76,7 @@ public:
      * @param acceleration the speed ramp profile, see @ref MksTest.Constants.MAX_ACCEL; defaults to instantaneous
      * @return `true` if transmitted over the CAN bus
      */
-    bool sendStep(const uint8_t motor, const uint32_t num_steps, const int16_t speed, const uint8_t acceleration = 0);
+    bool sendStep(const uint16_t motor, const uint32_t num_steps, const int16_t speed, const uint8_t acceleration = 0);
 
     /**
      * Sends a @ref MksTest.Commands.SEEK_POS_BY_STEPS command to move a motor to specific step position.
@@ -88,7 +88,7 @@ public:
      * @param acceleration the speed ramp profile, see @ref MksTest.Constants.MAX_ACCEL; defaults to instantaneous
      * @return `true` if transmitted over the CAN bus
      */
-    bool seekPosition(const uint8_t motor, const int32_t position, const int16_t speed, const uint8_t acceleration = 0);
+    bool seekPosition(const uint16_t motor, const int32_t position, const int16_t speed, const uint8_t acceleration = 0);
 
     /**
       * Sends a @ref MksTest.Commands.CURRENT_POS command to query the current position of a motor in steps.
@@ -96,7 +96,7 @@ public:
       * @param motor the ID of the motor to query
       * @return `true` if transmitted over the CAN bus
       */
-    bool getPosition(const uint8_t motor);
+    bool getPosition(const uint16_t motor);
 
     /**
      * Returns whether the CAN bus connection has been fully established.
@@ -120,25 +120,25 @@ public:
      * <a href=https://www.boost.org/doc/libs/1_63_0/doc/html/signals.html>Boost signal</a> triggered when
      * @ref setSpeed responses are received.
      */
-    boost::signals2::signal<void(uint8_t, int16_t)> ESetSpeed;
+    boost::signals2::signal<void(uint16_t, int16_t)> ESetSpeed;
 
     /**
      * <a href=https://www.boost.org/doc/libs/1_63_0/doc/html/signals.html>Boost signal</a> triggered when
      * @ref getSpeed responses are received.
      */
-    boost::signals2::signal<void(uint8_t, int16_t)> EGetSpeed;
+    boost::signals2::signal<void(uint16_t, int16_t)> EGetSpeed;
 
     /**
      * <a href=https://www.boost.org/doc/libs/1_63_0/doc/html/signals.html>Boost signal</a> triggered when
      * @ref sendStep responses are received.
      */
-    boost::signals2::signal<void(uint8_t, uint16_t, int16_t)> ESendStep;
+    boost::signals2::signal<void(uint16_t, uint16_t, int16_t)> ESendStep;
 
     /**
      * <a href=https://www.boost.org/doc/libs/1_63_0/doc/html/signals.html>Boost signal</a> triggered when
      * @ref seekPosition responses are received.
      */
-    boost::signals2::signal<void(uint8_t, int32_t, int16_t)> ESeekPosition;
+    boost::signals2::signal<void(uint16_t, int32_t, int16_t)> ESeekPosition;
 
     /**
      * <a href=https://www.boost.org/doc/libs/1_63_0/doc/html/signals.html>Boost signal</a> triggered when
@@ -147,7 +147,7 @@ public:
      * @param 1st [uint8_t] motor ID
      * @param 2nd [int32_t] motor position in steps
      */
-    boost::signals2::signal<void(uint8_t, int32_t)> EGetPosition;
+    boost::signals2::signal<void(uint16_t, int32_t)> EGetPosition;
 
 protected:
     /**

@@ -13,7 +13,7 @@
 #include "mks_stepper_controller.hpp"
 #include "utils.hpp"
 
-uint8_t checksum(uint8_t driver_id, const std::vector<uint8_t>& payload);
+uint8_t checksum(uint16_t driver_id, const std::vector<uint8_t>& payload);
 
 MksStepperController::MksStepperController(const std::string& can_interface, const uint8_t norm_factor) : norm_factor(norm_factor),
                                                                                                           setup_completed(false) {
@@ -33,7 +33,7 @@ MksStepperController::~MksStepperController() noexcept {
     BOOST_LOG_TRIVIAL(debug) << "MksStepperController destructed";
 }
 
-bool MksStepperController::setSpeed(const uint8_t motor, const int16_t speed, const uint8_t acceleration) {
+bool MksStepperController::setSpeed(const uint16_t motor, const int16_t speed, const uint8_t acceleration) {
     if (!isSetup()) { return false; }
 
     // Speed is normalised when norm_factor is 16
@@ -64,7 +64,7 @@ bool MksStepperController::setSpeed(const uint8_t motor, const int16_t speed, co
 }
 
 
-bool MksStepperController::getSpeed(const uint8_t motor) {
+bool MksStepperController::getSpeed(const uint16_t motor) {
     if (!isSetup()) { return false; }
 
     std::vector<uint8_t> payload{ MksCommands::MOTOR_SPEED };
@@ -81,7 +81,7 @@ bool MksStepperController::getSpeed(const uint8_t motor) {
     return true;
 }
 
-bool MksStepperController::sendStep(const uint8_t motor, const uint32_t num_steps, const int16_t speed, const uint8_t acceleration) {
+bool MksStepperController::sendStep(const uint16_t motor, const uint32_t num_steps, const int16_t speed, const uint8_t acceleration) {
     if (!isSetup()) { return false; }
 
     int16_t normalised_speed = static_cast<int16_t>(speed * (int32_t)16 / norm_factor);
@@ -111,7 +111,7 @@ bool MksStepperController::sendStep(const uint8_t motor, const uint32_t num_step
     return true;
 }
 
-bool MksStepperController::seekPosition(const uint8_t motor, const int32_t position, const int16_t speed, const uint8_t acceleration) {
+bool MksStepperController::seekPosition(const uint16_t motor, const int32_t position, const int16_t speed, const uint8_t acceleration) {
     if (!isSetup()) { return false; }
 
     int16_t normalised_speed = static_cast<int16_t>(speed * (int32_t)16 / norm_factor);
@@ -139,7 +139,7 @@ bool MksStepperController::seekPosition(const uint8_t motor, const int32_t posit
     return true;
 }
 
-bool MksStepperController::getPosition(const uint8_t motor) {
+bool MksStepperController::getPosition(const uint16_t motor) {
     if (!isSetup()) { return false; }
 
     std::vector<uint8_t> payload{ MksCommands::CURRENT_POS };
@@ -227,7 +227,7 @@ std::vector<uint8_t> to_bytes(uint32_t integer) {
     };
 }
 
-uint8_t checksum(uint8_t driver_id, const std::vector<uint8_t>& payload) {
+uint8_t checksum(uint16_t driver_id, const std::vector<uint8_t>& payload) {
     // Note: Accumulate is going to work in uint8_t, and unsigned integer overflow is well-defined - no need for explicit modulo
-    return std::accumulate(payload.cbegin(), payload.cend(), driver_id);
+    return std::accumulate(payload.cbegin(), payload.cend(), static_cast<uint8_t>(driver_id));
 }
