@@ -8,11 +8,13 @@
 #include <boost/signals2.hpp>
 #include <string>
 #include <vector>
+#include <chrono>
 
 // Forward declaring these classes so that ros2_socketcan can be a private dependency
 namespace drivers::socketcan {
     class SocketCanReceiver;
     class SocketCanSender;
+    class CanId;
 } // namespace drivers::socketcan
 
 /**
