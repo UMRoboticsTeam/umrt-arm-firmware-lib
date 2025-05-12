@@ -12,6 +12,7 @@
 #include "MKS_COMMANDS.hpp"
 #include "mks_stepper_controller.hpp"
 #include "utils.hpp"
+#include <cmath>
 
 uint8_t checksum(uint16_t driver_id, const std::vector<uint8_t>& payload);
 
@@ -40,12 +41,12 @@ bool MksStepperController::setSpeed(const uint16_t motor, const int16_t speed, c
     // That is, at 16 normalised_speed = speed
     // At 1, normalised_speed = speed / 16
     // At 32, normalised_speed = speed * 2
-    int16_t normalised_speed = static_cast<int16_t>(speed * (int32_t)16 / norm_factor);
+    int16_t normalised_speed = static_cast<int16_t>(std::abs(speed) * (int32_t)16 / norm_factor);
 
     std::vector<uint8_t> payload{ MksCommands::SET_SPEED };
 
-    uint8_t speed_properties_low = static_cast<uint8_t>((normalised_speed & 0xF00) >> 8) | (normalised_speed < 0 ? 1u << 7 : 0u);
-    uint8_t speed_properties_high = normalised_speed & 0xFF;
+    uint8_t speed_properties_low = static_cast<uint8_t>((normalised_speed & 0xF00) >> 8) | (speed < 0 ? 1u << 7 : 0u);
+    uint8_t speed_properties_high = static_cast<uint8_t>(normalised_speed & 0xFF);
     payload.insert(payload.end(), speed_properties_low);
     payload.insert(payload.end(), speed_properties_high);
     payload.insert(payload.end(), acceleration);
@@ -84,15 +85,14 @@ bool MksStepperController::getSpeed(const uint16_t motor) {
 bool MksStepperController::sendStep(const uint16_t motor, const uint32_t num_steps, const int16_t speed, const uint8_t acceleration) {
     if (!isSetup()) { return false; }
 
-    int16_t normalised_speed = static_cast<int16_t>(speed * (int32_t)16 / norm_factor);
+    // TODO: Don't use signed speed
+    int16_t normalised_speed = static_cast<int16_t>(std::abs(speed) * (int32_t)16 / norm_factor);
     uint32_t normalised_steps = num_steps * norm_factor;
 
     std::vector<uint8_t> payload{ MksCommands::SEND_STEP };
 
-    uint16_t abs_speed = std::abs<int16_t>(speed); // TODO: Don't use signed speed
-
-    uint8_t speed_properties_low = static_cast<uint8_t>((normalised_speed & 0xF00) >> 8) | (normalised_speed < 0 ? 1u << 7 : 0u);
-    uint8_t speed_properties_high = normalised_speed & 0xFF;
+    uint8_t speed_properties_low = static_cast<uint8_t>((normalised_speed & 0xF00) >> 8) | (speed < 0 ? 1u << 7 : 0u);
+    uint8_t speed_properties_high = static_cast<uint8_t>(normalised_speed & 0xFF);
     auto steps_packed = pack_24_big(normalised_speed);
     payload.insert(payload.end(), speed_properties_low);
     payload.insert(payload.end(), speed_properties_high);
@@ -114,13 +114,13 @@ bool MksStepperController::sendStep(const uint16_t motor, const uint32_t num_ste
 bool MksStepperController::seekPosition(const uint16_t motor, const int32_t position, const int16_t speed, const uint8_t acceleration) {
     if (!isSetup()) { return false; }
 
-    int16_t normalised_speed = static_cast<int16_t>(speed * (int32_t)16 / norm_factor);
+    int16_t normalised_speed = static_cast<int16_t>(std::abs(speed) * (int32_t)16 / norm_factor);
     int32_t normalised_position = position * norm_factor;
 
     std::vector<uint8_t> payload{ MksCommands::SEEK_POS_BY_STEPS };
 
-    uint8_t speed_properties_low = static_cast<uint8_t>((normalised_speed & 0xF00) >> 8) | (normalised_speed < 0 ? 1u << 7 : 0u);
-    uint8_t speed_properties_high = normalised_speed & 0xFF;
+    uint8_t speed_properties_low = static_cast<uint8_t>((normalised_speed & 0xF00) >> 8) | (speed < 0 ? 1u << 7 : 0u);
+    uint8_t speed_properties_high = static_cast<uint8_t>(normalised_speed & 0xFF);
     auto steps_packed = pack_24_big(normalised_position);
     payload.insert(payload.end(), speed_properties_low);
     payload.insert(payload.end(), speed_properties_high);
