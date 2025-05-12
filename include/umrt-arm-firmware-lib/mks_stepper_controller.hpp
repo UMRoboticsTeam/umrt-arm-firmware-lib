@@ -117,12 +117,6 @@ public:
     // ==========================
 
     /**
-     * <a href=https://www.boost.org/doc/libs/1_63_0/doc/html/signals.html>Boost signal</a> triggered once this
-     * MksStepperController is fully setup.
-     */
-    boost::signals2::signal<void(void)> ESetup;
-
-    /**
      * <a href=https://www.boost.org/doc/libs/1_63_0/doc/html/signals.html>Boost signal</a> triggered when
      * @ref setSpeed responses are received.
      */

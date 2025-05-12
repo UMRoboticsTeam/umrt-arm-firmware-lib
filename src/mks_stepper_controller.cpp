@@ -25,6 +25,8 @@ MksStepperController::MksStepperController(const std::string& can_interface, con
     //TODO: Write norm_factor as microstepping factor to the driver
 
     BOOST_LOG_TRIVIAL(debug) << "MksStepperController constructed";
+
+    setup_completed = true;
 }
 
 MksStepperController::~MksStepperController() noexcept {
