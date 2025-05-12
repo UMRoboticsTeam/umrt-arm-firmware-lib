@@ -219,6 +219,24 @@ inline uint32_t decode_32(const std::vector<uint8_t>::const_iterator& data) {
 inline uint32_t decode_32(const std::vector<uint8_t>& data) { return decode_32(data.cbegin()); }
 
 /**
+ * Reconstructs a big-endian byte vector into a 32-bit integer.
+ *
+ * @param data iterator to the byte vector subset to convert
+ * @return a 32-bit integer
+ */
+inline uint32_t decode_32_big(const std::vector<uint8_t>::const_iterator& data) {
+    return data[3] | data[2] << 8 | data[1] << 16 | data[0] << 24;
+}
+
+/**
+ * Calls decode_32_big(const std::vector<uint8_t>::const_iterator&) with `data.cbegin()`
+ *
+ * @param data the byte vector to convert
+ * @return a 32-bit integer
+ */
+inline uint32_t decode_32_big(const std::vector<uint8_t>& data) { return decode_32_big(data.cbegin()); }
+
+/**
  * Reconstructs a little-endian byte vector into a 16-bit integer.
  *
  * @param data iterator to the byte vector subset to convert
@@ -235,6 +253,24 @@ inline uint16_t decode_16(const std::vector<uint8_t>::const_iterator& data) {
  * @return a 16-bit integer
  */
 inline uint16_t decode_16(const std::vector<uint8_t>& data) { return decode_16(data.cbegin()); }
+
+/**
+ * Reconstructs a big-endian byte vector into a 16-bit integer.
+ *
+ * @param data iterator to the byte vector subset to convert
+ * @return a 16-bit integer
+ */
+inline uint16_t decode_16_big(const std::vector<uint8_t>::const_iterator& data) {
+    return static_cast<uint16_t>(data[1]) | static_cast<uint16_t>(data[0] << 8);
+}
+
+/**
+ * Calls decode_16(const std::vector<uint8_t>::const_iterator&) with `data.cbegin()`
+ *
+ * @param data the byte vector to convert
+ * @return a 16-bit integer
+ */
+inline uint16_t decode_16_big(const std::vector<uint8_t>& data) { return decode_16_big(data.cbegin()); }
 
 /**
  * Packs an std::string into a vector of 8-bit integers, in little-endian format.
