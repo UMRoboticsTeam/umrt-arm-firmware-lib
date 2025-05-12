@@ -140,8 +140,16 @@ bool MksStepperController::seekPosition(const uint8_t motor, const int32_t posit
 bool MksStepperController::getPosition(const uint8_t motor) {
     if (!isSetup()) { return false; }
 
-    sendSysEx(SysexCommands::GET_POS, std::vector<uint8_t>({ motor }));
+    std::vector<uint8_t> payload{ MksCommands::CURRENT_POS };
+    payload.insert(payload.end(), checksum(motor, payload));
 
+    try {
+        drivers::socketcan::CanId can_id(motor, 0, drivers::socketcan::FrameType::DATA, drivers::socketcan::StandardFrame);
+        can_sender->send(payload.data(), payload.size(), can_id);
+    } catch (drivers::socketcan::SocketCanTimeout& e) {
+        BOOST_LOG_TRIVIAL(warning) << "MksStepperController sendStep timeout: motor=" << motor << ", position=" << normalised_position << ", speed=" << normalised_speed << ", accel=" << acceleration;
+        return false;
+    }
     return true;
 }
 
