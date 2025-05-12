@@ -163,7 +163,7 @@ void MksStepperController::update(const std::chrono::nanoseconds & timeout) {
     // TODO: Need to at least do driver filtering, otherwise could get messages which happen to have the same 1st byte
     //       as one of our commands, and then attempt to unsafely decode something
     uint8_t msg_buffer[8];
-    drivers::socketcan::CanId msg_info = this->can_receiver->receive(msg_buffer, timeout);
+    drivers::socketcan::CanId msg_info = this->can_receiver->receive(&msg_buffer, timeout);
 
     // If this isn't a standard CAN message, then it isn't a message applicable to us
     if (msg_info.frame_type() != drivers::socketcan::FrameType::DATA) { return; }
