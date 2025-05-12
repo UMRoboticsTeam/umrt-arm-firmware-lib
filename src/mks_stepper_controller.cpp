@@ -155,88 +155,61 @@ bool MksStepperController::getPosition(const uint8_t motor) {
 
 bool MksStepperController::isSetup() const { return this->setup_completed; };
 
+void MksStepperController::update(const std::chrono::nanoseconds & timeout) {
+    // Read a message from the CAN bus
+    // TODO: Consider bus-level message filtering for efficiency
+    // TODO: Need to at least do driver filtering, otherwise could get messages which happen to have the same 1st byte
+    //       as one of our commands, and then attempt to unsafely decode something
+    uint8_t msg_buffer[8];
+    drivers::socketcan::CanId msg_info = this->can_receiver->receive(msg_buffer, timeout);
+
+    // If this isn't a standard CAN message, then it isn't a message applicable to us
+    if (msg_info.frame_type() != drivers::socketcan::FrameType::DATA) { return; }
+
+    // Turn the raw buffer into a vector
+    std::vector msg(msg_buffer, msg_buffer + msg_info.length());
+
+    this->handleCanMessage(msg, msg_info);
+}
+
 
 void MksStepperController::handleESetSpeed(const std::vector<unsigned char>& message) {
-    auto it = message.cbegin();
-    uint8_t motor = *it;
-    it += 1;
-    auto speed = static_cast<int16_t>(decode_16(it));
-    BOOST_LOG_TRIVIAL(debug) << "SetSpeed received for motor " << motor << " with speed=" << speed;
-    this->ESetSpeed(motor, speed);
+    // TODO: Decode response
 }
 
 void MksStepperController::handleEGetSpeed(const std::vector<unsigned char>& message) {
-    auto it = message.cbegin();
-    uint8_t motor = *it;
-    it += 1;
-    auto speed = static_cast<int16_t>(decode_16(it));
-    BOOST_LOG_TRIVIAL(debug) << "GetSpeed received for motor " << motor << " with speed=" << speed;
-    this->EGetSpeed(motor, speed);
+    // TODO: Decode response
 }
 
 void MksStepperController::handleESendStep(const std::vector<unsigned char>& message) {
-    auto it = message.cbegin();
-    uint8_t motor = *it;
-    it += 1;
-    auto steps = static_cast<uint16_t>(decode_16(it));
-    it += 2;
-    auto speed = static_cast<int16_t>(decode_16(it));
-    BOOST_LOG_TRIVIAL(debug) << "SendStep received for motor " << motor << " with steps=" << steps << ", speed="
-                             << speed;
-    this->ESendStep(motor, steps, speed);
+    // TODO: Decode response
 }
 
 void MksStepperController::handleESeekPosition(const std::vector<unsigned char>& message) {
-    auto it = message.cbegin();
-    uint8_t motor = *it;
-    it += 1;
-    auto position = static_cast<int32_t>(decode_32(it));
-    it += 4;
-    auto speed = static_cast<int16_t>(decode_16(it));
-    BOOST_LOG_TRIVIAL(debug) << "SeekPosition received for motor " << motor << " with position=" << position << ", speed="
-                             << speed;
-    this->ESeekPosition(motor, position, speed);
+    // TODO: Decode response
 }
 
-void MksStepperController::handleEGetPosition(const std::vector<unsigned char>& message) {
-    auto it = message.cbegin();
-    uint8_t motor = *it;
-    it += 1;
-    auto position = static_cast<int32_t>(decode_32(it));
-    BOOST_LOG_TRIVIAL(debug) << "GetPosition received for motor " << motor << " with position=" << position;
-    this->EGetPosition(motor, position);
+void MksStepperController::handleEGetPosition(const std::vector<uint8_t>& message, drivers::socketcan::CanId & info) {
+    auto position = static_cast<int32_t>(decode_32_big(message));
+    BOOST_LOG_TRIVIAL(debug) << "[" << info.get_bus_time() << "]: GetPosition received for motor " << info.identifier()
+                             << " with position=" << position;
+    EGetPosition(info.identifier(), position);
 }
 
-void MksStepperController::handleCanMessage(const std::vector<unsigned char>& message) {
-    if (message.empty()) { // Must at least have command
-        BOOST_LOG_TRIVIAL(error) << "SysEx received with no command byte";
-        return;
-    }
+void MksStepperController::handleCanMessage(const std::vector<uint8_t>& message, drivers::socketcan::CanId & info) {
+    // Note: info can't be const because get_bus_time isn't const-qualified...
 
-    // Must be odd since the first byte is the 7-bit command, followed by a firmatified payload
-    if (!(message.size() % 2)) {
-        BOOST_LOG_TRIVIAL(error) << "SysEx received with non-firmatified data";
+    if (message.empty()) { // Must at least have command for us to process
+        // We are subscribing to all messages on the bus, if another device is using payload-less messages there is no
+        // reason to spam our log over it
         return;
-    }
-
-    // Defirmatify data - See firmatify_32 in Utils.h for explanation of why this is needed
-    std::vector<unsigned char> defirmatified_message(message.size() / 2);
-    for (int i = 0; i < message.size(); ++i) {
-        // +1 since we don't want to include the command byte
-        defirmatified_message[i] = message[2 * i + 1] | message[2 * i + 2] << 7;
     }
 
     // Process the message
     switch (message[0]) {
-        case SysexCommands::ARDUINO_ECHO: this->handleEArduinoEcho(defirmatified_message); break;
-        case SysexCommands::SET_SPEED: this->handleESetSpeed(defirmatified_message); break;
-        case SysexCommands::GET_SPEED: this->handleEGetSpeed(defirmatified_message); break;
-        case SysexCommands::SEND_STEP: this->handleESendStep(defirmatified_message); break;
-        case SysexCommands::SEEK_POS: this->handleESeekPosition(defirmatified_message); break;
-        case SysexCommands::GET_POS: this->handleEGetPosition(defirmatified_message); break;
-        case SysexCommands::SET_GRIPPER: this->handleESetGripper(defirmatified_message); break;
+        case MksCommands::CURRENT_POS: this->handleEGetPosition(message, info); break;
         default:
-            BOOST_LOG_TRIVIAL(info) << "Unknown Sysex received with command=" << message[0];
+            // Again, we are subscribing to all messages on the bus, no need to spam log with ignored messages
             break;
     }
 }

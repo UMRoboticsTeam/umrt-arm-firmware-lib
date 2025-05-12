@@ -104,6 +104,14 @@ public:
      */
     [[nodiscard]] bool isSetup() const;
 
+    /**
+     * Polls for CAN messages.
+     * If an applicable message is received, the appropriate event is signalled.
+     *
+     * @param timeout maximum time to wait for a message to appear on the bus
+     */
+    void update(const std::chrono::nanoseconds & timeout = std::chrono::nanoseconds::zero());
+
     // ==========================
     //           Events
     // ==========================
@@ -141,6 +149,9 @@ public:
     /**
      * <a href=https://www.boost.org/doc/libs/1_63_0/doc/html/signals.html>Boost signal</a> triggered when
      * @ref getPosition responses are received.
+     *
+     * @param 1st [uint8_t] motor ID
+     * @param 2nd [int32_t] motor position in steps
      */
     boost::signals2::signal<void(uint8_t, int32_t)> EGetPosition;
 
@@ -149,8 +160,9 @@ protected:
      * Handles received CAN messages and sends out signals as appropriate.
      *
      * @param message the message payload
+     * @param info auxiliary information associated with the message, e.g. driver ID, bus time
      */
-    void handleCanMessage(const std::vector<unsigned char>& message);
+    void handleCanMessage(const std::vector<uint8_t>& message, drivers::socketcan::CanId & info);
 
     /**
      * @name Signal Processing Helper Functions
@@ -168,7 +180,7 @@ protected:
 
     void handleESeekPosition(const std::vector<unsigned char>& message);
 
-    void handleEGetPosition(const std::vector<unsigned char>& message);
+    void handleEGetPosition(const std::vector<unsigned char>& message, drivers::socketcan::CanId & info);
     //@}
 
     std::unique_ptr<drivers::socketcan::SocketCanReceiver> can_receiver;
