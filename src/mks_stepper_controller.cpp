@@ -149,7 +149,7 @@ bool MksStepperController::getPosition(const uint16_t motor) {
         drivers::socketcan::CanId can_id(motor, 0, drivers::socketcan::FrameType::DATA, drivers::socketcan::StandardFrame);
         can_sender->send(payload.data(), payload.size(), can_id);
     } catch (drivers::socketcan::SocketCanTimeout& e) {
-        BOOST_LOG_TRIVIAL(warning) << "MksStepperController sendStep timeout: motor=" << motor << ", position=" << normalised_position << ", speed=" << normalised_speed << ", accel=" << acceleration;
+        BOOST_LOG_TRIVIAL(warning) << "MksStepperController getPosition timeout: motor=" << motor;
         return false;
     }
     return true;
