@@ -747,4 +747,21 @@ enum MksCommands : uint8_t {
     SEEK_POS_BY_ANGLE = 0xF5,
 };
 
+/** Status code for the response to move commands.
+ * Used by @ref SEND_STEP, @ref SEEK_POS_BY_STEPS, @ref SEND_ANGLE, and @ref SEEK_POS_BY_ANGLE.
+ */
+enum MksMoveResponse : uint8_t {
+    /** Movement failed. */
+    FAILED = 0,
+
+    /** The motor is moving. */
+    MOVING = 1,
+
+    /** The motor has reached the target position. */
+    COMPLETED = 2,
+
+    /** An end limit has been reached. */
+    LIMIT_REACHED = 3
+};
+
 #endif //UMRT_ARM_FIRMWARE_LIB_MKS_COMMANDS_HPP
