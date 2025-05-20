@@ -93,7 +93,7 @@ bool MksStepperController::sendStep(const uint16_t motor, const uint32_t num_ste
 
     uint8_t speed_properties_low = static_cast<uint8_t>((normalised_speed & 0xF00) >> 8) | (speed < 0 ? 1u << 7 : 0u);
     uint8_t speed_properties_high = static_cast<uint8_t>(normalised_speed & 0xFF);
-    auto steps_packed = pack_24_big(normalised_speed);
+    auto steps_packed = pack_24_big(normalised_steps);
     payload.insert(payload.end(), speed_properties_low);
     payload.insert(payload.end(), speed_properties_high);
     payload.insert(payload.end(), acceleration);
