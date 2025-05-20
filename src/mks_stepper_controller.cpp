@@ -192,6 +192,7 @@ void MksStepperController::handleESeekPosition(const std::vector<unsigned char>&
 }
 
 void MksStepperController::handleEGetPosition(const std::vector<uint8_t>& message, drivers::socketcan::CanId & info) {
+    if (message.size() != 6) { return; } // Don't want to process loop-backed requests, only responses
     auto position = static_cast<int32_t>(decode_32_big(message.cbegin() + 1));
     BOOST_LOG_TRIVIAL(debug) << "[" << info.get_bus_time() << "]: GetPosition received for motor " << info.identifier()
                              << " with position=" << position << ", normalised_position=" << position / norm_factor;
