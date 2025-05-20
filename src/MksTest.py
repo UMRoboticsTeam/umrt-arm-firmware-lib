@@ -274,7 +274,7 @@ def on_current_pos(msg):
                 print(f"Checksum error in message: {msg}")
             
             pos = int.from_bytes(msg.data[1:5], 'big', signed=True)
-            print(f"Position: {pos}")
+            print(f"Position (ignoring interpolated normalisation): {pos}")
 
 
 def test(driver_can_id, can_device, bitrate):
