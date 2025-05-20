@@ -263,7 +263,7 @@ def on_motor_speed(msg):
             if Commands.checksum(driver_can_id, msg.data[:-1]) != msg.data[-1]:
                 print(f"Checksum error in message: {msg}")
             
-            speed = int.from_bytes(msg.data[1:3], 'little', signed=True)
+            speed = int.from_bytes(msg.data[1:3], 'big', signed=True)
             print(f"Speed: {speed}")
 
 
@@ -301,7 +301,15 @@ def test(driver_can_id, can_device, bitrate):
         #set_speed(1, False, 1, 2, bus)
         get_motor_speed(driver_can_id, bus)
         #get_current_pos(driver_can_id, bus)
-        time.sleep(5)
+        time.sleep(1)
+        get_motor_speed(driver_can_id, bus)
+        time.sleep(1)
+        get_motor_speed(driver_can_id, bus)
+        time.sleep(1)
+        get_motor_speed(driver_can_id, bus)
+        time.sleep(1)
+        get_motor_speed(driver_can_id, bus)
+        time.sleep(1)
         get_motor_speed(driver_can_id, bus)
         #get_current_pos(driver_can_id, bus)
         time.sleep(4)
@@ -363,16 +371,16 @@ def test(driver_can_id, can_device, bitrate):
         # time.sleep(1)
         #
 
-        # Step one full rotation in 5 seconds
-        send_step(driver_can_id, False, 12, 0, 200, bus, 128)
-        time.sleep(6)
-
-
-        # Seek back to position 0 from wherever we ended up at 10 RPM
-        #seek_pos_by_steps(driver_can_id, 10, 0, 0, bus)
-        seek_pos_by_steps(driver_can_id, 10, 0, 0, bus)
-        time.sleep(1)
-        get_current_pos(driver_can_id, bus)
+        # # Step one full rotation in 5 seconds
+        # send_step(driver_can_id, False, 12, 0, 200, bus, 128)
+        # time.sleep(6)
+        #
+        #
+        # # Seek back to position 0 from wherever we ended up at 10 RPM
+        # #seek_pos_by_steps(driver_can_id, 10, 0, 0, bus)
+        # seek_pos_by_steps(driver_can_id, 10, 0, 0, bus)
+        # time.sleep(1)
+        # get_current_pos(driver_can_id, bus)
         
         time.sleep(1)
         notifier.stop()
