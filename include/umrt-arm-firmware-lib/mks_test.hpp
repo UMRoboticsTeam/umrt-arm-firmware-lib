@@ -15,7 +15,7 @@
 // TODO: Could use some docs, would be nice if we could get some sample output
 class MksTest {
 public:
-    MksTest(const std::string& can_interface, const std::vector<uint8_t>& motor_ids);
+    MksTest(const std::string& can_interface, const std::vector<uint8_t>& motor_ids, const uint8_t norm_factor = 1);
 
     void update();
 

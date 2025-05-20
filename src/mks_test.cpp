@@ -7,8 +7,8 @@
 #include <iostream>
 #include <ros2_socketcan/socket_can_id.hpp>
 
-MksTest::MksTest(const std::string& can_interface, const std::vector<uint8_t>& motor_ids) : motor_ids(motor_ids),
-                                                                                            s(can_interface) {
+MksTest::MksTest(const std::string& can_interface, const std::vector<uint8_t>& motor_ids, const uint8_t norm_factor) : motor_ids(motor_ids),
+                                                                                            s(can_interface, norm_factor) {
     /*s.ESetSpeed.connect([this](auto&& PH1, auto&& PH2) {
         onSetSpeed(std::forward<decltype(PH1)>(PH1), std::forward<decltype(PH2)>(PH2));
     });

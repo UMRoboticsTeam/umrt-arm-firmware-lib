@@ -22,7 +22,7 @@ int main() {
     boost::log::add_common_attributes();
     BOOST_LOG_TRIVIAL(debug) << "Logging started";
 
-    MksTest c(CAN_INTERFACE, {0, 1});
+    MksTest c(CAN_INTERFACE, {1}, 16);
 
     // Run update loop forever
     // TODO: Look into a better way of doing the polling loop which isn't so intensive
