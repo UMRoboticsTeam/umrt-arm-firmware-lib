@@ -5,25 +5,18 @@
 #include "mks_test.hpp"
 
 #include <iostream>
+#include <string>
+
 #include <ros2_socketcan/socket_can_id.hpp>
 
-MksTest::MksTest(const std::string& can_interface, const std::vector<uint8_t>& motor_ids, const uint8_t norm_factor) : motor_ids(motor_ids),
-                                                                                            s(can_interface, norm_factor) {
-    /*s.ESetSpeed.connect([this](auto&& PH1, auto&& PH2) {
-        onSetSpeed(std::forward<decltype(PH1)>(PH1), std::forward<decltype(PH2)>(PH2));
-    });
-    s.EGetSpeed.connect([this](auto&& PH1, auto&& PH2) {
-        onGetSpeed(std::forward<decltype(PH1)>(PH1), std::forward<decltype(PH2)>(PH2));
-    });
-    s.ESendStep.connect([this](auto&& PH1, auto&& PH2, auto&& PH3) {
-        onSendStep(std::forward<decltype(PH1)>(PH1), std::forward<decltype(PH2)>(PH2), std::forward<decltype(PH3)>(PH3));
-    });
-    s.ESeekPosition.connect([this](auto&& PH1, auto&& PH2, auto&& PH3) {
-        onSeekPosition(std::forward<decltype(PH1)>(PH1), std::forward<decltype(PH2)>(PH2), std::forward<decltype(PH3)>(PH3));
-    });*/
-    s.EGetPosition.connect([this](auto motor, auto position) {
-        onGetPosition(motor, position);
-    });
+std::string mksMoveResponseToString(const MksMoveResponse status);
+
+MksTest::MksTest(const std::string& can_interface, const std::vector<uint8_t>& motor_ids, const uint8_t norm_factor)
+    : s(can_interface, norm_factor), motor_ids(motor_ids) {
+    s.ESetSpeed.connect([this](auto motor, auto status) { onSetSpeed(motor, status); });
+    s.ESendStep.connect([this](auto motor, auto status) { onSendStep(motor, status); });
+    s.ESeekPosition.connect([this](auto motor, auto status) { onSeekPosition(motor, status); });
+    s.EGetPosition.connect([this](auto motor, auto position) { onGetPosition(motor, position); });
 
     std::cout << "Mks setup!" << std::endl;
 
@@ -73,12 +66,28 @@ void MksTest::sendTestRoutine() {
     }
 }
 
-void MksTest::onSetSpeed(const uint16_t motor, const int16_t speed) {}
+void MksTest::onSetSpeed(const uint16_t motor, const bool status) {
+    std::cout << std::hex << "(Requested) Motor " << motor << ": SetSpeed: success=" << (status ? "true" : "false") << std::endl;
+}
 
-void MksTest::onSendStep(const uint16_t motor, const uint16_t steps, const int16_t speed) {}
+void MksTest::onSendStep(const uint16_t motor, const MksMoveResponse status) {
+    std::cout << std::hex << "(Requested) Motor " << motor << ": SendStep: success=" << mksMoveResponseToString(status) << std::endl;
+}
 
-void MksTest::onSeekPosition(const uint16_t motor, const int32_t position, const int16_t speed) {}
+void MksTest::onSeekPosition(const uint16_t motor, const MksMoveResponse status) {
+    std::cout << std::hex << "(Requested) Motor " << motor << ": SeekPos: success=" << mksMoveResponseToString(status) << std::endl;
+}
 
 void MksTest::onGetPosition(const uint16_t motor, const int32_t position) {
-    std::cout << std::dec << "(Queried)   Motor " << motor << ": position=" << position << std::endl;
+    std::cout << std::hex << "(Queried)   Motor " << motor << std::dec << ": GetPos: position=" << position << std::endl;
+}
+
+std::string mksMoveResponseToString(const MksMoveResponse status) {
+    switch (status) {
+        case MksMoveResponse::FAILED: return "FAILED";
+        case MksMoveResponse::MOVING: return "MOVING";
+        case MksMoveResponse::COMPLETED: return "COMPLETED";
+        case MksMoveResponse::LIMIT_REACHED: return "LIMIT_REACHED";
+    }
+    throw std::logic_error("MksMoveResponse passed with invalid value: " + std::to_string(static_cast<uint8_t>(status)));
 }

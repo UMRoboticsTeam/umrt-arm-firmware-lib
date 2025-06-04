@@ -6,10 +6,10 @@
 #define UMRT_ARM_FIRMWARE_LIB_MKS_TEST_HPP
 
 #include "mks_stepper_controller.hpp"
-#include "utils.hpp"
+#include "MKS_COMMANDS.hpp"
+
 #include <string>
 #include <thread>
-
 #include <vector>
 
 // TODO: Could use some docs, would be nice if we could get some sample output
@@ -26,11 +26,11 @@ protected:
     std::thread test_thread;
     const std::vector<uint8_t> motor_ids;
 
-    void onSetSpeed(const uint16_t motor, const int16_t speed);
+    void onSetSpeed(const uint16_t motor, const bool status);
 
-    void onSendStep(const uint16_t motor, const uint16_t steps, const int16_t speed);
+    void onSendStep(const uint16_t motor, const MksMoveResponse status);
 
-    void onSeekPosition(const uint16_t motor, const int32_t position, const int16_t speed);
+    void onSeekPosition(const uint16_t motor, const MksMoveResponse status);
 
     void onGetPosition(const uint16_t motor, const int32_t position);
 };
