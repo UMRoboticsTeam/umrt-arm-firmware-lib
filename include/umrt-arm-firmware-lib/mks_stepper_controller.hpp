@@ -59,15 +59,6 @@ public:
     bool setSpeed(const uint16_t motor, const int16_t speed, const uint8_t acceleration = 0);
 
     /**
-     * Sends a @ref MksTest.Commands.MOTOR_SPEED command to query the speed of a motor.
-     * Response callbacks are available through @ref EGetSpeed.
-     *
-     * @param motor the ID of the motor to query
-     * @return `true` if transmitted over the CAN bus
-     */
-    bool getSpeed(const uint16_t motor);
-
-    /**
      * Sends a @ref MksTest.Commands.SEND_STEP command to move a motor a fixed number of steps.
      * Direction is controlled by the sign of the target speed.
      * Response callbacks are available through @ref ESendStep.
@@ -126,12 +117,6 @@ public:
 
     /**
      * <a href=https://www.boost.org/doc/libs/1_63_0/doc/html/signals.html>Boost signal</a> triggered when
-     * @ref getSpeed responses are received.
-     */
-    boost::signals2::signal<void(uint16_t, int16_t)> EGetSpeed;
-
-    /**
-     * <a href=https://www.boost.org/doc/libs/1_63_0/doc/html/signals.html>Boost signal</a> triggered when
      * @ref sendStep responses are received.
      */
     boost::signals2::signal<void(uint16_t, uint16_t, int16_t)> ESendStep;
@@ -169,8 +154,6 @@ protected:
      */
     //@{
     void handleESetSpeed(const std::vector<unsigned char>& message);
-
-    void handleEGetSpeed(const std::vector<unsigned char>& message);
 
     void handleESendStep(const std::vector<unsigned char>& message);
 

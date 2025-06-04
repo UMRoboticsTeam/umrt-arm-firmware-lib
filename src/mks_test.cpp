@@ -46,13 +46,10 @@ void MksTest::sendTestRoutine() {
         // Send speed of 2 RPM for 5 seconds, then 1 RPM in other direction for 5 seconds, then stop
         s.getPosition(motor);
         s.setSpeed(motor, 2);
-        s.getSpeed(motor);
         std::this_thread::sleep_for(std::chrono::seconds(5));
         s.setSpeed(motor, -1);
-        s.getSpeed(motor);
         std::this_thread::sleep_for(std::chrono::seconds(5));
         s.setSpeed(motor, 0);
-        s.getSpeed(motor);
         std::this_thread::sleep_for(std::chrono::seconds(1));
         //Step forward 20 steps at 10 RPM, then back 10 steps at 5 RPM
         s.getPosition(motor);

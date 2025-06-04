@@ -64,23 +64,24 @@ bool MksStepperController::setSpeed(const uint16_t motor, const int16_t speed, c
     return true;
 }
 
-
-bool MksStepperController::getSpeed(const uint16_t motor) {
-    if (!isSetup()) { return false; }
-
-    std::vector<uint8_t> payload{ MksCommands::MOTOR_SPEED };
-    payload.insert(payload.end(), checksum(motor, payload));
-
-    try {
-        drivers::socketcan::CanId can_id(motor, 0, drivers::socketcan::FrameType::DATA, drivers::socketcan::StandardFrame);
-        can_sender->send(payload.data(), payload.size(), can_id);
-    } catch (drivers::socketcan::SocketCanTimeout& e) {
-        BOOST_LOG_TRIVIAL(warning) << "MksStepperController getSpeed timeout: motor=" << motor;
-        return false;
-    }
-
-    return true;
-}
+// Included for posterity; due to strange responses this command is assumed to return the encoder speed, and we are not
+// using the driver's encoder so I cannot test this and it is not useful functionality anyways
+//bool MksStepperController::getSpeed(const uint16_t motor) {
+//    if (!isSetup()) { return false; }
+//
+//    std::vector<uint8_t> payload{ MksCommands::MOTOR_SPEED };
+//    payload.insert(payload.end(), checksum(motor, payload));
+//
+//    try {
+//        drivers::socketcan::CanId can_id(motor, 0, drivers::socketcan::FrameType::DATA, drivers::socketcan::StandardFrame);
+//        can_sender->send(payload.data(), payload.size(), can_id);
+//    } catch (drivers::socketcan::SocketCanTimeout& e) {
+//        BOOST_LOG_TRIVIAL(warning) << "MksStepperController getSpeed timeout: motor=" << motor;
+//        return false;
+//    }
+//
+//    return true;
+//}
 
 bool MksStepperController::sendStep(const uint16_t motor, const uint32_t num_steps, const int16_t speed, const uint8_t acceleration) {
     if (!isSetup()) { return false; }
@@ -176,10 +177,6 @@ void MksStepperController::update(const std::chrono::nanoseconds & timeout) {
 
 
 void MksStepperController::handleESetSpeed(const std::vector<unsigned char>& message) {
-    // TODO: Decode response
-}
-
-void MksStepperController::handleEGetSpeed(const std::vector<unsigned char>& message) {
     // TODO: Decode response
 }
 

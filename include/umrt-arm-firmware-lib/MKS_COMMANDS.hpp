@@ -60,11 +60,12 @@ enum MksCommands : uint8_t {
      */
     ENCODER_ADDITIVE = 0x31,
 
-    /** Motor speed.
+    /** Motor speed, as determined by the encoder.
      * Represented as a signed integer, where positive denotes CCW and negative denotes CW.
      *
      * @return speed [int16] the current speed in RPM
-     * TODO: Units probably wrong, but also getting weird responses
+     * TODO: Units probably wrong
+     * TODO: I am assuming it is determined by the encoder because I am seeing odd responses, and I don't have an encoder installed
      */
     MOTOR_SPEED = 0x32,
 
