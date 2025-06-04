@@ -239,6 +239,12 @@ std::vector<uint8_t> to_bytes(uint32_t integer) {
     };
 }
 
+/**
+ * Calculates the "CRC" for an MKS message in accordance with @ref MksCommands
+ * @param driver_id CAN ID of the driver this message is sent to
+ * @param payload CAN message payload
+ * @return computed checksum for the CAN message
+ */
 uint8_t checksum(uint16_t driver_id, const std::vector<uint8_t>& payload) {
     // Note: Accumulate is going to work in uint8_t, and unsigned integer overflow is well-defined - no need for explicit modulo
     return std::accumulate(payload.cbegin(), payload.cend(), static_cast<uint8_t>(driver_id));

@@ -19,7 +19,7 @@
  * @code{.py}
  * cs = 0
  * for x in message:
- *     cs = (cs + n) & 0xFF
+ *     cs = (cs + x) & 0xFF
  * return cs
  * @endcode
  *
