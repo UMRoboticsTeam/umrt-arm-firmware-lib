@@ -16,7 +16,11 @@
 
 uint8_t checksum(uint16_t driver_id, const std::vector<uint8_t>& payload);
 
-MksStepperController::MksStepperController(const std::string& can_interface, const uint8_t norm_factor) : norm_factor(norm_factor) {
+MksStepperController::MksStepperController(
+        const std::string& can_interface, std::shared_ptr<const std::unordered_set<uint16_t>> motor_ids,
+        const uint8_t norm_factor
+)
+    : motor_ids{ std::move(motor_ids) }, norm_factor{ norm_factor } {
     BOOST_LOG_TRIVIAL(trace) << "MksStepperController construction begun";
 
     this->can_receiver = std::make_unique<drivers::socketcan::SocketCanReceiver>(can_interface);
@@ -29,9 +33,7 @@ MksStepperController::MksStepperController(const std::string& can_interface, con
     setup_completed = true;
 }
 
-MksStepperController::~MksStepperController() noexcept {
-    BOOST_LOG_TRIVIAL(debug) << "MksStepperController destructed";
-}
+MksStepperController::~MksStepperController() noexcept { BOOST_LOG_TRIVIAL(debug) << "MksStepperController destructed"; }
 
 bool MksStepperController::setSpeed(const uint16_t motor, const int16_t speed, const uint8_t acceleration) {
     if (!isSetup()) { return false; }
@@ -56,7 +58,8 @@ bool MksStepperController::setSpeed(const uint16_t motor, const int16_t speed, c
         can_sender->send(payload.data(), payload.size(), can_id);
     } catch (drivers::socketcan::SocketCanTimeout& e) {
         // Won't bother with e.what(), it is always "CAN Send timeout"
-        BOOST_LOG_TRIVIAL(warning) << "MksStepperController setSpeed timeout: motor=" << motor << ", speed=" << normalised_speed << ", accel=" << acceleration;
+        BOOST_LOG_TRIVIAL(warning) << "MksStepperController setSpeed timeout: motor=0x" << std::hex << motor << std::dec
+                                   << ", speed=" << normalised_speed << ", accel=" << acceleration;
         return false;
     }
     return true;
@@ -81,7 +84,9 @@ bool MksStepperController::setSpeed(const uint16_t motor, const int16_t speed, c
 //    return true;
 //}
 
-bool MksStepperController::sendStep(const uint16_t motor, const uint32_t num_steps, const int16_t speed, const uint8_t acceleration) {
+bool MksStepperController::sendStep(
+        const uint16_t motor, const uint32_t num_steps, const int16_t speed, const uint8_t acceleration
+) {
     if (!isSetup()) { return false; }
 
     // TODO: Don't use signed speed - disagree now, good to have consistency between methods
@@ -98,20 +103,26 @@ bool MksStepperController::sendStep(const uint16_t motor, const uint32_t num_ste
     payload.insert(payload.end(), speed_properties_high);
     payload.insert(payload.end(), acceleration);
     // With move iterators the compiler might invoke copy elision? Not entirely sure
-    payload.insert(payload.end(), std::make_move_iterator(steps_packed.begin()), std::make_move_iterator(steps_packed.end()));
+    payload.insert(
+            payload.end(), std::make_move_iterator(steps_packed.begin()), std::make_move_iterator(steps_packed.end())
+    );
     payload.insert(payload.end(), checksum(motor, payload));
 
     try {
         drivers::socketcan::CanId can_id(motor, 0, drivers::socketcan::FrameType::DATA, drivers::socketcan::StandardFrame);
         can_sender->send(payload.data(), payload.size(), can_id);
     } catch (drivers::socketcan::SocketCanTimeout& e) {
-        BOOST_LOG_TRIVIAL(warning) << "MksStepperController sendStep timeout: motor=" << motor << ", num_steps=" << num_steps << ", speed=" << normalised_speed << ", accel=" << acceleration;
+        BOOST_LOG_TRIVIAL(warning) << "MksStepperController sendStep timeout: motor=0x" << std::hex << motor << std::dec
+                                   << ", num_steps=" << num_steps << ", speed=" << normalised_speed
+                                   << ", accel=" << acceleration;
         return false;
     }
     return true;
 }
 
-bool MksStepperController::seekPosition(const uint16_t motor, const int32_t position, const int16_t speed, const uint8_t acceleration) {
+bool MksStepperController::seekPosition(
+        const uint16_t motor, const int32_t position, const int16_t speed, const uint8_t acceleration
+) {
     if (!isSetup()) { return false; }
 
     auto normalised_speed = static_cast<int16_t>(std::abs(speed) * (int32_t)16 / norm_factor);
@@ -126,14 +137,18 @@ bool MksStepperController::seekPosition(const uint16_t motor, const int32_t posi
     payload.insert(payload.end(), speed_properties_high);
     payload.insert(payload.end(), acceleration);
     // With move iterators the compiler might invoke copy elision? Not entirely sure
-    payload.insert(payload.end(), std::make_move_iterator(steps_packed.begin()), std::make_move_iterator(steps_packed.end()));
+    payload.insert(
+            payload.end(), std::make_move_iterator(steps_packed.begin()), std::make_move_iterator(steps_packed.end())
+    );
     payload.insert(payload.end(), checksum(motor, payload));
 
     try {
         drivers::socketcan::CanId can_id(motor, 0, drivers::socketcan::FrameType::DATA, drivers::socketcan::StandardFrame);
         can_sender->send(payload.data(), payload.size(), can_id);
     } catch (drivers::socketcan::SocketCanTimeout& e) {
-        BOOST_LOG_TRIVIAL(warning) << "MksStepperController sendStep timeout: motor=" << motor << ", position=" << normalised_position << ", speed=" << normalised_speed << ", accel=" << acceleration;
+        BOOST_LOG_TRIVIAL(warning) << "MksStepperController sendStep timeout: motor=0x" << std::hex << motor << std::dec
+                                   << ", position=" << normalised_position << ", speed=" << normalised_speed
+                                   << ", accel=" << acceleration;
         return false;
     }
     return true;
@@ -149,7 +164,7 @@ bool MksStepperController::getPosition(const uint16_t motor) {
         drivers::socketcan::CanId can_id(motor, 0, drivers::socketcan::FrameType::DATA, drivers::socketcan::StandardFrame);
         can_sender->send(payload.data(), payload.size(), can_id);
     } catch (drivers::socketcan::SocketCanTimeout& e) {
-        BOOST_LOG_TRIVIAL(warning) << "MksStepperController getPosition timeout: motor=" << motor;
+        BOOST_LOG_TRIVIAL(warning) << "MksStepperController getPosition timeout: motor=0x" << std::hex << motor << std::dec;
         return false;
     }
     return true;
@@ -157,11 +172,9 @@ bool MksStepperController::getPosition(const uint16_t motor) {
 
 bool MksStepperController::isSetup() const { return this->setup_completed; }
 
-void MksStepperController::update(const std::chrono::nanoseconds & timeout) {
+void MksStepperController::update(const std::chrono::nanoseconds& timeout) {
     // Read a message from the CAN bus
     // TODO: Consider bus-level message filtering for efficiency
-    // TODO: Need to at least do driver filtering, otherwise could get messages which happen to have the same 1st byte
-    //       as one of our commands, and then attempt to unsafely decode something
     uint8_t msg_buffer[8];
     drivers::socketcan::CanId msg_info = this->can_receiver->receive(&msg_buffer, timeout);
 
@@ -175,45 +188,52 @@ void MksStepperController::update(const std::chrono::nanoseconds & timeout) {
 }
 
 
-void MksStepperController::handleESetSpeed(const std::vector<uint8_t>& message, drivers::socketcan::CanId & info) {
+void MksStepperController::handleESetSpeed(const std::vector<uint8_t>& message, drivers::socketcan::CanId& info) {
     if (message.size() != 3) { return; } // Don't want to process loop-backed requests, only responses
     uint8_t status = message.at(1);
-    BOOST_LOG_TRIVIAL(debug) << "[" << info.get_bus_time() << "]: SetSpeed received for motor " << info.identifier()
-                             << " with status=" << status;
+    BOOST_LOG_TRIVIAL(debug) << "[" << info.get_bus_time() << "]: SetSpeed received for motor 0x" << std::hex
+                             << info.identifier() << std::dec << " with status=" << status;
     EGetPosition(static_cast<uint16_t>(info.identifier()), status == 1);
 }
 
-void MksStepperController::handleESendStep(const std::vector<uint8_t>& message, drivers::socketcan::CanId & info) {
+void MksStepperController::handleESendStep(const std::vector<uint8_t>& message, drivers::socketcan::CanId& info) {
     if (message.size() != 3) { return; } // Don't want to process loop-backed requests, only responses
     uint8_t status = message.at(1);
-    BOOST_LOG_TRIVIAL(debug) << "[" << info.get_bus_time() << "]: SendStep received for motor " << info.identifier()
-                             << " with status=" << status;
+    BOOST_LOG_TRIVIAL(debug) << "[" << info.get_bus_time() << "]: SendStep received for motor 0x" << std::hex
+                             << info.identifier() << std::dec << " with status=" << status;
     EGetPosition(static_cast<uint16_t>(info.identifier()), status);
 }
 
-void MksStepperController::handleESeekPosition(const std::vector<uint8_t>& message, drivers::socketcan::CanId & info) {
+void MksStepperController::handleESeekPosition(const std::vector<uint8_t>& message, drivers::socketcan::CanId& info) {
     if (message.size() != 3) { return; } // Don't want to process loop-backed requests, only responses
     uint8_t status = message.at(1);
-    BOOST_LOG_TRIVIAL(debug) << "[" << info.get_bus_time() << "]: SeekPosition received for motor " << info.identifier()
-                             << " with status=" << status;
+    BOOST_LOG_TRIVIAL(debug) << "[" << info.get_bus_time() << "]: SeekPosition received for motor 0x" << std::hex
+                             << info.identifier() << std::dec << " with status=" << status;
     EGetPosition(static_cast<uint16_t>(info.identifier()), status);
 }
 
-void MksStepperController::handleEGetPosition(const std::vector<uint8_t>& message, drivers::socketcan::CanId & info) {
+void MksStepperController::handleEGetPosition(const std::vector<uint8_t>& message, drivers::socketcan::CanId& info) {
     if (message.size() != 6) { return; } // Don't want to process loop-backed requests, only responses
     auto position = static_cast<int32_t>(decode_32_big(message.cbegin() + 1));
-    BOOST_LOG_TRIVIAL(debug) << "[" << info.get_bus_time() << "]: GetPosition received for motor " << info.identifier()
-                             << " with position=" << position << ", normalised_position=" << position / norm_factor;
+    BOOST_LOG_TRIVIAL(debug) << "[" << info.get_bus_time() << "]: GetPosition received for motor 0x" << std::hex
+                             << info.identifier() << std::dec << " with position=" << position
+                             << ", normalised_position=" << position / norm_factor;
     EGetPosition(static_cast<uint16_t>(info.identifier()), position / norm_factor);
 }
 
-void MksStepperController::handleCanMessage(const std::vector<uint8_t>& message, drivers::socketcan::CanId & info) {
+void MksStepperController::handleCanMessage(const std::vector<uint8_t>& message, drivers::socketcan::CanId& info) {
     // Note: info can't be const because get_bus_time isn't const-qualified...
 
-    if (message.empty()) { // Must at least have command for us to process
-        // We are subscribing to all messages on the bus, if another device is using payload-less messages there is no
-        // reason to spam our log over it
+    // Drop message if not addressed to us
+    if (info.is_extended() || motor_ids->count(static_cast<const uint16_t>(info.identifier()))) {
+        // We are subscribing to all messages on the bus, there is no reason to spam our log over it
         return;
+    }
+
+    // So this message is from a motor driver; it must contain a command or there is something weird happening
+    if (message.empty()) {
+        BOOST_LOG_TRIVIAL(error) << "[" << info.get_bus_time() << "]: Message received for motor 0x" << std::hex
+                                 << info.identifier() << std::dec << " with no payload";
     }
 
     // Process the message

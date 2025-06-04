@@ -8,9 +8,10 @@
 #include "MKS_COMMANDS.hpp"
 
 #include <boost/signals2.hpp>
-#include <string>
-#include <vector>
 #include <chrono>
+#include <string>
+#include <unordered_set>
+#include <vector>
 
 // Forward declaring these classes so that ros2_socketcan can be a private dependency
 namespace drivers::socketcan {
@@ -38,10 +39,15 @@ public:
     /**
      * Initializes an MksStepperController.
      *
-     * @param can_interface the SocketCAN network interface corresponding to the CAN bus
-     * @param norm_factor the interpolation normalisation factor to use, see @ref internorm; defaults to off
+     * @param can_interface SocketCAN network interface corresponding to the CAN bus
+     * @param motor_ids CAN IDs for the motor controllers, used to filter CAN messages so other devices' messages aren't
+     *                  attempted to be decoded
+     * @param norm_factor interpolated normalisation factor to use, see @ref internorm; defaults to off
      */
-    MksStepperController(const std::string& can_interface, const uint8_t norm_factor = 1);
+    MksStepperController(
+            const std::string& can_interface, std::shared_ptr<const std::unordered_set<uint16_t>> motor_ids,
+            const uint8_t norm_factor = 1
+    );
 
     /**
      * Destroys an MksStepperController.
@@ -105,7 +111,7 @@ public:
      *
      * @param timeout maximum time to wait for a message to appear on the bus
      */
-    void update(const std::chrono::nanoseconds & timeout = std::chrono::nanoseconds::zero());
+    void update(const std::chrono::nanoseconds& timeout = std::chrono::nanoseconds::zero());
 
     // ==========================
     //           Events
@@ -154,7 +160,7 @@ protected:
      * @param message the message payload
      * @param info auxiliary information associated with the message, e.g. driver ID, bus time
      */
-    void handleCanMessage(const std::vector<uint8_t>& message, drivers::socketcan::CanId & info);
+    void handleCanMessage(const std::vector<uint8_t>& message, drivers::socketcan::CanId& info);
 
     /**
      * @name Signal Processing Helper Functions
@@ -175,6 +181,7 @@ protected:
 
     std::unique_ptr<drivers::socketcan::SocketCanReceiver> can_receiver;
     std::unique_ptr<drivers::socketcan::SocketCanSender> can_sender;
+    std::shared_ptr<const std::unordered_set<uint16_t>> motor_ids;
     const uint8_t norm_factor;
 
 private:

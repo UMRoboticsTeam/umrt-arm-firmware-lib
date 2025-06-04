@@ -6,13 +6,17 @@
 
 #include <iostream>
 #include <string>
+#include <unordered_set>
 
 #include <ros2_socketcan/socket_can_id.hpp>
 
 std::string mksMoveResponseToString(const MksMoveResponse status);
 
-MksTest::MksTest(const std::string& can_interface, const std::vector<uint8_t>& motor_ids, const uint8_t norm_factor)
-    : s(can_interface, norm_factor), motor_ids(motor_ids) {
+MksTest::MksTest(
+        const std::string& can_interface, std::shared_ptr<const std::unordered_set<uint16_t>> motor_ids,
+        const uint8_t norm_factor
+)
+    : s(can_interface, motor_ids, norm_factor), motor_ids{ std::move(motor_ids) } {
     s.ESetSpeed.connect([this](auto motor, auto status) { onSetSpeed(motor, status); });
     s.ESendStep.connect([this](auto motor, auto status) { onSendStep(motor, status); });
     s.ESeekPosition.connect([this](auto motor, auto status) { onSeekPosition(motor, status); });
@@ -35,7 +39,7 @@ void MksTest::sendTestRoutine() {
     std::this_thread::sleep_for(std::chrono::seconds(1));
 
     // Test motors
-    for (uint8_t motor : this->motor_ids) {
+    for (uint16_t motor : *this->motor_ids) {
         // Send speed of 2 RPM for 5 seconds, then 1 RPM in other direction for 5 seconds, then stop
         s.getPosition(motor);
         s.setSpeed(motor, 2);
@@ -67,19 +71,22 @@ void MksTest::sendTestRoutine() {
 }
 
 void MksTest::onSetSpeed(const uint16_t motor, const bool status) {
-    std::cout << std::hex << "(Requested) Motor " << motor << ": SetSpeed: success=" << (status ? "true" : "false") << std::endl;
+    std::cout << "(Requested) Motor 0x" << std::hex << motor << std::dec
+              << ": SetSpeed: success=" << (status ? "true" : "false") << std::endl;
 }
 
 void MksTest::onSendStep(const uint16_t motor, const MksMoveResponse status) {
-    std::cout << std::hex << "(Requested) Motor " << motor << ": SendStep: success=" << mksMoveResponseToString(status) << std::endl;
+    std::cout << "(Requested) Motor 0x" << std::hex << motor << std::dec
+              << ": SendStep: success=" << mksMoveResponseToString(status) << std::endl;
 }
 
 void MksTest::onSeekPosition(const uint16_t motor, const MksMoveResponse status) {
-    std::cout << std::hex << "(Requested) Motor " << motor << ": SeekPos: success=" << mksMoveResponseToString(status) << std::endl;
+    std::cout << "(Requested) Motor 0x" << std::hex << motor << std::dec
+              << ": SeekPos: success=" << mksMoveResponseToString(status) << std::endl;
 }
 
 void MksTest::onGetPosition(const uint16_t motor, const int32_t position) {
-    std::cout << std::hex << "(Queried)   Motor " << motor << std::dec << ": GetPos: position=" << position << std::endl;
+    std::cout << "(Queried)   Motor 0x" << std::hex << motor << std::dec << ": GetPos: position=" << position << std::endl;
 }
 
 std::string mksMoveResponseToString(const MksMoveResponse status) {

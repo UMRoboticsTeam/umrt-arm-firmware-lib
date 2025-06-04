@@ -5,8 +5,8 @@
 #ifndef UMRT_ARM_FIRMWARE_LIB_MKS_TEST_HPP
 #define UMRT_ARM_FIRMWARE_LIB_MKS_TEST_HPP
 
-#include "mks_stepper_controller.hpp"
 #include "MKS_COMMANDS.hpp"
+#include "mks_stepper_controller.hpp"
 
 #include <string>
 #include <thread>
@@ -15,7 +15,8 @@
 // TODO: Could use some docs, would be nice if we could get some sample output
 class MksTest {
 public:
-    MksTest(const std::string& can_interface, const std::vector<uint8_t>& motor_ids, const uint8_t norm_factor = 1);
+    MksTest(const std::string& can_interface, std::shared_ptr<const std::unordered_set<uint16_t>> motor_ids,
+            const uint8_t norm_factor = 1);
 
     void update();
 
@@ -24,7 +25,7 @@ public:
 protected:
     MksStepperController s;
     std::thread test_thread;
-    const std::vector<uint8_t> motor_ids;
+    std::shared_ptr<const std::unordered_set<uint16_t>> motor_ids;
 
     void onSetSpeed(const uint16_t motor, const bool status);
 
