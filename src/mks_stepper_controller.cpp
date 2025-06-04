@@ -18,7 +18,7 @@ uint8_t checksum(uint16_t driver_id, const std::vector<uint8_t>& payload);
 
 MksStepperController::MksStepperController(const std::string& can_interface, const uint8_t norm_factor) : norm_factor(norm_factor),
                                                                                                           setup_completed(false) {
-    BOOST_LOG_TRIVIAL(trace) << "ArduinoStepperController construction begun";
+    BOOST_LOG_TRIVIAL(trace) << "MksStepperController construction begun";
 
     this->can_receiver = std::make_unique<drivers::socketcan::SocketCanReceiver>(can_interface);
     this->can_sender = std::make_unique<drivers::socketcan::SocketCanSender>(can_interface);
@@ -52,7 +52,6 @@ bool MksStepperController::setSpeed(const uint16_t motor, const int16_t speed, c
     payload.insert(payload.end(), acceleration);
     payload.insert(payload.end(), checksum(motor, payload));
 
-    // TODO: Is the driver expecting remote messages?
     try {
         drivers::socketcan::CanId can_id(motor, 0, drivers::socketcan::FrameType::DATA, drivers::socketcan::StandardFrame);
         can_sender->send(payload.data(), payload.size(), can_id);

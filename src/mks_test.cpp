@@ -75,8 +75,6 @@ void MksTest::sendTestRoutine() {
 
 void MksTest::onSetSpeed(const uint16_t motor, const int16_t speed) {}
 
-void MksTest::onGetSpeed(const uint16_t motor, const int16_t speed) {}
-
 void MksTest::onSendStep(const uint16_t motor, const uint16_t steps, const int16_t speed) {}
 
 void MksTest::onSeekPosition(const uint16_t motor, const int32_t position, const int16_t speed) {}
