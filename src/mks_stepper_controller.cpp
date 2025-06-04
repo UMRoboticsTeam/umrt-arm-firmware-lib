@@ -228,17 +228,6 @@ void MksStepperController::handleCanMessage(const std::vector<uint8_t>& message,
 }
 
 /**
- * Converts 16-bit unsigned integer to bytes in big-endian format.
- * @return big-endian representation
- */
-std::vector<uint8_t> to_bytes(uint32_t integer) {
-    return {
-        static_cast<uint8_t>(integer >> 8 & 0xFF), // bits [15, 8]
-        static_cast<uint8_t>(integer & 0xFF)       // bits [7, 0]
-    };
-}
-
-/**
  * Calculates the "CRC" for an MKS message in accordance with @ref MksCommands
  * @param driver_id CAN ID of the driver this message is sent to
  * @param payload CAN message payload
