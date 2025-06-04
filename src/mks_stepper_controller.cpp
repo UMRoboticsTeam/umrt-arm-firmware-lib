@@ -16,8 +16,7 @@
 
 uint8_t checksum(uint16_t driver_id, const std::vector<uint8_t>& payload);
 
-MksStepperController::MksStepperController(const std::string& can_interface, const uint8_t norm_factor) : norm_factor(norm_factor),
-                                                                                                          setup_completed(false) {
+MksStepperController::MksStepperController(const std::string& can_interface, const uint8_t norm_factor) : norm_factor(norm_factor) {
     BOOST_LOG_TRIVIAL(trace) << "MksStepperController construction begun";
 
     this->can_receiver = std::make_unique<drivers::socketcan::SocketCanReceiver>(can_interface);
@@ -41,12 +40,12 @@ bool MksStepperController::setSpeed(const uint16_t motor, const int16_t speed, c
     // That is, at 16 normalised_speed = speed
     // At 1, normalised_speed = speed / 16
     // At 32, normalised_speed = speed * 2
-    int16_t normalised_speed = static_cast<int16_t>(std::abs(speed) * (int32_t)16 / norm_factor);
+    auto normalised_speed = static_cast<int16_t>(std::abs(speed) * (int32_t)16 / norm_factor);
 
     std::vector<uint8_t> payload{ MksCommands::SET_SPEED };
 
-    uint8_t speed_properties_low = static_cast<uint8_t>((normalised_speed & 0xF00) >> 8) | (speed < 0 ? 1u << 7 : 0u);
-    uint8_t speed_properties_high = static_cast<uint8_t>(normalised_speed & 0xFF);
+    auto speed_properties_low = static_cast<uint8_t>((normalised_speed & 0xF00) >> 8 | (speed < 0 ? 1u << 7 : 0u));
+    auto speed_properties_high = static_cast<uint8_t>(normalised_speed & 0xFF);
     payload.insert(payload.end(), speed_properties_low);
     payload.insert(payload.end(), speed_properties_high);
     payload.insert(payload.end(), acceleration);
@@ -86,13 +85,13 @@ bool MksStepperController::sendStep(const uint16_t motor, const uint32_t num_ste
     if (!isSetup()) { return false; }
 
     // TODO: Don't use signed speed
-    int16_t normalised_speed = static_cast<int16_t>(std::abs(speed) * (int32_t)16 / norm_factor);
+    auto normalised_speed = static_cast<int16_t>(std::abs(speed) * (int32_t)16 / norm_factor);
     uint32_t normalised_steps = num_steps * norm_factor;
 
     std::vector<uint8_t> payload{ MksCommands::SEND_STEP };
 
-    uint8_t speed_properties_low = static_cast<uint8_t>((normalised_speed & 0xF00) >> 8) | (speed < 0 ? 1u << 7 : 0u);
-    uint8_t speed_properties_high = static_cast<uint8_t>(normalised_speed & 0xFF);
+    auto speed_properties_low = static_cast<uint8_t>((normalised_speed & 0xF00) >> 8 | (speed < 0 ? 1u << 7 : 0u));
+    auto speed_properties_high = static_cast<uint8_t>(normalised_speed & 0xFF);
     auto steps_packed = pack_24_big(normalised_steps);
     payload.insert(payload.end(), speed_properties_low);
     payload.insert(payload.end(), speed_properties_high);
@@ -114,13 +113,13 @@ bool MksStepperController::sendStep(const uint16_t motor, const uint32_t num_ste
 bool MksStepperController::seekPosition(const uint16_t motor, const int32_t position, const int16_t speed, const uint8_t acceleration) {
     if (!isSetup()) { return false; }
 
-    int16_t normalised_speed = static_cast<int16_t>(std::abs(speed) * (int32_t)16 / norm_factor);
+    auto normalised_speed = static_cast<int16_t>(std::abs(speed) * (int32_t)16 / norm_factor);
     int32_t normalised_position = position * norm_factor;
 
     std::vector<uint8_t> payload{ MksCommands::SEEK_POS_BY_STEPS };
 
-    uint8_t speed_properties_low = static_cast<uint8_t>((normalised_speed & 0xF00) >> 8) | (speed < 0 ? 1u << 7 : 0u);
-    uint8_t speed_properties_high = static_cast<uint8_t>(normalised_speed & 0xFF);
+    auto speed_properties_low = static_cast<uint8_t>((normalised_speed & 0xF00) >> 8 | (speed < 0 ? 1u << 7 : 0u));
+    auto speed_properties_high = static_cast<uint8_t>(normalised_speed & 0xFF);
     auto steps_packed = pack_24_big(normalised_position);
     payload.insert(payload.end(), speed_properties_low);
     payload.insert(payload.end(), speed_properties_high);
@@ -155,7 +154,7 @@ bool MksStepperController::getPosition(const uint16_t motor) {
     return true;
 }
 
-bool MksStepperController::isSetup() const { return this->setup_completed; };
+bool MksStepperController::isSetup() const { return this->setup_completed; }
 
 void MksStepperController::update(const std::chrono::nanoseconds & timeout) {
     // Read a message from the CAN bus
@@ -180,7 +179,7 @@ void MksStepperController::handleESetSpeed(const std::vector<uint8_t>& message, 
     uint8_t status = message.at(1);
     BOOST_LOG_TRIVIAL(debug) << "[" << info.get_bus_time() << "]: SetSpeed received for motor " << info.identifier()
                              << " with status=" << status;
-    EGetPosition(info.identifier(), status == 1);
+    EGetPosition(static_cast<uint16_t>(info.identifier()), status == 1);
 }
 
 void MksStepperController::handleESendStep(const std::vector<uint8_t>& message, drivers::socketcan::CanId & info) {
