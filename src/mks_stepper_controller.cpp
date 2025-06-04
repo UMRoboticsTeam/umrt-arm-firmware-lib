@@ -175,16 +175,28 @@ void MksStepperController::update(const std::chrono::nanoseconds & timeout) {
 }
 
 
-void MksStepperController::handleESetSpeed(const std::vector<unsigned char>& message) {
-    // TODO: Decode response
+void MksStepperController::handleESetSpeed(const std::vector<uint8_t>& message, drivers::socketcan::CanId & info) {
+    if (message.size() != 3) { return; } // Don't want to process loop-backed requests, only responses
+    uint8_t status = message.at(1);
+    BOOST_LOG_TRIVIAL(debug) << "[" << info.get_bus_time() << "]: SetSpeed received for motor " << info.identifier()
+                             << " with status=" << status;
+    EGetPosition(info.identifier(), status == 1);
 }
 
-void MksStepperController::handleESendStep(const std::vector<unsigned char>& message) {
-    // TODO: Decode response
+void MksStepperController::handleESendStep(const std::vector<uint8_t>& message, drivers::socketcan::CanId & info) {
+    if (message.size() != 3) { return; } // Don't want to process loop-backed requests, only responses
+    uint8_t status = message.at(1);
+    BOOST_LOG_TRIVIAL(debug) << "[" << info.get_bus_time() << "]: SendStep received for motor " << info.identifier()
+                             << " with status=" << status;
+    EGetPosition(static_cast<uint16_t>(info.identifier()), status);
 }
 
-void MksStepperController::handleESeekPosition(const std::vector<unsigned char>& message) {
-    // TODO: Decode response
+void MksStepperController::handleESeekPosition(const std::vector<uint8_t>& message, drivers::socketcan::CanId & info) {
+    if (message.size() != 3) { return; } // Don't want to process loop-backed requests, only responses
+    uint8_t status = message.at(1);
+    BOOST_LOG_TRIVIAL(debug) << "[" << info.get_bus_time() << "]: SeekPosition received for motor " << info.identifier()
+                             << " with status=" << status;
+    EGetPosition(static_cast<uint16_t>(info.identifier()), status);
 }
 
 void MksStepperController::handleEGetPosition(const std::vector<uint8_t>& message, drivers::socketcan::CanId & info) {
@@ -192,7 +204,7 @@ void MksStepperController::handleEGetPosition(const std::vector<uint8_t>& messag
     auto position = static_cast<int32_t>(decode_32_big(message.cbegin() + 1));
     BOOST_LOG_TRIVIAL(debug) << "[" << info.get_bus_time() << "]: GetPosition received for motor " << info.identifier()
                              << " with position=" << position << ", normalised_position=" << position / norm_factor;
-    EGetPosition(info.identifier(), position / norm_factor);
+    EGetPosition(static_cast<uint16_t>(info.identifier()), position / norm_factor);
 }
 
 void MksStepperController::handleCanMessage(const std::vector<uint8_t>& message, drivers::socketcan::CanId & info) {
@@ -206,6 +218,9 @@ void MksStepperController::handleCanMessage(const std::vector<uint8_t>& message,
 
     // Process the message
     switch (message[0]) {
+        case MksCommands::SET_SPEED: this->handleESetSpeed(message, info); break;
+        case MksCommands::SEND_STEP: this->handleESendStep(message, info); break;
+        case MksCommands::SEEK_POS_BY_STEPS: this->handleESeekPosition(message, info); break;
         case MksCommands::CURRENT_POS: this->handleEGetPosition(message, info); break;
         default:
             // Again, we are subscribing to all messages on the bus, no need to spam log with ignored messages

@@ -5,6 +5,8 @@
 #ifndef UMRT_ARM_FIRMWARE_LIB_MKS_STEPPER_CONTROLLER_HPP
 #define UMRT_ARM_FIRMWARE_LIB_MKS_STEPPER_CONTROLLER_HPP
 
+#include "MKS_COMMANDS.hpp"
+
 #include <boost/signals2.hpp>
 #include <string>
 #include <vector>
@@ -112,20 +114,29 @@ public:
     /**
      * <a href=https://www.boost.org/doc/libs/1_63_0/doc/html/signals.html>Boost signal</a> triggered when
      * @ref setSpeed responses are received.
+     *
+     * @param 1st [uint8_t] motor ID
+     * @param 2nd [bool] 1 if movement succeeded
      */
-    boost::signals2::signal<void(uint16_t, int16_t)> ESetSpeed;
+    boost::signals2::signal<void(uint16_t, bool)> ESetSpeed;
 
     /**
      * <a href=https://www.boost.org/doc/libs/1_63_0/doc/html/signals.html>Boost signal</a> triggered when
      * @ref sendStep responses are received.
+     *
+     * @param 1st [uint8_t] motor ID
+     * @param 2nd [MksMoveResponse] current movement status
      */
-    boost::signals2::signal<void(uint16_t, uint16_t, int16_t)> ESendStep;
+    boost::signals2::signal<void(uint16_t, MksMoveResponse)> ESendStep;
 
     /**
      * <a href=https://www.boost.org/doc/libs/1_63_0/doc/html/signals.html>Boost signal</a> triggered when
      * @ref seekPosition responses are received.
+     *
+     * @param 1st [uint8_t] motor ID
+     * @param 2nd [MksMoveResponse] current movement status
      */
-    boost::signals2::signal<void(uint16_t, int32_t, int16_t)> ESeekPosition;
+    boost::signals2::signal<void(uint16_t, MksMoveResponse)> ESeekPosition;
 
     /**
      * <a href=https://www.boost.org/doc/libs/1_63_0/doc/html/signals.html>Boost signal</a> triggered when
@@ -153,13 +164,13 @@ protected:
      * @param message the de-firmatified Sysex payload
      */
     //@{
-    void handleESetSpeed(const std::vector<unsigned char>& message);
+    void handleESetSpeed(const std::vector<uint8_t>& message, drivers::socketcan::CanId& info);
 
-    void handleESendStep(const std::vector<unsigned char>& message);
+    void handleESendStep(const std::vector<uint8_t>& message, drivers::socketcan::CanId& info);
 
-    void handleESeekPosition(const std::vector<unsigned char>& message);
+    void handleESeekPosition(const std::vector<uint8_t>& message, drivers::socketcan::CanId& info);
 
-    void handleEGetPosition(const std::vector<unsigned char>& message, drivers::socketcan::CanId & info);
+    void handleEGetPosition(const std::vector<unsigned char>& message, drivers::socketcan::CanId& info);
     //@}
 
     std::unique_ptr<drivers::socketcan::SocketCanReceiver> can_receiver;
