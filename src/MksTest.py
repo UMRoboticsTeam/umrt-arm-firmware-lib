@@ -290,97 +290,46 @@ def test(driver_can_id, can_device, bitrate):
     print(0x01_FE_02_58_02_FF_C0_00_1A == squeeze_msg(seek_pos_by_steps(1, 600, 2, -0x4000)))
     
     # Motor testing sequence
+    # TODO: Needs more testing
     with can.Bus(interface='socketcan', channel=can_device, bitrate=bitrate) as bus:
-    #if True:
         # Register message handlers
         notifier = can.Notifier(bus, [])
         notifier.add_listener(on_motor_speed)
         notifier.add_listener(on_current_pos)
 
-        set_speed(driver_can_id, False, 6, 0, bus, 16)
-        #set_speed(1, False, 1, 2, bus)
-        get_motor_speed(driver_can_id, bus)
-        #get_current_pos(driver_can_id, bus)
-        time.sleep(1)
-        get_motor_speed(driver_can_id, bus)
-        time.sleep(1)
-        get_motor_speed(driver_can_id, bus)
-        time.sleep(1)
-        get_motor_speed(driver_can_id, bus)
-        time.sleep(1)
-        get_motor_speed(driver_can_id, bus)
-        time.sleep(1)
-        get_motor_speed(driver_can_id, bus)
-        #get_current_pos(driver_can_id, bus)
-        time.sleep(4)
-        get_motor_speed(driver_can_id, bus)
-        #get_current_pos(driver_can_id, bus)
-        time.sleep(1)
-        set_speed(driver_can_id, False, 0, 0, bus)
-        time.sleep(5)
-        #
-        # set_speed(driver_can_id, True, 2, 0, bus)
-        # get_motor_speed(driver_can_id, bus)
-        # get_current_pos(driver_can_id, bus)
-        # time.sleep(2)
-        # get_motor_speed(driver_can_id, bus)
-        # get_current_pos(driver_can_id, bus)
-        # time.sleep(2)
-        # get_motor_speed(driver_can_id, bus)
-        # get_current_pos(driver_can_id, bus)
-        # time.sleep(1)
-        # set_speed(driver_can_id, False, 0, 0, bus)
-        # time.sleep(5)
-
-        # set_speed(1, False, 32, 2, bus)
-        # get_motor_speed(driver_can_id, bus)
-        # time.sleep(5)
-        # set_speed(1, False, 0, 2, bus)
-
-        # seek_pos_by_steps(driver_can_id, 1, 0, 200*8, bus)
-        # get_motor_speed(driver_can_id, bus)
-        # get_current_pos(driver_can_id, bus)
-        # time.sleep(2)
-        # get_motor_speed(driver_can_id, bus)
-        # get_current_pos(driver_can_id, bus)
-        # time.sleep(2)
-        # get_motor_speed(driver_can_id, bus)
-        # get_current_pos(driver_can_id, bus)
-        # time.sleep(1)
-
         # Send speed of 2 RPM for 5 seconds, then 1 RPM in other direction for 5 seconds, then stop
-        # get_current_pos(driver_can_id, bus)
-        # set_speed(driver_can_id, False, 2, 0, bus)
-        # get_motor_speed(driver_can_id, bus)
-        # time.sleep(5)
-        # set_speed(driver_can_id, True, 1, 0, bus)
-        # get_motor_speed(driver_can_id, bus)
-        # time.sleep(5)
-        # set_speed(driver_can_id, False, 0, 0, bus)
-        # get_motor_speed(driver_can_id, bus)
-        #
-        # # Step forward 20 steps at 10 RPM, then back 10 steps at 5 RPM
-        # get_current_pos(driver_can_id, bus)
-        # send_step(driver_can_id, False, 10, 0, 20, bus)
-        # time.sleep(1)
-        # get_current_pos(driver_can_id, bus)
-        # send_step(driver_can_id, True, 5, 0, 20, bus)
-        # time.sleep(1)
-        # get_current_pos(driver_can_id, bus)
-        #
-        # time.sleep(1)
-        #
+        get_current_pos(driver_can_id, bus)
+        set_speed(driver_can_id, False, 2, 0, bus)
+        get_motor_speed(driver_can_id, bus)
+        time.sleep(5)
+        set_speed(driver_can_id, True, 1, 0, bus)
+        get_motor_speed(driver_can_id, bus)
+        time.sleep(5)
+        set_speed(driver_can_id, False, 0, 0, bus)
+        get_motor_speed(driver_can_id, bus)
 
-        # # Step one full rotation in 5 seconds
-        # send_step(driver_can_id, False, 12, 0, 200, bus, 128)
-        # time.sleep(6)
-        #
-        #
-        # # Seek back to position 0 from wherever we ended up at 10 RPM
-        # #seek_pos_by_steps(driver_can_id, 10, 0, 0, bus)
-        # seek_pos_by_steps(driver_can_id, 10, 0, 0, bus)
-        # time.sleep(1)
-        # get_current_pos(driver_can_id, bus)
+        # Step forward 20 steps at 10 RPM, then back 10 steps at 5 RPM
+        get_current_pos(driver_can_id, bus)
+        send_step(driver_can_id, False, 10, 0, 20, bus)
+        time.sleep(1)
+        get_current_pos(driver_can_id, bus)
+        send_step(driver_can_id, True, 5, 0, 20, bus)
+        time.sleep(1)
+        get_current_pos(driver_can_id, bus)
+
+        time.sleep(1)
+
+
+        # Step one full rotation in 5 seconds
+        send_step(driver_can_id, False, 12, 0, 200, bus, 128)
+        time.sleep(6)
+
+
+        # Seek back to position 0 from wherever we ended up at 10 RPM
+        #seek_pos_by_steps(driver_can_id, 10, 0, 0, bus)
+        seek_pos_by_steps(driver_can_id, 10, 0, 0, bus)
+        time.sleep(1)
+        get_current_pos(driver_can_id, bus)
         
         time.sleep(1)
         notifier.stop()
