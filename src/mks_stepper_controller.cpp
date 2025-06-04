@@ -84,7 +84,8 @@ bool MksStepperController::setSpeed(const uint16_t motor, const int16_t speed, c
 bool MksStepperController::sendStep(const uint16_t motor, const uint32_t num_steps, const int16_t speed, const uint8_t acceleration) {
     if (!isSetup()) { return false; }
 
-    // TODO: Don't use signed speed
+    // TODO: Don't use signed speed - disagree now, good to have consistency between methods
+    // TODO: Need to test though
     auto normalised_speed = static_cast<int16_t>(std::abs(speed) * (int32_t)16 / norm_factor);
     uint32_t normalised_steps = num_steps * norm_factor;
 
