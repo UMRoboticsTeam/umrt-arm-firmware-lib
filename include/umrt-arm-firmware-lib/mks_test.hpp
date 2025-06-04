@@ -15,8 +15,7 @@
 // TODO: Could use some docs, would be nice if we could get some sample output
 class MksTest {
 public:
-    MksTest(const std::string& can_interface, std::shared_ptr<const std::unordered_set<uint16_t>> motor_ids,
-            const uint8_t norm_factor = 1);
+    MksTest(const std::string& can_interface, std::vector<uint16_t>&& motor_ids, const uint8_t norm_factor = 1);
 
     void update();
 
@@ -25,7 +24,7 @@ public:
 protected:
     MksStepperController s;
     std::thread test_thread;
-    std::shared_ptr<const std::unordered_set<uint16_t>> motor_ids;
+    const std::vector<uint16_t> motor_ids;
 
     void onSetSpeed(const uint16_t motor, const bool status);
 

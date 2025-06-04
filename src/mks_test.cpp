@@ -12,11 +12,10 @@
 
 std::string mksMoveResponseToString(const MksMoveResponse status);
 
-MksTest::MksTest(
-        const std::string& can_interface, std::shared_ptr<const std::unordered_set<uint16_t>> motor_ids,
-        const uint8_t norm_factor
-)
-    : s(can_interface, motor_ids, norm_factor), motor_ids{ std::move(motor_ids) } {
+MksTest::MksTest(const std::string& can_interface, std::vector<uint16_t>&& motor_ids, const uint8_t norm_factor)
+    : s{ can_interface, std::make_shared<std::unordered_set<uint16_t>>(motor_ids.cbegin(), motor_ids.cend()), norm_factor },
+      motor_ids{ std::move(motor_ids) } {
+    // Note: We use vector for motor_ids here instead of unordered_set because we want the motors to be tested in order
     s.ESetSpeed.connect([this](auto motor, auto status) { onSetSpeed(motor, status); });
     s.ESendStep.connect([this](auto motor, auto status) { onSendStep(motor, status); });
     s.ESeekPosition.connect([this](auto motor, auto status) { onSeekPosition(motor, status); });
@@ -39,7 +38,7 @@ void MksTest::sendTestRoutine() {
     std::this_thread::sleep_for(std::chrono::seconds(1));
 
     // Test motors
-    for (uint16_t motor : *this->motor_ids) {
+    for (uint16_t motor : this->motor_ids) {
         // Send speed of 2 RPM for 5 seconds, then 1 RPM in other direction for 5 seconds, then stop
         s.getPosition(motor);
         s.setSpeed(motor, 2);
