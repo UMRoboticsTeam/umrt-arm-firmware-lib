@@ -68,7 +68,8 @@ It uses the fork of <a href="https://github.com/JWhitleyWork/socketcan-plus-plus
 packaged and maintained in <a href="https://github.com/autowarefoundation/ros2_socketcan">ros2_socketcan</a> to
 communicate with the stepper controllers over a SocketCAN interface. As with the Arduino system, this script also uses
 the event system to verify that the correct responses (and therefore correct callbacks) are fired when the low-level
-controller responds.
+controller responds. The script must have the motor IDs to test provided through the `--motors` argument. See `--help`
+for available options.
 
 Below is the expected output from this test program:
 \code

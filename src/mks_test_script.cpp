@@ -30,9 +30,9 @@ int main(int argc, const char* argv[]) {
     try {
         boost::program_options::options_description options;
         options.add_options()
-            ("interface", boost::program_options::value<std::string>()->default_value(CAN_INTERFACE), "SocketCAN network interface")
-            ("motors", boost::program_options::value<std::vector<uint16_t>>()->multitoken()->composing()->required(), "List of CAN IDs for motor controllers to test")
-            ("help", "Show help");
+            ("interface,i", boost::program_options::value<std::string>()->default_value(CAN_INTERFACE), "SocketCAN network interface")
+            ("motors,m", boost::program_options::value<std::vector<uint16_t>>()->multitoken()->composing()->required(), "List of CAN IDs for motor controllers to test")
+            ("help,h", "Show help");
 
         boost::program_options::variables_map vm;
         store(parse_command_line(argc, argv, options), vm);
