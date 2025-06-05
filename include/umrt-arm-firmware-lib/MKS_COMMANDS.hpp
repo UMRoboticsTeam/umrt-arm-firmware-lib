@@ -32,8 +32,6 @@
  * This is only true for these conditions; a speed of "1 RPM" actually corresponds to 3200 steps per minute.
  * If a 200 step/rev motor is being used in full-step mode, a speed command of "1 RPM" will instead move the
  * motor at \f$v = 1 * \left(\frac{3200\ steps}{min}\right) \left(\frac{1\ full-step}{step}\right) \left(\frac{1\ rev}{200\ full-steps}\right) = 16\ RPM\f$
- *
- * TODO: Update Doxygen references to point here instead of MksTest.py
  */
 enum MksCommands : uint8_t {
     /** Encoder value, split into number of turns and angle.

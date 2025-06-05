@@ -89,8 +89,6 @@ bool MksStepperController::sendStep(
 ) {
     if (!isSetup()) { return false; }
 
-    // TODO: Don't use signed speed - disagree now, good to have consistency between methods
-    // TODO: Need to test though
     auto normalised_speed = static_cast<int16_t>(std::abs(speed) * (int32_t)16 / norm_factor);
     uint32_t normalised_steps = num_steps * norm_factor;
 

@@ -12,7 +12,7 @@
 #include <thread>
 #include <vector>
 
-// TODO: Could use some docs, would be nice if we could get some sample output
+// TODO: Could use some docs
 class MksTest {
 public:
     MksTest(const std::string& can_interface, std::vector<uint16_t>&& motor_ids, const uint8_t norm_factor = 1);
