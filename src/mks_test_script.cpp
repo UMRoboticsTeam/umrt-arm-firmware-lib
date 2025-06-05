@@ -36,12 +36,15 @@ int main(int argc, const char* argv[]) {
 
         boost::program_options::variables_map vm;
         store(parse_command_line(argc, argv, options), vm);
-        notify(vm);
 
+        // Print help output before notify so that you don't need to specify motors
         if (vm.count("help")) {
             std::cout << options << std::endl;
             return 0;
         }
+
+        notify(vm);
+
         interface = vm["interface"].as<std::string>();
         motor_ids = vm["motors"].as<std::vector<uint16_t>>();
     }
