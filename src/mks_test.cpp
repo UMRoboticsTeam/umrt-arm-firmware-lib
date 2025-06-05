@@ -47,6 +47,7 @@ void MksTest::sendTestRoutine() {
         std::this_thread::sleep_for(std::chrono::seconds(5));
         s.setSpeed(motor, 0);
         std::this_thread::sleep_for(std::chrono::seconds(1));
+
         //Step forward 20 steps at 10 RPM, then back 10 steps at 5 RPM
         s.getPosition(motor);
         s.sendStep(motor, 20, 10);
@@ -76,12 +77,12 @@ void MksTest::onSetSpeed(const uint16_t motor, const bool status) {
 
 void MksTest::onSendStep(const uint16_t motor, const MksMoveResponse status) {
     std::cout << "(Requested) Motor 0x" << std::hex << motor << std::dec
-              << ": SendStep: success=" << mksMoveResponseToString(status) << std::endl;
+              << ": SendStep: status=" << mksMoveResponseToString(status) << std::endl;
 }
 
 void MksTest::onSeekPosition(const uint16_t motor, const MksMoveResponse status) {
     std::cout << "(Requested) Motor 0x" << std::hex << motor << std::dec
-              << ": SeekPos: success=" << mksMoveResponseToString(status) << std::endl;
+              << ": SeekPos: status=" << mksMoveResponseToString(status) << std::endl;
 }
 
 void MksTest::onGetPosition(const uint16_t motor, const int32_t position) {
