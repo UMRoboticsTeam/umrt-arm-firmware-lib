@@ -224,7 +224,7 @@ void MksStepperController::handleCanMessage(const std::vector<uint8_t>& message,
 
     // Drop message if not addressed to us
     BOOST_LOG_TRIVIAL(error) << "Reached" << info.is_extended();
-    if (info.is_extended() || !motor_ids->count(static_cast<const uint16_t>(info.identifier()))) {
+    if (info.is_extended() || !motor_ids->count(static_cast<uint16_t>(info.identifier()))) {
         // We are subscribing to all messages on the bus, there is no reason to spam our log over it
         return;
     }
