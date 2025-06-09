@@ -58,24 +58,15 @@ target_include_directories(${lib_target} PUBLIC # Everything in this folder will
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include/${PROJECT_NAME}>"
         "$<INSTALL_INTERFACE:include/>")
 
-# Somewhat of a hack here:
-# We use a C++ library contained in ros2_socketcan for SocketCAN support
-# However, just linking in ros2_socketcan pulls in all of the ROS interface dependencies, which is not something we want
-#       as we want to build this into a static library
-# So, we wrap ros2_socketcan in some CMake magic to suppress those INTERFACE linkages from propagating into our linkages
-#add_library(ros2_socketcan_wrapper)
-#target_link_libraries(ros2_socketcan_wrapper INTERFACE $<TARGET_NAME_IF_EXISTS:ros2_socketcan>)
-#set_target_properties(ros2_socketcan_wrapper PROPERTIES INTERFACE_LINK_LIBRARIES "")
-
 target_link_libraries(${lib_target} PUBLIC
         # Consumers need to know about openFrameworksArduino since we reference it in ArduinoStepperController.h
         openFrameworksArduino::openFrameworksArduino
         Boost::log
         Boost::log_setup
         )
-message( "!!!! My stuff !!!!" "${ros2_socketcan_LIBRARIES}")
+
 target_link_libraries(${lib_target} PRIVATE
-        ${ros2_socketcan_LIBRARIES}
+        /opt/ros/humble/lib/libros2_socketcan.so
         )
 target_include_directories(${lib_target} PRIVATE
         ${ros2_socketcan_INCLUDE_DIRS}
