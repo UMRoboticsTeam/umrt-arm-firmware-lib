@@ -16,15 +16,66 @@
 
 uint8_t checksum(uint16_t driver_id, const std::vector<uint8_t>& payload);
 
+/**
+ * PIMPL wrapper around the CAN send/receive implementation to allow for it to be a private dependency.
+ * Under no circumstance may an instance of this class outlive the MksStepperController which encloses it.
+ */
+class MksStepperController::CanImpl {
+public:
+    explicit CanImpl(MksStepperController* controller, const std::string& can_interface) : controller(controller) {
+        this->can_receiver = std::make_unique<drivers::socketcan::SocketCanReceiver>(can_interface);
+        this->can_sender = std::make_unique<drivers::socketcan::SocketCanSender>(can_interface);
+    }
+
+    /**
+     * Handles received CAN messages and sends out signals as appropriate.
+     *
+     * @param message the message payload
+     * @param info auxiliary information associated with the message, e.g. driver ID, bus time
+     */
+    void handleCanMessage(const std::vector<uint8_t>& message, drivers::socketcan::CanId& info);
+
+    /**
+     * @name Signal Processing Helper Functions
+     * Helper functions for decoding the parameters of Sysex commands processed by @ref handleSysex before forwarding
+     * to their associated <a href=https://www.boost.org/doc/libs/1_63_0/doc/html/signals.html>signal</a>.
+     *
+     * @param message the de-firmatified Sysex payload
+     */
+    //@{
+    void handleESetSpeed(const std::vector<uint8_t>& message, drivers::socketcan::CanId& info);
+
+    void handleESendStep(const std::vector<uint8_t>& message, drivers::socketcan::CanId& info);
+
+    void handleESeekPosition(const std::vector<uint8_t>& message, drivers::socketcan::CanId& info);
+
+    void handleEGetPosition(const std::vector<unsigned char>& message, drivers::socketcan::CanId& info);
+    //@}
+
+    /**
+     * Non-owning reference to the MksStepperController this CanImpl belongs to.
+     */
+    MksStepperController* controller;
+
+    /**
+     * Implementation-opaque SocketCAN receiver node.
+     */
+    std::unique_ptr<drivers::socketcan::SocketCanReceiver> can_receiver;
+
+    /**
+     * Implementation-opaque SocketCAN sender node.
+     */
+    std::unique_ptr<drivers::socketcan::SocketCanSender> can_sender;
+};
+
+
 MksStepperController::MksStepperController(
         const std::string& can_interface, std::shared_ptr<const std::unordered_set<uint16_t>> motor_ids,
         const uint8_t norm_factor
-)
-    : motor_ids{ std::move(motor_ids) }, norm_factor{ norm_factor } {
+) : motor_ids{ std::move(motor_ids) }, norm_factor{ norm_factor } {
     BOOST_LOG_TRIVIAL(trace) << "MksStepperController construction begun";
 
-    this->can_receiver = std::make_unique<drivers::socketcan::SocketCanReceiver>(can_interface);
-    this->can_sender = std::make_unique<drivers::socketcan::SocketCanSender>(can_interface);
+    can_impl = std::make_unique<CanImpl>(this, can_interface);
 
     //TODO: Write norm_factor as microstepping factor to the driver
 
@@ -55,7 +106,7 @@ bool MksStepperController::setSpeed(const uint16_t motor, const int16_t speed, c
 
     try {
         drivers::socketcan::CanId can_id(motor, 0, drivers::socketcan::FrameType::DATA, drivers::socketcan::StandardFrame);
-        can_sender->send(payload.data(), payload.size(), can_id);
+        can_impl->can_sender->send(payload.data(), payload.size(), can_id);
     } catch (drivers::socketcan::SocketCanTimeout& e) {
         // Won't bother with e.what(), it is always "CAN Send timeout"
         BOOST_LOG_TRIVIAL(warning) << "MksStepperController setSpeed timeout: motor=0x" << std::hex << motor << std::dec
@@ -75,7 +126,7 @@ bool MksStepperController::setSpeed(const uint16_t motor, const int16_t speed, c
 //
 //    try {
 //        drivers::socketcan::CanId can_id(motor, 0, drivers::socketcan::FrameType::DATA, drivers::socketcan::StandardFrame);
-//        can_sender->send(payload.data(), payload.size(), can_id);
+//        can_impl->can_sender->send(payload.data(), payload.size(), can_id);
 //    } catch (drivers::socketcan::SocketCanTimeout& e) {
 //        BOOST_LOG_TRIVIAL(warning) << "MksStepperController getSpeed timeout: motor=" << motor;
 //        return false;
@@ -108,7 +159,7 @@ bool MksStepperController::sendStep(
 
     try {
         drivers::socketcan::CanId can_id(motor, 0, drivers::socketcan::FrameType::DATA, drivers::socketcan::StandardFrame);
-        can_sender->send(payload.data(), payload.size(), can_id);
+        can_impl->can_sender->send(payload.data(), payload.size(), can_id);
     } catch (drivers::socketcan::SocketCanTimeout& e) {
         BOOST_LOG_TRIVIAL(warning) << "MksStepperController sendStep timeout: motor=0x" << std::hex << motor << std::dec
                                    << ", num_steps=" << num_steps << ", speed=" << normalised_speed
@@ -142,7 +193,7 @@ bool MksStepperController::seekPosition(
 
     try {
         drivers::socketcan::CanId can_id(motor, 0, drivers::socketcan::FrameType::DATA, drivers::socketcan::StandardFrame);
-        can_sender->send(payload.data(), payload.size(), can_id);
+        can_impl->can_sender->send(payload.data(), payload.size(), can_id);
     } catch (drivers::socketcan::SocketCanTimeout& e) {
         BOOST_LOG_TRIVIAL(warning) << "MksStepperController sendStep timeout: motor=0x" << std::hex << motor << std::dec
                                    << ", position=" << normalised_position << ", speed=" << normalised_speed
@@ -160,7 +211,7 @@ bool MksStepperController::getPosition(const uint16_t motor) {
 
     try {
         drivers::socketcan::CanId can_id(motor, 0, drivers::socketcan::FrameType::DATA, drivers::socketcan::StandardFrame);
-        can_sender->send(payload.data(), payload.size(), can_id);
+        can_impl->can_sender->send(payload.data(), payload.size(), can_id);
     } catch (drivers::socketcan::SocketCanTimeout& e) {
         BOOST_LOG_TRIVIAL(warning) << "MksStepperController getPosition timeout: motor=0x" << std::hex << motor << std::dec;
         return false;
@@ -174,7 +225,7 @@ void MksStepperController::update(const std::chrono::nanoseconds& timeout) {
     // Read a message from the CAN bus
     // TODO: Consider bus-level message filtering for efficiency
     uint8_t msg_buffer[8];
-    drivers::socketcan::CanId msg_info = this->can_receiver->receive(&msg_buffer, timeout);
+    drivers::socketcan::CanId msg_info = can_impl->can_receiver->receive(&msg_buffer, timeout);
 
     // If this isn't a standard CAN message, then it isn't a message applicable to us
     if (msg_info.frame_type() != drivers::socketcan::FrameType::DATA) { return; }
@@ -182,49 +233,49 @@ void MksStepperController::update(const std::chrono::nanoseconds& timeout) {
     // Turn the raw buffer into a vector
     std::vector msg(msg_buffer, msg_buffer + msg_info.length());
 
-    this->handleCanMessage(msg, msg_info);
+    this->can_impl->handleCanMessage(msg, msg_info);
 }
 
 
-void MksStepperController::handleESetSpeed(const std::vector<uint8_t>& message, drivers::socketcan::CanId& info) {
+void MksStepperController::CanImpl::handleESetSpeed(const std::vector<uint8_t>& message, drivers::socketcan::CanId& info) {
     if (message.size() != 3) { return; } // Don't want to process loop-backed requests, only responses
     const auto status = static_cast<MksMoveResponse>(message.at(1));
     BOOST_LOG_TRIVIAL(debug) << "[" << info.get_bus_time() << "]: SetSpeed received for motor 0x" << std::hex
                              << info.identifier() << std::dec << " with status=" << status;
-    ESetSpeed(static_cast<uint16_t>(info.identifier()), status == 1);
+    controller->ESetSpeed(static_cast<uint16_t>(info.identifier()), status == 1);
 }
 
-void MksStepperController::handleESendStep(const std::vector<uint8_t>& message, drivers::socketcan::CanId& info) {
+void MksStepperController::CanImpl::handleESendStep(const std::vector<uint8_t>& message, drivers::socketcan::CanId& info) {
     if (message.size() != 3) { return; } // Don't want to process loop-backed requests, only responses
     const auto status = static_cast<MksMoveResponse>(message.at(1));
     BOOST_LOG_TRIVIAL(debug) << "[" << info.get_bus_time() << "]: SendStep received for motor 0x" << std::hex
                              << info.identifier() << std::dec << " with status=" << status;
-    ESendStep(static_cast<uint16_t>(info.identifier()), status);
+    controller->ESendStep(static_cast<uint16_t>(info.identifier()), status);
 }
 
-void MksStepperController::handleESeekPosition(const std::vector<uint8_t>& message, drivers::socketcan::CanId& info) {
+void MksStepperController::CanImpl::handleESeekPosition(const std::vector<uint8_t>& message, drivers::socketcan::CanId& info) {
     if (message.size() != 3) { return; } // Don't want to process loop-backed requests, only responses
     const auto status = static_cast<MksMoveResponse>(message.at(1));
     BOOST_LOG_TRIVIAL(debug) << "[" << info.get_bus_time() << "]: SeekPosition received for motor 0x" << std::hex
                              << info.identifier() << std::dec << " with status=" << status;
-    ESeekPosition(static_cast<uint16_t>(info.identifier()), status);
+    controller->ESeekPosition(static_cast<uint16_t>(info.identifier()), status);
 }
 
-void MksStepperController::handleEGetPosition(const std::vector<uint8_t>& message, drivers::socketcan::CanId& info) {
+void MksStepperController::CanImpl::handleEGetPosition(const std::vector<uint8_t>& message, drivers::socketcan::CanId& info) {
     if (message.size() != 6) { return; } // Don't want to process loop-backed requests, only responses
     auto position = static_cast<int32_t>(decode_32_big(message.cbegin() + 1));
     BOOST_LOG_TRIVIAL(debug) << "[" << info.get_bus_time() << "]: GetPosition received for motor 0x" << std::hex
                              << info.identifier() << std::dec << " with position=" << position
-                             << ", normalised_position=" << position / norm_factor;
-    EGetPosition(static_cast<uint16_t>(info.identifier()), position / norm_factor);
+                             << ", normalised_position=" << position / controller->norm_factor;
+    controller->EGetPosition(static_cast<uint16_t>(info.identifier()), position / controller->norm_factor);
 }
 
-void MksStepperController::handleCanMessage(const std::vector<uint8_t>& message, drivers::socketcan::CanId& info) {
+void MksStepperController::CanImpl::handleCanMessage(const std::vector<uint8_t>& message, drivers::socketcan::CanId& info) {
     // Note: info can't be const because get_bus_time isn't const-qualified...
 
     // Drop message if not addressed to us
     BOOST_LOG_TRIVIAL(error) << "Reached" << info.is_extended();
-    if (info.is_extended() || !motor_ids->count(static_cast<uint16_t>(info.identifier()))) {
+    if (info.is_extended() || !controller->motor_ids->count(static_cast<uint16_t>(info.identifier()))) {
         // We are subscribing to all messages on the bus, there is no reason to spam our log over it
         return;
     }
