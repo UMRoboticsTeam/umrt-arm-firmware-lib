@@ -13,6 +13,13 @@
 #include <unordered_set>
 #include <vector>
 
+// Forward declaring these classes so that ros2_socketcan can be a private dependency
+namespace drivers::socketcan {
+    class SocketCanReceiver;
+    class SocketCanSender;
+    class CanId;
+} // namespace drivers::socketcan
+
 /**
  * Abstracts CAN bus communication to MKS SERVO57D/42D/35D/28D stepper motor driver modules. Responses are conveyed through
  * <a href=https://www.boost.org/doc/libs/1_63_0/doc/html/signals.html>Boost signals</a>.
@@ -147,9 +154,33 @@ public:
     boost::signals2::signal<void(uint16_t, int32_t)> EGetPosition;
 
 protected:
-    class CanImpl;
-    std::unique_ptr<CanImpl> can_impl;
+    /**
+     * Handles received CAN messages and sends out signals as appropriate.
+     *
+     * @param message the message payload
+     * @param info auxiliary information associated with the message, e.g. driver ID, bus time
+     */
+    void handleCanMessage(const std::vector<uint8_t>& message, drivers::socketcan::CanId& info);
 
+    /**
+     * @name Signal Processing Helper Functions
+     * Helper functions for decoding the parameters of Sysex commands processed by @ref handleSysex before forwarding
+     * to their associated <a href=https://www.boost.org/doc/libs/1_63_0/doc/html/signals.html>signal</a>.
+     *
+     * @param message the de-firmatified Sysex payload
+     */
+    //@{
+    void handleESetSpeed(const std::vector<uint8_t>& message, drivers::socketcan::CanId& info);
+
+    void handleESendStep(const std::vector<uint8_t>& message, drivers::socketcan::CanId& info);
+
+    void handleESeekPosition(const std::vector<uint8_t>& message, drivers::socketcan::CanId& info);
+
+    void handleEGetPosition(const std::vector<unsigned char>& message, drivers::socketcan::CanId& info);
+    //@}
+
+    std::unique_ptr<drivers::socketcan::SocketCanReceiver> can_receiver;
+    std::unique_ptr<drivers::socketcan::SocketCanSender> can_sender;
     std::shared_ptr<const std::unordered_set<uint16_t>> motor_ids;
     const uint8_t norm_factor;
 
