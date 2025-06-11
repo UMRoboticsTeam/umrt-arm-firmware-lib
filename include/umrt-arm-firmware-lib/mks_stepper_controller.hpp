@@ -67,7 +67,7 @@ public:
     bool setSpeed(const uint16_t motor, const int16_t speed, const uint8_t acceleration = 0);
 
     /**
-     * Sends a @ref MksCommands::.SEND_STEP command to move a motor a fixed number of steps.
+     * Sends a @ref MksCommands::SEND_STEP command to move a motor a fixed number of steps.
      * Direction is controlled by the sign of the target speed.
      * Response callbacks are available through @ref ESendStep.
      *
@@ -80,7 +80,7 @@ public:
     bool sendStep(const uint16_t motor, const uint32_t num_steps, const int16_t speed, const uint8_t acceleration = 0);
 
     /**
-     * Sends a @ref MksCommands::.SEEK_POS_BY_STEPS command to move a motor to specific step position.
+     * Sends a @ref MksCommands::SEEK_POS_BY_STEPS command to move a motor to specific step position.
      * Since this command seeks a position, the sign of the speed is ignored.
      *
      * @param motor the ID of the motor to move
@@ -92,7 +92,7 @@ public:
     bool seekPosition(const uint16_t motor, const int32_t position, const int16_t speed, const uint8_t acceleration = 0);
 
     /**
-      * Sends a @ref MksCommands::.CURRENT_POS command to query the current position of a motor in steps.
+      * Sends a @ref MksCommands::CURRENT_POS command to query the current position of a motor in steps.
       *
       * @param motor the ID of the motor to query
       * @return `true` if transmitted over the CAN bus

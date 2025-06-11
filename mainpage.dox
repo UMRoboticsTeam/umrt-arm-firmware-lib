@@ -49,7 +49,6 @@ The test sequence is:
     -# Spin forward at 2 RPM for 5 seconds
     -# Spin backward at 1 RPM in other direction for 5 seconds
     -# Stop
-    -# Query the speed, which should respond with 0
     -# Query the position
     -# Step forward 20 steps at 10 RPM
     -# Query the position, should be 20 steps further than before
