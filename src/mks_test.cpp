@@ -7,10 +7,9 @@
 #include <iostream>
 #include <string>
 #include <unordered_set>
+#include <utils.hpp>
 
 #include <ros2_socketcan/socket_can_id.hpp>
-
-std::string mksMoveResponseToString(const MksMoveResponse status);
 
 MksTest::MksTest(const std::string& can_interface, std::vector<uint16_t>&& motor_ids, const uint8_t norm_factor)
     : s{ can_interface, std::make_shared<std::unordered_set<uint16_t>>(motor_ids.cbegin(), motor_ids.cend()), norm_factor },
@@ -85,24 +84,14 @@ void MksTest::onSetSpeed(const uint16_t motor, const bool status) {
 
 void MksTest::onSendStep(const uint16_t motor, const MksMoveResponse status) {
     std::cout << "(Requested) Motor 0x" << std::hex << motor << std::dec
-              << ": SendStep: status=" << mksMoveResponseToString(status) << std::endl;
+              << ": SendStep: status=" << to_string_mks_move_response(status) << std::endl;
 }
 
 void MksTest::onSeekPosition(const uint16_t motor, const MksMoveResponse status) {
     std::cout << "(Requested) Motor 0x" << std::hex << motor << std::dec
-              << ": SeekPos: status=" << mksMoveResponseToString(status) << std::endl;
+              << ": SeekPos: status=" << to_string_mks_move_response(status) << std::endl;
 }
 
 void MksTest::onGetPosition(const uint16_t motor, const int32_t position) {
     std::cout << "(Queried)   Motor 0x" << std::hex << motor << std::dec << ": GetPos: position=" << position << std::endl;
-}
-
-std::string mksMoveResponseToString(const MksMoveResponse status) {
-    switch (status) {
-        case MksMoveResponse::FAILED: return "FAILED";
-        case MksMoveResponse::MOVING: return "MOVING";
-        case MksMoveResponse::COMPLETED: return "COMPLETED";
-        case MksMoveResponse::LIMIT_REACHED: return "LIMIT_REACHED";
-    }
-    throw std::logic_error("MksMoveResponse passed with invalid value: " + std::to_string(static_cast<uint8_t>(status)));
 }

@@ -189,7 +189,7 @@ void MksStepperController::handleESetSpeed(const std::vector<uint8_t>& message, 
     if (message.size() != 3) { return; } // Don't want to process loop-backed requests, only responses
     const auto status = static_cast<MksMoveResponse>(message.at(1));
     BOOST_LOG_TRIVIAL(debug) << "[" << info.get_bus_time() << "]: SetSpeed received for motor 0x" << std::hex
-                             << info.identifier() << std::dec << " with status=" << status;
+                             << info.identifier() << std::dec << " with status=" << to_string_mks_move_response(status);
     ESetSpeed(static_cast<uint16_t>(info.identifier()), status == 1);
 }
 
@@ -197,7 +197,7 @@ void MksStepperController::handleESendStep(const std::vector<uint8_t>& message, 
     if (message.size() != 3) { return; } // Don't want to process loop-backed requests, only responses
     const auto status = static_cast<MksMoveResponse>(message.at(1));
     BOOST_LOG_TRIVIAL(debug) << "[" << info.get_bus_time() << "]: SendStep received for motor 0x" << std::hex
-                             << info.identifier() << std::dec << " with status=" << status;
+                             << info.identifier() << std::dec << " with status=" << to_string_mks_move_response(status);
     ESendStep(static_cast<uint16_t>(info.identifier()), status);
 }
 
@@ -205,7 +205,7 @@ void MksStepperController::handleESeekPosition(const std::vector<uint8_t>& messa
     if (message.size() != 3) { return; } // Don't want to process loop-backed requests, only responses
     const auto status = static_cast<MksMoveResponse>(message.at(1));
     BOOST_LOG_TRIVIAL(debug) << "[" << info.get_bus_time() << "]: SeekPosition received for motor 0x" << std::hex
-                             << info.identifier() << std::dec << " with status=" << status;
+                             << info.identifier() << std::dec << " with status=" << to_string_mks_move_response(status);
     ESeekPosition(static_cast<uint16_t>(info.identifier()), status);
 }
 

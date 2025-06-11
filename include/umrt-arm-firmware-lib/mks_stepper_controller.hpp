@@ -11,7 +11,7 @@
 #include <unordered_set>
 #include <vector>
 
-#include "MKS_COMMANDS.hpp"
+#include "mks_enums.hpp"
 
 // Forward declaring these classes so that ros2_socketcan can be a private dependency
 namespace drivers::socketcan {

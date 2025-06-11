@@ -52,6 +52,7 @@ set(public_headers # These files will be installed with the library
         include/umrt-arm-firmware-lib/SYSEX_COMMANDS.hpp
         include/umrt-arm-firmware-lib/MKS_COMMANDS.hpp
         include/umrt-arm-firmware-lib/utils.hpp
+        include/umrt-arm-firmware-lib/mks_enums.hpp
         )
 set_property(TARGET ${lib_target} PROPERTY PUBLIC_HEADER ${public_headers})
 target_include_directories(${lib_target} PUBLIC # Everything in this folder will be available during building
