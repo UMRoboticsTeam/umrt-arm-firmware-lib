@@ -15,6 +15,7 @@
 #include <cmath>
 
 uint8_t checksum(uint16_t driver_id, const std::vector<uint8_t>& payload);
+void packSpeedProperties(std::vector<uint8_t>& payload, const uint8_t acceleration, const int16_t normalised_speed, const bool dir);
 
 MksStepperController::MksStepperController(
         const std::string& can_interface, std::shared_ptr<const std::unordered_set<uint16_t>> motor_ids,
@@ -46,11 +47,8 @@ bool MksStepperController::setSpeed(const uint16_t motor, const int16_t speed, c
 
     std::vector<uint8_t> payload{ MksCommands::SET_SPEED };
 
-    auto speed_properties_low = static_cast<uint8_t>((normalised_speed & 0xF00) >> 8 | (speed < 0 ? 1u << 7 : 0u));
-    auto speed_properties_high = static_cast<uint8_t>(normalised_speed & 0xFF);
-    payload.insert(payload.end(), speed_properties_low);
-    payload.insert(payload.end(), speed_properties_high);
-    payload.insert(payload.end(), acceleration);
+    packSpeedProperties(payload, acceleration, normalised_speed, speed < 0);
+
     payload.insert(payload.end(), checksum(motor, payload));
 
     try {
@@ -94,13 +92,10 @@ bool MksStepperController::sendStep(
 
     std::vector<uint8_t> payload{ MksCommands::SEND_STEP };
 
-    auto speed_properties_low = static_cast<uint8_t>((normalised_speed & 0xF00) >> 8 | (speed < 0 ? 1u << 7 : 0u));
-    auto speed_properties_high = static_cast<uint8_t>(normalised_speed & 0xFF);
-    auto steps_packed = pack_24_big(normalised_steps);
-    payload.insert(payload.end(), speed_properties_low);
-    payload.insert(payload.end(), speed_properties_high);
-    payload.insert(payload.end(), acceleration);
+    packSpeedProperties(payload, acceleration, normalised_speed,  speed < 0);
+
     // With move iterators the compiler might invoke copy elision? Not entirely sure
+    auto steps_packed = pack_24_big(normalised_steps);
     payload.insert(
             payload.end(), std::make_move_iterator(steps_packed.begin()), std::make_move_iterator(steps_packed.end())
     );
@@ -128,15 +123,12 @@ bool MksStepperController::seekPosition(
 
     std::vector<uint8_t> payload{ MksCommands::SEEK_POS_BY_STEPS };
 
-    auto speed_properties_low = static_cast<uint8_t>((normalised_speed & 0xF00) >> 8 | (speed < 0 ? 1u << 7 : 0u));
-    auto speed_properties_high = static_cast<uint8_t>(normalised_speed & 0xFF);
-    auto steps_packed = pack_24_big(normalised_position);
-    payload.insert(payload.end(), speed_properties_low);
-    payload.insert(payload.end(), speed_properties_high);
-    payload.insert(payload.end(), acceleration);
+    packSpeedProperties(payload, acceleration, normalised_speed, speed < 0);
+
     // With move iterators the compiler might invoke copy elision? Not entirely sure
+    auto position_packed = pack_24_big(normalised_position);
     payload.insert(
-            payload.end(), std::make_move_iterator(steps_packed.begin()), std::make_move_iterator(steps_packed.end())
+            payload.end(), std::make_move_iterator(position_packed.begin()), std::make_move_iterator(position_packed.end())
     );
     payload.insert(payload.end(), checksum(motor, payload));
 
@@ -248,7 +240,7 @@ void MksStepperController::handleCanMessage(const std::vector<uint8_t>& message,
 }
 
 /**
- * Calculates the "CRC" for an MKS message in accordance with @ref MksCommands
+ * Calculates the "CRC" for an MKS message in accordance with @ref MksCommands.
  * @param driver_id CAN ID of the driver this message is sent to
  * @param payload CAN message payload
  * @return computed checksum for the CAN message
@@ -256,4 +248,20 @@ void MksStepperController::handleCanMessage(const std::vector<uint8_t>& message,
 uint8_t checksum(uint16_t driver_id, const std::vector<uint8_t>& payload) {
     // Note: Accumulate is going to work in uint8_t, and unsigned integer overflow is well-defined - no need for explicit modulo
     return std::accumulate(payload.cbegin(), payload.cend(), static_cast<uint8_t>(driver_id));
+}
+
+/**
+ * Creates the speed properties structure used in the @ref MksCommands::SET_SPEED and @ref MksCommands::SEEK_POS commands.
+ * @param payload std::vector<uint8_t> to append the properties structure to
+ * @param acceleration the speed ramp profile, see @ref MksTest.Constants.MAX_ACCEL;
+ * @param normalised_speed speed value to write to the motor controller
+ * @param dir direction to spin, set to `true` if speed is negative
+ */
+void packSpeedProperties(std::vector<uint8_t>& payload, const uint8_t acceleration, const int16_t normalised_speed, const bool dir) {
+    const auto speed_properties_low =
+            static_cast<uint8_t>((normalised_speed & 0xF00) >> 8 | (dir ? 1u << 7 : 0u));
+    const auto speed_properties_high = static_cast<uint8_t>(normalised_speed & 0xFF);
+    payload.insert(payload.end(), speed_properties_low);
+    payload.insert(payload.end(), speed_properties_high);
+    payload.insert(payload.end(), acceleration);
 }

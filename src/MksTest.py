@@ -126,23 +126,26 @@ def squeeze_msg(msg: can.Message):
         out |= preformatting[i] << (8 * (l - i))  # We want big endian
     return out
 
+def try_send_msg(driver_can_id: int, bus: can.Bus, payload: list):
+    msg = can.Message(arbitration_id=driver_can_id,
+                      data=payload,
+                      is_extended_id=False)
+
+    if bus is not None:
+        try:
+            bus.send(msg)
+        except can.CanError:
+            print("Error sending CAN message")
+    return msg
+
 
 def get_motor_speed(driver_can_id: int, bus: can.Bus = None):
     payload = [MOTOR_SPEED]
     
     # Calculate checksum
     payload.append(Commands.checksum(driver_can_id, payload))
-    
-    msg = can.Message(arbitration_id=driver_can_id,
-                      data=payload,
-                      is_extended_id=False)
-    
-    if bus is not None:
-        try:
-            bus.send(msg)
-        except can.CanError:
-            print("Error sending CAN message")
-    return msg, None
+
+    return try_send_msg(driver_can_id, bus, payload)
 
 
 def get_current_pos(driver_can_id: int, bus: can.Bus = None):
@@ -151,16 +154,7 @@ def get_current_pos(driver_can_id: int, bus: can.Bus = None):
     # Calculate checksum
     payload.append(Commands.checksum(driver_can_id, payload))
     
-    msg = can.Message(arbitration_id=driver_can_id,
-                      data=payload,
-                      is_extended_id=False)
-    
-    if bus is not None:
-        try:
-            bus.send(msg)
-        except can.CanError:
-            print("Error sending CAN message")
-    return msg, None
+    return try_send_msg(driver_can_id, bus, payload)
 
 
 def set_speed(driver_can_id: int, dir: bool, speed: int, accel: int, bus: can.Bus = None, norm_factor: int = 16):
@@ -186,16 +180,7 @@ def set_speed(driver_can_id: int, dir: bool, speed: int, accel: int, bus: can.Bu
     # Calculate checksum
     payload.append(Commands.checksum(driver_can_id, payload))
     
-    msg = can.Message(arbitration_id=driver_can_id,
-                      data=payload,
-                      is_extended_id=False)
-    
-    if bus is not None:
-        try:
-            bus.send(msg)
-        except can.CanError:
-            print("Error sending CAN message")
-    return msg
+    return try_send_msg(driver_can_id, bus, payload)
 
 
 def send_step(driver_can_id: int, dir: bool, speed: int, accel: int, steps: int, bus: can.Bus = None, norm_factor: int = 16):
@@ -219,16 +204,7 @@ def send_step(driver_can_id: int, dir: bool, speed: int, accel: int, steps: int,
     # Calculate checksum
     payload.append(Commands.checksum(driver_can_id, payload))
     
-    msg = can.Message(arbitration_id=driver_can_id,
-                      data=payload,
-                      is_extended_id=False)
-    
-    if bus is not None:
-        try:
-            bus.send(msg)
-        except can.CanError:
-            print("Error sending CAN message")
-    return msg
+    return try_send_msg(driver_can_id, bus, payload)
 
 
 def seek_pos_by_steps(driver_can_id: int, speed: int, accel: int, pos: int, bus: can.Bus = None, norm_factor: int = 16):
@@ -245,16 +221,7 @@ def seek_pos_by_steps(driver_can_id: int, speed: int, accel: int, pos: int, bus:
     # Calculate checksum
     payload.append(Commands.checksum(driver_can_id, payload))
     
-    msg = can.Message(arbitration_id=driver_can_id,
-                      data=payload,
-                      is_extended_id=False)
-    
-    if bus is not None:
-        try:
-            bus.send(msg)
-        except can.CanError:
-            print("Error sending CAN message")
-    return msg
+    return try_send_msg(driver_can_id, bus, payload)
 
 
 def on_motor_speed(msg):
@@ -326,7 +293,6 @@ def test(driver_can_id, can_device, bitrate):
 
 
         # Seek back to position 0 from wherever we ended up at 10 RPM
-        #seek_pos_by_steps(driver_can_id, 10, 0, 0, bus)
         seek_pos_by_steps(driver_can_id, 10, 0, 0, bus)
         time.sleep(1)
         get_current_pos(driver_can_id, bus)
