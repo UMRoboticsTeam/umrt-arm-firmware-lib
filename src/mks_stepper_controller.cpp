@@ -169,16 +169,19 @@ bool MksStepperController::isSetup() const { return this->setup_completed; }
 void MksStepperController::update(const std::chrono::nanoseconds& timeout) {
     // Read a message from the CAN bus
     // TODO: Consider bus-level message filtering for efficiency
-    uint8_t msg_buffer[8];
-    drivers::socketcan::CanId msg_info = this->can_receiver->receive(&msg_buffer, timeout);
+    try {
+        uint8_t msg_buffer[8];
+        drivers::socketcan::CanId msg_info = this->can_receiver->receive(&msg_buffer, timeout);
 
-    // If this isn't a standard CAN message, then it isn't a message applicable to us
-    if (msg_info.frame_type() != drivers::socketcan::FrameType::DATA) { return; }
+        // If this isn't a standard CAN message, then it isn't a message applicable to us
+        if (msg_info.frame_type() != drivers::socketcan::FrameType::DATA) { return; }
 
-    // Turn the raw buffer into a vector
-    std::vector msg(msg_buffer, msg_buffer + msg_info.length());
+        // Turn the raw buffer into a vector
+        std::vector msg(msg_buffer, msg_buffer + msg_info.length());
 
-    this->handleCanMessage(msg, msg_info);
+        this->handleCanMessage(msg, msg_info);
+    }
+    catch (drivers::socketcan::SocketCanTimeout& _) {} // Don't care if we don't receive a message
 }
 
 
