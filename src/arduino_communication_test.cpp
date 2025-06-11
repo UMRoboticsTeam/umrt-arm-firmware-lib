@@ -84,6 +84,14 @@ void ArduinoCommunicationTest::sendTestRoutine() {
         // Wait 1 second
         std::this_thread::sleep_for(std::chrono::seconds(1));
 
+        // Seek back to position -10 from wherever we ended up at 30 RPM
+        s.seekPosition(motor, 10, 300);
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+        s.getPosition(motor);
+
+        // Wait 1 second
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+
         // Seek back to position 0 from wherever we ended up at 10 RPM
         s.seekPosition(motor, 0, 100);
         std::this_thread::sleep_for(std::chrono::seconds(1));

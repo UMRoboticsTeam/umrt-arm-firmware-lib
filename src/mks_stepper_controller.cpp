@@ -123,13 +123,17 @@ bool MksStepperController::seekPosition(
 
     std::vector<uint8_t> payload{ MksCommands::SEEK_POS_BY_STEPS };
 
-    packSpeedProperties(payload, acceleration, normalised_speed, speed < 0);
-
     // With move iterators the compiler might invoke copy elision? Not entirely sure
+    auto speed_packed = pack_16_big(normalised_speed);
     auto position_packed = pack_24_big(normalised_position);
+    payload.insert(
+            payload.end(), std::make_move_iterator(speed_packed.begin()), std::make_move_iterator(speed_packed.end())
+    );
+    payload.insert(payload.end(), acceleration);
     payload.insert(
             payload.end(), std::make_move_iterator(position_packed.begin()), std::make_move_iterator(position_packed.end())
     );
+
     payload.insert(payload.end(), checksum(motor, payload));
 
     try {
