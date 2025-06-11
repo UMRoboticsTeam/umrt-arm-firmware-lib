@@ -50,6 +50,7 @@ set(public_headers # These files will be installed with the library
         include/umrt-arm-firmware-lib/arduino_stepper_controller.hpp
         include/umrt-arm-firmware-lib/mks_stepper_controller.hpp
         include/umrt-arm-firmware-lib/SYSEX_COMMANDS.hpp
+        include/umrt-arm-firmware-lib/MKS_COMMANDS.hpp
         include/umrt-arm-firmware-lib/utils.hpp
         )
 set_property(TARGET ${lib_target} PROPERTY PUBLIC_HEADER ${public_headers})

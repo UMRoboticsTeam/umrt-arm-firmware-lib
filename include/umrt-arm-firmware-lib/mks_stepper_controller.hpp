@@ -5,8 +5,6 @@
 #ifndef UMRT_ARM_FIRMWARE_LIB_MKS_STEPPER_CONTROLLER_HPP
 #define UMRT_ARM_FIRMWARE_LIB_MKS_STEPPER_CONTROLLER_HPP
 
-#include "MKS_COMMANDS.hpp"
-
 #include <boost/signals2.hpp>
 #include <chrono>
 #include <string>
