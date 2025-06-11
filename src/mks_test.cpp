@@ -60,8 +60,8 @@ void MksTest::sendTestRoutine() {
         // Wait 1 second
         std::this_thread::sleep_for(std::chrono::seconds(1));
 
-        // Seek back to position 10 from wherever we ended up at 30 RPM
-        s.seekPosition(motor, 10, 30);
+        // Seek back to position -10 from wherever we ended up at 30 RPM
+        s.seekPosition(motor, -10, 30);
         std::this_thread::sleep_for(std::chrono::seconds(1));
         s.getPosition(motor);
 

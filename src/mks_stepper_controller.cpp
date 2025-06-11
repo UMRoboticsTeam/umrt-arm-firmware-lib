@@ -47,7 +47,7 @@ bool MksStepperController::setSpeed(const uint16_t motor, const int16_t speed, c
 
     std::vector<uint8_t> payload{ MksCommands::SET_SPEED };
 
-    packSpeedProperties(payload, acceleration, normalised_speed, speed < 0);
+    packSpeedProperties(payload, acceleration, normalised_speed, speed > 0);
 
     payload.insert(payload.end(), checksum(motor, payload));
 
@@ -92,7 +92,7 @@ bool MksStepperController::sendStep(
 
     std::vector<uint8_t> payload{ MksCommands::SEND_STEP };
 
-    packSpeedProperties(payload, acceleration, normalised_speed,  speed < 0);
+    packSpeedProperties(payload, acceleration, normalised_speed,  speed > 0);
 
     // With move iterators the compiler might invoke copy elision? Not entirely sure
     auto steps_packed = pack_24_big(normalised_steps);
@@ -259,7 +259,7 @@ uint8_t checksum(uint16_t driver_id, const std::vector<uint8_t>& payload) {
  * @param payload std::vector<uint8_t> to append the properties structure to
  * @param acceleration the speed ramp profile, see @ref MksTest.Constants.MAX_ACCEL;
  * @param normalised_speed speed value to write to the motor controller
- * @param dir direction to spin, set to `true` if speed is negative
+ * @param dir direction to spin, set to `true` if speed is positive
  */
 void packSpeedProperties(std::vector<uint8_t>& payload, const uint8_t acceleration, const int16_t normalised_speed, const bool dir) {
     const auto speed_properties_low =

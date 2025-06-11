@@ -27,9 +27,9 @@ The test sequence is:
     -# Query the position, should be 20 steps further than before
     -# Step backward 10 steps at 5 RPM
     -# Query the position, should be 10 steps closer than before
-    -# Seek to position 10
-    -# Query the position, should be 10
-    -# Seek back to position 0
+    -# Seek to position -10 at 30 RPM
+    -# Query the position, should be -10
+    -# Seek back to position 0 at 10 RPM
     -# Query the position, should be 0
 
 
@@ -56,9 +56,9 @@ The test sequence is:
     -# Query the position, should be 20 steps further than before
     -# Step backward 10 steps at 5 RPM
     -# Query the position, should be 10 steps closer than before
-    -# Seek to position 10
-    -# Query the position, should be 10
-    -# Seek back to position 0
+    -# Seek to position -10 at 30 RPM
+    -# Query the position, should be -10
+    -# Seek back to position 0 at 10 RPM
     -# Query the position, should be 0
 
 
@@ -82,14 +82,14 @@ Below is the expected output from this test program:
     (Requested) Motor 0x1: SetSpeed: success=true
     (Requested) Motor 0x1: SetSpeed: success=true
     (Requested) Motor 0x1: SetSpeed: success=false
-    (Queried)   Motor 0x1: GetPos: position=-16
+    (Queried)   Motor 0x1: GetPos: position=16
     (Requested) Motor 0x1: SendStep: success=MOVING
-    (Queried)   Motor 0x1: GetPos: position=-36
+    (Queried)   Motor 0x1: GetPos: position=36
     (Requested) Motor 0x1: SendStep: success=MOVING
     (Requested) Motor 0x1: SendStep: success=COMPLETED
-    (Queried)   Motor 0x1: GetPos: position=-26
+    (Queried)   Motor 0x1: GetPos: position=26
     (Requested) Motor 0x1: SeekPos: success=MOVING
-    (Queried)   Motor 0x1: GetPos: position=10
+    (Queried)   Motor 0x1: GetPos: position=-10
     (Requested) Motor 0x1: SeekPos: success=MOVING
     (Queried)   Motor 0x1: GetPos: position=0
     (Requested) Motor 0x1: SeekPos: success=COMPLETED
