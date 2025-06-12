@@ -4,11 +4,11 @@ Team's robotic arm.
 
 This includes:
     - Communication between the arm's high-level and low-level computer
-    - A small application for testing the communication link
+    - A small application for testing the low-level computer communication link
     - An abstraction for controlling the arm's stepper motors
-        - StepperController
+        - ArduinoStepperController
 
-\section communication-test-script Communication Test Script
+\section arduino-communication-test-script Arduino Communication Test Script
 
 A small program to test communication between the high-level and low-level computer has been implemented in both Python
 and C++.
@@ -27,17 +27,73 @@ The test sequence is:
     -# Query the position, should be 20 steps further than before
     -# Step backward 10 steps at 5 RPM
     -# Query the position, should be 10 steps closer than before
-    -# Seek back to position 0
-    -# Query the position, which should respond with 0
+    -# Seek to position -10 at 30 RPM
+    -# Query the position, should be -10
+    -# Seek back to position 0 at 10 RPM
+    -# Query the position, should be 0
 
 
-The Python implementation, CommunicationMaster.py, was the communication system's proof-of-concept.
-It is entirely self-contained, and serves as the minimum working example of how to control the arm's motors from a
-high-level computer.
+The Python implementation, @ref CommunicationMaster.py, was the communication system's proof-of-concept.
+It is entirely self-contained, and serves as the minimum working example of how to control Prairie Pioneer's arm motors
+from a high-level computer.
 
-The C++ implementation, CommunicationTest.h, tests the full functionality of umrt-arm-firmware-lib.
-It uses openFrameworksArduino's Firmata implementation to create a StepperController, and uses the event system to
-verify that the correct responses (and therefore correct callbacks) are fired when the low-level controller responds.
+The C++ implementation, arduino_communication_test.hpp, fully tests the C++ interface for controlling Prairie Pioneer's
+arm motors.
+It uses openFrameworksArduino's Firmata implementation to create an ArduinoStepperController, and uses the event system
+to verify that the correct responses (and therefore correct callbacks) are fired when the low-level controller responds.
+
+\section mks-test-script MKS Test Script
+
+Similarly to @ref arduino-communication-test-script, a small program to test communication between the high-level
+computer and MKS SERVO57D/42D stepper controllers has been implemented in both Python and C++.
+The test sequence is:
+ -# Cycle through each motor:
+    -# Spin forward at 2 RPM for 5 seconds
+    -# Spin backward at 1 RPM in other direction for 5 seconds
+    -# Stop
+    -# Query the position
+    -# Step forward 20 steps at 10 RPM
+    -# Query the position, should be 20 steps further than before
+    -# Step backward 10 steps at 5 RPM
+    -# Query the position, should be 10 steps closer than before
+    -# Seek to position -10 at 30 RPM
+    -# Query the position, should be -10
+    -# Seek back to position 0 at 10 RPM
+    -# Query the position, should be 0
+
+
+The Python implementation, @ref MksTest.py, was the stepper controller interface's proof-of-concept.
+It serves as the minimum working example of how to control Project Perry's arm motors from a high-level computer.
+All possible CAN commands to the controllers are described in @ref MKS_COMMANDS.hpp.
+
+The C++ implementation, mks_test.hpp, fully tests the C++ interface for controlling Project Perry's arm motors.
+It uses the fork of <a href="https://github.com/JWhitleyWork/socketcan-plus-plus">socketcan-plus-plus</a>, conveniently
+packaged and maintained in <a href="https://github.com/autowarefoundation/ros2_socketcan">ros2_socketcan</a> to
+communicate with the stepper controllers over a SocketCAN interface. As with the Arduino system, this script also uses
+the event system to verify that the correct responses (and therefore correct callbacks) are fired when the low-level
+controller responds. The script must have the motor IDs to test provided through the `--motors` argument. See `--help`
+for available options.
+
+Below is the expected output from this test program:
+\code
+    Mks setup!
+    (Queried)   Motor 0x1: GetPos: position=0
+    (Requested) Motor 0x1: SetSpeed: success=true
+    (Requested) Motor 0x1: SetSpeed: success=true
+    (Requested) Motor 0x1: SetSpeed: success=true
+    (Requested) Motor 0x1: SetSpeed: success=false
+    (Queried)   Motor 0x1: GetPos: position=16
+    (Requested) Motor 0x1: SendStep: success=MOVING
+    (Queried)   Motor 0x1: GetPos: position=36
+    (Requested) Motor 0x1: SendStep: success=MOVING
+    (Requested) Motor 0x1: SendStep: success=COMPLETED
+    (Queried)   Motor 0x1: GetPos: position=26
+    (Requested) Motor 0x1: SeekPos: success=MOVING
+    (Queried)   Motor 0x1: GetPos: position=-10
+    (Requested) Motor 0x1: SeekPos: success=MOVING
+    (Queried)   Motor 0x1: GetPos: position=0
+    (Requested) Motor 0x1: SeekPos: success=COMPLETED
+\endcode
 
 <hr>
 The Doxygen tagfile for this documentation is available <a href="umrt-arm-firmware-lib.tag.xml">here</a>.

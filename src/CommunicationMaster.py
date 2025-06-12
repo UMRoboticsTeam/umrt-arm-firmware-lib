@@ -1,7 +1,7 @@
 """ @file
 Python MWE for controlling stepper motors over the communication link.
 
-When run, the testing sequence described at @ref communication-test-script is executed.
+When run, the testing sequence described at @ref arduino-communication-test-script is executed.
 @snippet this Test Params
 @snippet this Test Script
 """

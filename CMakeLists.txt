@@ -21,11 +21,17 @@ if(NOT WIN32)
 endif()
 
 # Setup Boost
-find_package(Boost REQUIRED COMPONENTS log log_setup filesystem)
+find_package(Boost REQUIRED COMPONENTS log log_setup filesystem program_options)
 include_directories(${Boost_INCLUDE_DIRS})
 
 # Setup openFrameworksArduino
 find_package(openFrameworksArduino CONFIG REQUIRED)
+
+find_package(ros2_socketcan CONFIG REQUIRED)
+
+# Fixes intellisense not finding ros2 headers https://youtrack.jetbrains.com/issue/CPP-29747/Certain-ROS2-package-headers-missing-from-Intellisense-when-using-a-Docker-toolchain
+# (since it doesn't seem transfer target_include_directories paths for remote toolchains)
+include_directories(SYSTEM /opt/ros/$ENV{ROS_DISTRO}/include)
 
 # ********** Setup umrt_arm_firmware_lib library **********
 
@@ -34,15 +40,19 @@ set(lib_target ${PROJECT_NAME})
 add_library(${lib_target})
 
 target_sources(${lib_target} PRIVATE # These files will only be available during building
-        src/StepperController.cpp
+        src/arduino_stepper_controller.cpp
+        src/mks_stepper_controller.cpp
         )
 
 # Locate headers
 # Using FILE_SET would be much cleaner, but needs CMake 3.23+ and ROS Humble ships with 3.22
 set(public_headers # These files will be installed with the library
-        include/umrt-arm-firmware-lib/StepperController.h
-        include/umrt-arm-firmware-lib/SYSEX_COMMANDS.h
-        include/umrt-arm-firmware-lib/Utils.h
+        include/umrt-arm-firmware-lib/arduino_stepper_controller.hpp
+        include/umrt-arm-firmware-lib/mks_stepper_controller.hpp
+        include/umrt-arm-firmware-lib/SYSEX_COMMANDS.hpp
+        include/umrt-arm-firmware-lib/MKS_COMMANDS.hpp
+        include/umrt-arm-firmware-lib/utils.hpp
+        include/umrt-arm-firmware-lib/mks_enums.hpp
         )
 set_property(TARGET ${lib_target} PROPERTY PUBLIC_HEADER ${public_headers})
 target_include_directories(${lib_target} PUBLIC # Everything in this folder will be available during building
@@ -51,28 +61,55 @@ target_include_directories(${lib_target} PUBLIC # Everything in this folder will
         "$<INSTALL_INTERFACE:include/>")
 
 target_link_libraries(${lib_target} PUBLIC
-        # Consumers need to know about openFrameworksArduino since we reference it in StepperController.h
+        # Consumers need to know about openFrameworksArduino since we reference it in ArduinoStepperController.h
         openFrameworksArduino::openFrameworksArduino
         Boost::log
         Boost::log_setup
         )
 
-# ********** Setup communication_test_script executable **********
-
-set(communication_test_target communication_test_script)
-
-add_executable(${communication_test_target})
-
-target_sources(${communication_test_target} PRIVATE
-        src/CommunicationTestScript.cpp
+target_link_libraries(${lib_target} PRIVATE
+        /opt/ros/humble/lib/libros2_socketcan.so
+        )
+target_include_directories(${lib_target} PRIVATE
+        ${ros2_socketcan_INCLUDE_DIRS}
         )
 
-target_link_libraries(${communication_test_target} PRIVATE
+# ********** Setup arduino_communication_test_script executable **********
+
+set(arduino_communication_test_target arduino_communication_test_script)
+
+add_executable(${arduino_communication_test_target})
+
+target_sources(${arduino_communication_test_target} PRIVATE
+        src/arduino_communication_test_script.cpp
+        src/arduino_communication_test.cpp
+        )
+
+target_link_libraries(${arduino_communication_test_target} PRIVATE
         Boost::log_setup
         Boost::log
         Boost::filesystem
         ${lib_target}
         )
+
+# ********** Setup mks_test_script executable **********
+
+set(mks_test_target mks_test_script)
+
+add_executable(${mks_test_target})
+
+target_sources(${mks_test_target} PRIVATE
+        src/mks_test_script.cpp
+        src/mks_test.cpp
+)
+
+target_link_libraries(${mks_test_target} PRIVATE
+        Boost::log_setup
+        Boost::log
+        Boost::filesystem
+        Boost::program_options
+        ${lib_target}
+)
 
 # ********** Setup packaging **********
 
@@ -103,7 +140,7 @@ install(FILES
         )
 
 install(
-        TARGETS ${lib_target} ${communication_test_target} # These targets will be packaged
+        TARGETS ${lib_target} ${arduino_communication_test_target} ${mks_test_target} # These targets will be packaged
         EXPORT ${PROJECT_NAME}Targets
         PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}
 )

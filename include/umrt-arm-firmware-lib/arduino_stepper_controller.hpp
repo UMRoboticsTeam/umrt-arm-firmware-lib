@@ -3,29 +3,29 @@
 // Based off of ArduinoTest from openFrameworksArduino (https://github.com/NeuroRoboticTech/openFrameworksArduino/blob/master/examples/ArduinoTest.h)
 //
 
-#ifndef UMRT_ARM_FIRMWARE_LIB_STEPPER_CONTROLLER_H
-#define UMRT_ARM_FIRMWARE_LIB_STEPPER_CONTROLLER_H
+#ifndef UMRT_ARM_FIRMWARE_LIB_ARDUINO_STEPPER_CONTROLLER_HPP
+#define UMRT_ARM_FIRMWARE_LIB_ARDUINO_STEPPER_CONTROLLER_HPP
 
-#include <vector>
+#include <boost/signals2.hpp>
 #include <openFrameworksArduino/StdAfx.h>
 #include <openFrameworksArduino/ofArduino.h>
-#include <boost/signals2.hpp>
+#include <vector>
 
 /**
  * Manages the Firmata connection to an Arduino running the Stepper Controller program. Responses are conveyed through
  * <a href=https://www.boost.org/doc/libs/1_63_0/doc/html/signals.html>Boost signals</a>.
  */
-class StepperController : public ofArduino {
+class ArduinoStepperController : public ofArduino {
 public:
     /**
-     * Initializes a StepperController.
+     * Initializes an ArduinoStepperController.
      */
-    StepperController();
+    ArduinoStepperController();
 
     /**
-     * Destroys a StepperController.
+     * Destroys an ArduinoStepperController.
      */
-    ~StepperController() noexcept override;
+    ~ArduinoStepperController() noexcept override;
 
     /**
      * Sends a @ref SysexCommands::ARDUINO_ECHO command with the provided payload.
@@ -75,7 +75,7 @@ public:
      * @param motor the ID of the motor to move
      * @param position the target position in number of steps from the motor's zero point
      * @param speed the signed target speed to move the motor at, in 1/10 RPM. Note that the absolute value is taken.
-     * * @return `true` if successfully written to the serial connection
+     * @return `true` if successfully written to the serial connection
      */
     bool seekPosition(const uint8_t motor, const int32_t position, const int16_t speed);
 
@@ -96,12 +96,11 @@ public:
      */
     bool setGripper(const uint8_t position);
 
-    // Checks if this StepperController is fully setup
     /**
-     * Returns whether the connection to the Stepper Controller Arduino has been fully established.
+     * Returns whether the connection to the stepper controller Arduino has been fully established.
      * @return `true` if so
      */
-    [[nodiscard]] bool isSetup() const { return this->setup_completed; };
+    [[nodiscard]] bool isSetup() const;
 
     // ==========================
     //           Events
@@ -109,7 +108,7 @@ public:
 
     /**
      * <a href=https://www.boost.org/doc/libs/1_63_0/doc/html/signals.html>Boost signal</a> triggered once this
-     * StepperController is fully setup.
+     * ArduinoStepperController is fully setup.
      */
     boost::signals2::signal<void(void)> ESetup;
 
@@ -208,4 +207,4 @@ private:
     bool setup_completed;
 };
 
-#endif //UMRT_ARM_FIRMWARE_LIB_STEPPER_CONTROLLER_H
+#endif //UMRT_ARM_FIRMWARE_LIB_ARDUINO_STEPPER_CONTROLLER_HPP

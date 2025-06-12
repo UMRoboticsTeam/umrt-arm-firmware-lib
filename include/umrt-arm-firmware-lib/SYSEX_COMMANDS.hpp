@@ -4,13 +4,14 @@
 * Firmata.
 */
 
-#ifndef SYSEX_COMMANDS_H
-#define SYSEX_COMMANDS_H
+#ifndef UMRT_ARM_FIRMWARE_LIB_SYSEX_COMMANDS_HPP
+#define UMRT_ARM_FIRMWARE_LIB_SYSEX_COMMANDS_HPP
 
-#include <stdint.h>
+// Using stdint.h because Arduino interprets this file and doesn't have cstdint...
+#include <stdint.h> // NOLINT(modernize-deprecated-headers)
 
 /**
-* Lists the command IDs and associated requirements which can be sent over Firmata to a Stepper Controller.
+ * Lists the command IDs and associated requirements which can be sent over Firmata to a Stepper Controller.
 */
 // TODO: Consider adding a keep-alive
 // Note: Only allowed to use 0x00-0x0F, beyond that would have to nest commands
@@ -88,4 +89,4 @@ enum SysexCommands : uint8_t {
     SET_GRIPPER = 0x06
 };
 
-#endif
+#endif //UMRT_ARM_FIRMWARE_LIB_SYSEX_COMMANDS_HPP
