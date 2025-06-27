@@ -15,7 +15,9 @@
 #include <cmath>
 
 uint8_t checksum(uint16_t driver_id, const std::vector<uint8_t>& payload);
-void packSpeedProperties(std::vector<uint8_t>& payload, const uint8_t acceleration, const int16_t normalised_speed, const bool dir);
+void packSpeedProperties(
+        std::vector<uint8_t>& payload, const uint8_t acceleration, const int16_t normalised_speed, const bool dir
+);
 
 MksStepperController::MksStepperController(
         const std::string& can_interface, std::shared_ptr<const std::unordered_set<uint16_t>> motor_ids,
@@ -51,13 +53,17 @@ bool MksStepperController::setSpeed(const uint16_t motor, const int16_t speed, c
 
     payload.insert(payload.end(), checksum(motor, payload));
 
+    // accel casted to uint16_t so that it outputs as an integer instead of a char
+    BOOST_LOG_TRIVIAL(debug) << "SetSpeed sent for motor 0x" << std::hex << motor << std::dec << " with speed=" << speed
+                             << ", accel=" << static_cast<uint16_t>(acceleration)
+                             << ", normalised_speed=" << normalised_speed;
     try {
         drivers::socketcan::CanId can_id(motor, 0, drivers::socketcan::FrameType::DATA, drivers::socketcan::StandardFrame);
         can_sender->send(payload.data(), payload.size(), can_id);
     } catch (drivers::socketcan::SocketCanTimeout& e) {
         // Won't bother with e.what(), it is always "CAN Send timeout"
         BOOST_LOG_TRIVIAL(warning) << "MksStepperController setSpeed timeout: motor=0x" << std::hex << motor << std::dec
-                                   << ", speed=" << normalised_speed << ", accel=" << acceleration;
+                                   << ", speed=" << normalised_speed << ", accel=" << static_cast<uint16_t>(acceleration);
         return false;
     }
     return true;
@@ -92,7 +98,7 @@ bool MksStepperController::sendStep(
 
     std::vector<uint8_t> payload{ MksCommands::SEND_STEP };
 
-    packSpeedProperties(payload, acceleration, normalised_speed,  speed > 0);
+    packSpeedProperties(payload, acceleration, normalised_speed, speed > 0);
 
     // With move iterators the compiler might invoke copy elision? Not entirely sure
     auto steps_packed = pack_24_big(normalised_steps);
@@ -101,13 +107,16 @@ bool MksStepperController::sendStep(
     );
     payload.insert(payload.end(), checksum(motor, payload));
 
+    BOOST_LOG_TRIVIAL(debug) << "SendStep sent for motor 0x" << std::hex << motor << std::dec << " with steps=" << num_steps
+                             << ", speed=" << speed << ", accel=" << static_cast<uint16_t>(acceleration)
+                             << ", normalised_steps=" << normalised_steps << ", normalised_speed=" << normalised_speed;
     try {
         drivers::socketcan::CanId can_id(motor, 0, drivers::socketcan::FrameType::DATA, drivers::socketcan::StandardFrame);
         can_sender->send(payload.data(), payload.size(), can_id);
     } catch (drivers::socketcan::SocketCanTimeout& e) {
         BOOST_LOG_TRIVIAL(warning) << "MksStepperController sendStep timeout: motor=0x" << std::hex << motor << std::dec
                                    << ", num_steps=" << num_steps << ", speed=" << normalised_speed
-                                   << ", accel=" << acceleration;
+                                   << ", accel=" << static_cast<uint16_t>(acceleration);
         return false;
     }
     return true;
@@ -133,16 +142,19 @@ bool MksStepperController::seekPosition(
     payload.insert(
             payload.end(), std::make_move_iterator(position_packed.begin()), std::make_move_iterator(position_packed.end())
     );
-
     payload.insert(payload.end(), checksum(motor, payload));
 
+    BOOST_LOG_TRIVIAL(debug) << "SeekPosition sent for motor 0x" << std::hex << motor << std::dec
+                             << " with position=" << position << ", speed=" << speed
+                             << ", accel=" << static_cast<uint16_t>(acceleration)
+                             << ", normalised_position=" << normalised_position << ", normalised_speed=" << normalised_speed;
     try {
         drivers::socketcan::CanId can_id(motor, 0, drivers::socketcan::FrameType::DATA, drivers::socketcan::StandardFrame);
         can_sender->send(payload.data(), payload.size(), can_id);
     } catch (drivers::socketcan::SocketCanTimeout& e) {
         BOOST_LOG_TRIVIAL(warning) << "MksStepperController sendStep timeout: motor=0x" << std::hex << motor << std::dec
                                    << ", position=" << normalised_position << ", speed=" << normalised_speed
-                                   << ", accel=" << acceleration;
+                                   << ", accel=" << static_cast<uint16_t>(acceleration);
         return false;
     }
     return true;
@@ -154,6 +166,7 @@ bool MksStepperController::getPosition(const uint16_t motor) {
     std::vector<uint8_t> payload{ MksCommands::CURRENT_POS };
     payload.insert(payload.end(), checksum(motor, payload));
 
+    BOOST_LOG_TRIVIAL(debug) << "GetPosition sent for motor 0x" << std::hex << motor << std::dec;
     try {
         drivers::socketcan::CanId can_id(motor, 0, drivers::socketcan::FrameType::DATA, drivers::socketcan::StandardFrame);
         can_sender->send(payload.data(), payload.size(), can_id);
@@ -180,8 +193,7 @@ void MksStepperController::update(const std::chrono::nanoseconds& timeout) {
         std::vector msg(msg_buffer, msg_buffer + msg_info.length());
 
         this->handleCanMessage(msg, msg_info);
-    }
-    catch (drivers::socketcan::SocketCanTimeout& _) {} // Don't care if we don't receive a message
+    } catch (drivers::socketcan::SocketCanTimeout& _) {} // Don't care if we don't receive a message
 }
 
 
@@ -263,9 +275,10 @@ uint8_t checksum(uint16_t driver_id, const std::vector<uint8_t>& payload) {
  * @param normalised_speed speed value to write to the motor controller
  * @param dir direction to spin, set to `true` if speed is positive
  */
-void packSpeedProperties(std::vector<uint8_t>& payload, const uint8_t acceleration, const int16_t normalised_speed, const bool dir) {
-    const auto speed_properties_low =
-            static_cast<uint8_t>((normalised_speed & 0xF00) >> 8 | (dir ? 1u << 7 : 0u));
+void packSpeedProperties(
+        std::vector<uint8_t>& payload, const uint8_t acceleration, const int16_t normalised_speed, const bool dir
+) {
+    const auto speed_properties_low = static_cast<uint8_t>((normalised_speed & 0xF00) >> 8 | (dir ? 1u << 7 : 0u));
     const auto speed_properties_high = static_cast<uint8_t>(normalised_speed & 0xFF);
     payload.insert(payload.end(), speed_properties_low);
     payload.insert(payload.end(), speed_properties_high);
