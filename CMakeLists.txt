@@ -42,6 +42,7 @@ add_library(${lib_target})
 target_sources(${lib_target} PRIVATE # These files will only be available during building
         src/arduino_stepper_controller.cpp
         src/mks_stepper_controller.cpp
+        src/wheel_controller.cpp
         )
 
 # Locate headers
@@ -49,6 +50,7 @@ target_sources(${lib_target} PRIVATE # These files will only be available during
 set(public_headers # These files will be installed with the library
         include/umrt-arm-firmware-lib/arduino_stepper_controller.hpp
         include/umrt-arm-firmware-lib/mks_stepper_controller.hpp
+        include/umrt-arm-firmware-lib/wheel_controller.hpp
         include/umrt-arm-firmware-lib/SYSEX_COMMANDS.hpp
         include/umrt-arm-firmware-lib/MKS_COMMANDS.hpp
         include/umrt-arm-firmware-lib/utils.hpp
