@@ -17,24 +17,24 @@
 uint8_t checksum(uint16_t driver_id, const std::vector<uint8_t>& payload);
 void packSpeedProperties(std::vector<uint8_t>& payload, const uint8_t acceleration, const int16_t normalised_speed, const bool dir);
 
-WheelController::MksStepperController(
+WheelController::WheelController(
         const std::string& can_interface, std::shared_ptr<const std::unordered_set<uint16_t>> motor_ids,
         const uint8_t norm_factor
 )
     : motor_ids{ std::move(motor_ids) }, norm_factor{ norm_factor } {
-    BOOST_LOG_TRIVIAL(trace) << "MksStepperController construction begun";
+    BOOST_LOG_TRIVIAL(trace) << "WheelController construction begun";
 
     this->can_receiver = std::make_unique<drivers::socketcan::SocketCanReceiver>(can_interface);
     this->can_sender = std::make_unique<drivers::socketcan::SocketCanSender>(can_interface);
 
     //TODO: Write norm_factor as microstepping factor to the driver
 
-    BOOST_LOG_TRIVIAL(debug) << "MksStepperController constructed";
+    BOOST_LOG_TRIVIAL(debug) << "WheelController constructed";
 
     setup_completed = true;
 }
 
-WheelController::~MksStepperController() noexcept { BOOST_LOG_TRIVIAL(debug) << "MksStepperController destructed"; }
+WheelController::~WheelController() noexcept { BOOST_LOG_TRIVIAL(debug) << "WheelController destructed"; }
 
 bool WheelController::setSpeed(const uint16_t motor, const int16_t speed, const uint8_t acceleration) {
     if (!isSetup()) { return false; }
@@ -56,7 +56,7 @@ bool WheelController::setSpeed(const uint16_t motor, const int16_t speed, const 
         can_sender->send(payload.data(), payload.size(), can_id);
     } catch (drivers::socketcan::SocketCanTimeout& e) {
         // Won't bother with e.what(), it is always "CAN Send timeout"
-        BOOST_LOG_TRIVIAL(warning) << "MksStepperController setSpeed timeout: motor=0x" << std::hex << motor << std::dec
+        BOOST_LOG_TRIVIAL(warning) << "WheelController setSpeed timeout: motor=0x" << std::hex << motor << std::dec
                                    << ", speed=" << normalised_speed << ", accel=" << acceleration;
         return false;
     }
@@ -75,7 +75,7 @@ bool WheelController::setSpeed(const uint16_t motor, const int16_t speed, const 
 //        drivers::socketcan::CanId can_id(motor, 0, drivers::socketcan::FrameType::DATA, drivers::socketcan::StandardFrame);
 //        can_sender->send(payload.data(), payload.size(), can_id);
 //    } catch (drivers::socketcan::SocketCanTimeout& e) {
-//        BOOST_LOG_TRIVIAL(warning) << "MksStepperController getSpeed timeout: motor=" << motor;
+//        BOOST_LOG_TRIVIAL(warning) << "WheelController getSpeed timeout: motor=" << motor;
 //        return false;
 //    }
 //
@@ -93,7 +93,7 @@ bool WheelController::getPosition(const uint16_t motor) {
         drivers::socketcan::CanId can_id(motor, 0, drivers::socketcan::FrameType::DATA, drivers::socketcan::StandardFrame);
         can_sender->send(payload.data(), payload.size(), can_id);
     } catch (drivers::socketcan::SocketCanTimeout& e) {
-        BOOST_LOG_TRIVIAL(warning) << "MksStepperController getPosition timeout: motor=0x" << std::hex << motor << std::dec;
+        BOOST_LOG_TRIVIAL(warning) << "WheelController getPosition timeout: motor=0x" << std::hex << motor << std::dec;
         return false;
     }
     return true;
@@ -168,7 +168,7 @@ void WheelController::handleCanMessage(const std::vector<uint8_t>& message, driv
  * @param payload CAN message payload
  * @return computed checksum for the CAN message
  */
-uint8_t checksum(uint16_t driver_id, const std::vector<uint8_t>& payload) {
+uint8_t WheelController::checksum(uint16_t driver_id, const std::vector<uint8_t>& payload) {
     // Note: Accumulate is going to work in uint8_t, and unsigned integer overflow is well-defined - no need for explicit modulo
     return std::accumulate(payload.cbegin(), payload.cend(), static_cast<uint8_t>(driver_id));
 }
@@ -180,7 +180,7 @@ uint8_t checksum(uint16_t driver_id, const std::vector<uint8_t>& payload) {
  * @param normalised_speed speed value to write to the motor controller
  * @param dir direction to spin, set to `true` if speed is positive
  */
-void packSpeedProperties(std::vector<uint8_t>& payload, const uint8_t acceleration, const int16_t normalised_speed, const bool dir) {
+void WheelController::packSpeedProperties(std::vector<uint8_t>& payload, const uint8_t acceleration, const int16_t normalised_speed, const bool dir) {
     const auto speed_properties_low =
             static_cast<uint8_t>((normalised_speed & 0xF00) >> 8 | (dir ? 1u << 7 : 0u));
     const auto speed_properties_high = static_cast<uint8_t>(normalised_speed & 0xFF);
