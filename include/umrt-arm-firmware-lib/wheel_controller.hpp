@@ -37,22 +37,22 @@ namespace drivers::socketcan {
 class WheelController {
 public:
     /**
-     * Initializes an MksStepperController.
+     * Initializes an WheelController.
      *
      * @param can_interface SocketCAN network interface corresponding to the CAN bus
      * @param motor_ids CAN IDs for the motor controllers, used to filter CAN messages so other devices' messages aren't
      *                  attempted to be decoded
      * @param norm_factor interpolated normalisation factor to use, see @ref internorm; defaults to off
      */
-    MksStepperController(
+    WheelController(
             const std::string& can_interface, std::shared_ptr<const std::unordered_set<uint16_t>> motor_ids,
             const uint8_t norm_factor = 1
     );
 
     /**
-     * Destroys an MksStepperController.
+     * Destroys an WheelController.
      */
-    ~MksStepperController() noexcept;
+    ~WheelController() noexcept;
 
     /**
      * Sends a @ref MksCommands::SET_SPEED command to set the speed of a motor.
@@ -189,6 +189,8 @@ private:
      * Flag which indicates whether the CAN bus connection has been initialised.
      */
     bool setup_completed;
+    void packSpeedProperties(std::vector<uint8_t>& payload, const uint8_t acceleration, const int16_t normalised_speed, const bool dir);
+    uint8_t checksum(uint16_t driver_id, const std::vector<uint8_t>& payload);
 };
 
-#endif //UMRT_ARM_FIRMWARE_LIB_MKS_STEPPER_CONTROLLER_HPP
+#endif //UMRT_ARM_FIRMWARE_LIB_WHEEL_CONTROLLER_HPP
