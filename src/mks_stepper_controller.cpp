@@ -54,8 +54,8 @@ bool MksStepperController::setSpeed(const uint16_t motor, const int16_t speed, c
     payload.insert(payload.end(), checksum(motor, payload));
 
     // accel casted to uint16_t so that it outputs as an integer instead of a char
-    BOOST_LOG_TRIVIAL(debug) << "SetSpeed sent for motor 0x" << std::hex << motor << std::dec << " with speed=" << speed
-                             << ", accel=" << static_cast<uint16_t>(acceleration)
+    BOOST_LOG_TRIVIAL(debug) << "MksStepperController: SetSpeed sent for motor 0x" << std::hex << motor << std::dec
+                             << " with speed=" << speed << ", accel=" << static_cast<uint16_t>(acceleration)
                              << ", normalised_speed=" << normalised_speed;
     try {
         drivers::socketcan::CanId can_id(motor, 0, drivers::socketcan::FrameType::DATA, drivers::socketcan::StandardFrame);
@@ -107,8 +107,9 @@ bool MksStepperController::sendStep(
     );
     payload.insert(payload.end(), checksum(motor, payload));
 
-    BOOST_LOG_TRIVIAL(debug) << "SendStep sent for motor 0x" << std::hex << motor << std::dec << " with steps=" << num_steps
-                             << ", speed=" << speed << ", accel=" << static_cast<uint16_t>(acceleration)
+    BOOST_LOG_TRIVIAL(debug) << "MksStepperController: SendStep sent for motor 0x" << std::hex << motor << std::dec
+                             << " with steps=" << num_steps << ", speed=" << speed
+                             << ", accel=" << static_cast<uint16_t>(acceleration)
                              << ", normalised_steps=" << normalised_steps << ", normalised_speed=" << normalised_speed;
     try {
         drivers::socketcan::CanId can_id(motor, 0, drivers::socketcan::FrameType::DATA, drivers::socketcan::StandardFrame);
@@ -144,7 +145,7 @@ bool MksStepperController::seekPosition(
     );
     payload.insert(payload.end(), checksum(motor, payload));
 
-    BOOST_LOG_TRIVIAL(debug) << "SeekPosition sent for motor 0x" << std::hex << motor << std::dec
+    BOOST_LOG_TRIVIAL(debug) << "MksStepperController: SeekPosition sent for motor 0x" << std::hex << motor << std::dec
                              << " with position=" << position << ", speed=" << speed
                              << ", accel=" << static_cast<uint16_t>(acceleration)
                              << ", normalised_position=" << normalised_position << ", normalised_speed=" << normalised_speed;
@@ -166,7 +167,7 @@ bool MksStepperController::getPosition(const uint16_t motor) {
     std::vector<uint8_t> payload{ MksCommands::CURRENT_POS };
     payload.insert(payload.end(), checksum(motor, payload));
 
-    BOOST_LOG_TRIVIAL(debug) << "GetPosition sent for motor 0x" << std::hex << motor << std::dec;
+    BOOST_LOG_TRIVIAL(debug) << "MksStepperController: GetPosition sent for motor 0x" << std::hex << motor << std::dec;
     try {
         drivers::socketcan::CanId can_id(motor, 0, drivers::socketcan::FrameType::DATA, drivers::socketcan::StandardFrame);
         can_sender->send(payload.data(), payload.size(), can_id);
@@ -200,16 +201,18 @@ void MksStepperController::update(const std::chrono::nanoseconds& timeout) {
 void MksStepperController::handleESetSpeed(const std::vector<uint8_t>& message, drivers::socketcan::CanId& info) {
     if (message.size() != 3) { return; } // Don't want to process loop-backed requests, only responses
     const auto status = static_cast<MksMoveResponse>(message.at(1));
-    BOOST_LOG_TRIVIAL(debug) << "[" << info.get_bus_time() << "]: SetSpeed received for motor 0x" << std::hex
-                             << info.identifier() << std::dec << " with status=" << to_string_mks_move_response(status);
+    BOOST_LOG_TRIVIAL(debug) << "[" << info.get_bus_time() << "]: MksStepperController: SetSpeed received for motor 0x"
+                             << std::hex << info.identifier() << std::dec
+                             << " with status=" << to_string_mks_move_response(status);
     ESetSpeed(static_cast<uint16_t>(info.identifier()), status == 1);
 }
 
 void MksStepperController::handleESendStep(const std::vector<uint8_t>& message, drivers::socketcan::CanId& info) {
     if (message.size() != 3) { return; } // Don't want to process loop-backed requests, only responses
     const auto status = static_cast<MksMoveResponse>(message.at(1));
-    BOOST_LOG_TRIVIAL(debug) << "[" << info.get_bus_time() << "]: SendStep received for motor 0x" << std::hex
-                             << info.identifier() << std::dec << " with status=" << to_string_mks_move_response(status);
+    BOOST_LOG_TRIVIAL(debug) << "[" << info.get_bus_time() << "]: MksStepperController: SendStep received for motor 0x"
+                             << std::hex << info.identifier() << std::dec
+                             << " with status=" << to_string_mks_move_response(status);
     ESendStep(static_cast<uint16_t>(info.identifier()), status);
 }
 
@@ -224,8 +227,8 @@ void MksStepperController::handleESeekPosition(const std::vector<uint8_t>& messa
 void MksStepperController::handleEGetPosition(const std::vector<uint8_t>& message, drivers::socketcan::CanId& info) {
     if (message.size() != 6) { return; } // Don't want to process loop-backed requests, only responses
     auto position = static_cast<int32_t>(decode_32_big(message.cbegin() + 1));
-    BOOST_LOG_TRIVIAL(debug) << "[" << info.get_bus_time() << "]: GetPosition received for motor 0x" << std::hex
-                             << info.identifier() << std::dec << " with position=" << position
+    BOOST_LOG_TRIVIAL(debug) << "[" << info.get_bus_time() << "]: MksStepperController: GetPosition received for motor 0x"
+                             << std::hex << info.identifier() << std::dec << " with position=" << position
                              << ", normalised_position=" << position / norm_factor;
     EGetPosition(static_cast<uint16_t>(info.identifier()), position / norm_factor);
 }
@@ -241,8 +244,8 @@ void MksStepperController::handleCanMessage(const std::vector<uint8_t>& message,
 
     // So this message is from a motor driver; it must contain a command or there is something weird happening
     if (message.empty()) {
-        BOOST_LOG_TRIVIAL(error) << "[" << info.get_bus_time() << "]: Message received for motor 0x" << std::hex
-                                 << info.identifier() << std::dec << " with no payload";
+        BOOST_LOG_TRIVIAL(error) << "[" << info.get_bus_time() << "]: MksStepperController: Message received for motor 0x"
+                                 << std::hex << info.identifier() << std::dec << " with no payload";
     }
 
     // Process the message
