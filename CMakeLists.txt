@@ -113,6 +113,24 @@ target_link_libraries(${mks_test_target} PRIVATE
         ${lib_target}
 )
 
+# ********** Setup servo_test_script executable **********
+
+set(servo_test_target servo_test_script)
+
+add_executable(${servo_test_target})
+
+target_sources(${servo_test_target} PRIVATE
+        src/servo_test_script.cpp
+)
+
+target_link_libraries(${servo_test_target} PRIVATE
+        Boost::log_setup
+        Boost::log
+        Boost::filesystem
+        Boost::program_options
+        ${lib_target}
+)
+
 # ********** Setup packaging **********
 
 include(GNUInstallDirs)
