@@ -22,6 +22,9 @@ ServoController::~ServoController() noexcept { BOOST_LOG_TRIVIAL(debug) << "Serv
 bool ServoController::send(const uint8_t position) {
     if (!isSetup()) { return false; }
 
+    BOOST_LOG_TRIVIAL(debug) << "ServoController: Send for servo 0x" << std::hex << servo_id_ << std::dec
+                             << "with pos=" << position;
+
     // Message format is an 8 byte payload where the 1st byte is the commanded position of the servo
     std::vector<uint8_t> payload{ position, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
 
