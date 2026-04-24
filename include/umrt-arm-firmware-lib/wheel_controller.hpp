@@ -97,11 +97,11 @@ protected:
      * @param message the de-firmatified Sysex payload
      */
     //@{
-    // void handleESetSpeed(const std::vector<uint8_t>& message, drivers::socketcan::CanId& info);
+    void handleEcho(const std::vector<uint8_t>& message, drivers::socketcan::CanId& info);
 
-    // void handleESendStep(const std::vector<uint8_t>& message, drivers::socketcan::CanId& info);
+    void handleGetSpeed(const std::vector<uint8_t>& message, drivers::socketcan::CanId& info);
 
-    // void handleESeekPosition(const std::vector<uint8_t>& message, drivers::socketcan::CanId& info);
+    void handleEStop(const std::vector<uint8_t>& message, drivers::socketcan::CanId& info);
 
     // void handleEGetPosition(const std::vector<unsigned char>& message, drivers::socketcan::CanId& info);
     //@}
