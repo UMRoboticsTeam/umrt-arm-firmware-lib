@@ -9,59 +9,29 @@
 
 #include <numeric>
 
-#include "MKS_COMMANDS.hpp"
+#include "ROVER_COMMANDS.hpp"
 #include "wheel_controller.hpp"
 #include "utils.hpp"
 #include <cmath>
 
-uint8_t checksum(uint16_t driver_id, const std::vector<uint8_t>& payload);
-void packSpeedProperties(std::vector<uint8_t>& payload, const uint8_t acceleration, const int16_t normalised_speed, const bool dir);
+uint8_t msg_counter = 0;
+// uint8_t checksum(uint16_t driver_id, const std::vector<uint8_t>& payload);
 
-WheelController::WheelController(
-        const std::string& can_interface, std::shared_ptr<const std::unordered_set<uint16_t>> motor_ids,
-        const uint8_t norm_factor
-)
-    : motor_ids{ std::move(motor_ids) }, norm_factor{ norm_factor } {
-    BOOST_LOG_TRIVIAL(trace) << "WheelController construction begun";
+WheelController::WheelController() {
+
+    BOOST_LOG_TRIVIAL(trace) << "WheelController construction begun.";
 
     this->can_receiver = std::make_unique<drivers::socketcan::SocketCanReceiver>(can_interface);
     this->can_sender = std::make_unique<drivers::socketcan::SocketCanSender>(can_interface);
 
     //TODO: Write norm_factor as microstepping factor to the driver
 
-    BOOST_LOG_TRIVIAL(debug) << "WheelController constructed";
+    BOOST_LOG_TRIVIAL(debug) << "WheelController constructed.";
 
     setup_completed = true;
 }
 
-WheelController::~WheelController() noexcept { BOOST_LOG_TRIVIAL(debug) << "WheelController destructed"; }
-
-bool WheelController::setSpeed(const uint16_t motor, const int16_t speed, const uint8_t acceleration) {
-    if (!isSetup()) { return false; }
-
-    // Speed is normalised when norm_factor is 16
-    // That is, at 16 normalised_speed = speed
-    // At 1, normalised_speed = speed / 16
-    // At 32, normalised_speed = speed * 2
-    auto normalised_speed = static_cast<int16_t>(std::abs(speed) * (int32_t)16 / norm_factor);
-
-    std::vector<uint8_t> payload{ MksCommands::SET_SPEED };
-
-    packSpeedProperties(payload, acceleration, normalised_speed, speed > 0);
-
-    payload.insert(payload.end(), checksum(motor, payload));
-
-    try {
-        drivers::socketcan::CanId can_id(motor, 0, drivers::socketcan::FrameType::DATA, drivers::socketcan::StandardFrame);
-        can_sender->send(payload.data(), payload.size(), can_id);
-    } catch (drivers::socketcan::SocketCanTimeout& e) {
-        // Won't bother with e.what(), it is always "CAN Send timeout"
-        BOOST_LOG_TRIVIAL(warning) << "WheelController setSpeed timeout: motor=0x" << std::hex << motor << std::dec
-                                   << ", speed=" << normalised_speed << ", accel=" << acceleration;
-        return false;
-    }
-    return true;
-}
+WheelController::~WheelController() noexcept { BOOST_LOG_TRIVIAL(debug) << "WheelController destructed."; }
 
 // Included for posterity; due to strange responses this command is assumed to return the encoder speed, and we are not
 // using the driver's encoder so I cannot test this and it is not useful functionality anyways
@@ -82,22 +52,68 @@ bool WheelController::setSpeed(const uint16_t motor, const int16_t speed, const 
 //    return true;
 //}
 
+// bool WheelController::getSpeed(const uint16_t motor) {
+//     if (!isSetup()) { return false; }
 
-bool WheelController::getPosition(const uint16_t motor) {
+//     std::vector<uint8_t> payload{ MksCommands::CURRENT_POS };
+//     payload.insert(payload.end(), checksum(motor, payload));
+
+//     try {
+//         drivers::socketcan::CanId can_id(motor, 0, drivers::socketcan::FrameType::DATA, drivers::socketcan::StandardFrame);
+//         can_sender->send(payload.data(), payload.size(), can_id);
+//     } catch (drivers::socketcan::SocketCanTimeout& e) {
+//         BOOST_LOG_TRIVIAL(warning) << "WheelController getPosition timeout: motor=0x" << std::hex << motor << std::dec;
+//         return false;
+//     }
+//     return true;
+// }
+
+bool WheelController::setSpeed(const int16_t left_speed, const int16_t right_speed){
+
     if (!isSetup()) { return false; }
 
-    std::vector<uint8_t> payload{ MksCommands::CURRENT_POS };
-    payload.insert(payload.end(), checksum(motor, payload));
+    //  Setup CAN ID
+    uint32_t priority = 1;
+    uint32_t rdp = 0;
+    uint32_t pf = 0xFF; 
+    uint32_t ps = RoverCommands::SET_SPEED; //  Command for Set Wheel Speed
+    uint32_t source = 0x80  //  Source Address for Jetson Xavier AGX placeholder - ea
 
+    uint32_t ID = (priority << 26) | (rdp << 24) | (pf << 16) | (ps << 8) | source;
+
+    //  The 0 as second parameter is a placeholder, don't know if it is viable in ExtendedFrame
+    drivers::socketcan::CanId can_id(ID, 0, drivers::socketcan::FrameType::DATA, drivers::socketcan::ExtendedFrame);
+
+    //  Setup Payload 
+    std::vector<uint8_t> payload;
+    //  Make sure to create a counter 
+    packPayload(payload, left_speed, right_speed, msg_counter);
+    //  Non-vector method 
+    // uint8_t payload[8] = {0};
+    // // Left Wheel (Bytes 0-1)
+    // payload[0] = left_speed & 0xFF;
+    // payload[1] = (left_speed >> 8) & 0xFF;
+    // // Right Wheel (Bytes 2-3)
+    // payload[2] = right_speed & 0xFF;
+    // payload[3] = (right_speed >> 8) & 0xFF;
+
+    //  Send the CAN message  
     try {
-        drivers::socketcan::CanId can_id(motor, 0, drivers::socketcan::FrameType::DATA, drivers::socketcan::StandardFrame);
-        can_sender->send(payload.data(), payload.size(), can_id);
+        //  Send the Message over CAN 
+        // this->can_sender->send(&payload, 8, can_id);
+        this->can_sender->send(payload.data(), payload.size(), can_id);
+        msg_counter++;
     } catch (drivers::socketcan::SocketCanTimeout& e) {
-        BOOST_LOG_TRIVIAL(warning) << "WheelController getPosition timeout: motor=0x" << std::hex << motor << std::dec;
+        BOOST_LOG_TRIVIAL(error) << "WheelController setSpeed timeout: " << std::hex << ID << std::dec
+                                   << ", left speed=" << left_speed 
+                                   << ", right speed=" << right_speed 
+                                   << ", error: " << e.what();
         return false;
-    }
+    }  
+
     return true;
-}
+
+}   //  setSpeed()
 
 bool WheelController::isSetup() const { return this->setup_completed; }
 
@@ -106,10 +122,14 @@ void WheelController::update(const std::chrono::nanoseconds& timeout) {
     // TODO: Consider bus-level message filtering for efficiency
     try {
         uint8_t msg_buffer[8];
+
         drivers::socketcan::CanId msg_info = this->can_receiver->receive(&msg_buffer, timeout);
 
-        // If this isn't a standard CAN message, then it isn't a message applicable to us
-        if (msg_info.frame_type() != drivers::socketcan::FrameType::DATA) { return; }
+        //  Check if this isn't a standard CAN message, if so then it isn't a message applicable to us
+        if (msg_info.frame_type() != drivers::socketcan::FrameType::DATA) { return; }   
+
+        //  Check if this CAN message is 29-bit, J1939, Extended
+        if (msg_info.id_type() != drivers::socketcan::IdType::EXTENDED) { return; }
 
         // Turn the raw buffer into a vector
         std::vector msg(msg_buffer, msg_buffer + msg_info.length());
@@ -117,74 +137,80 @@ void WheelController::update(const std::chrono::nanoseconds& timeout) {
         this->handleCanMessage(msg, msg_info);
     }
     catch (drivers::socketcan::SocketCanTimeout& _) {} // Don't care if we don't receive a message
-}
+}   //  update()
 
-
-void WheelController::handleESetSpeed(const std::vector<uint8_t>& message, drivers::socketcan::CanId& info) {
-    if (message.size() != 3) { return; } // Don't want to process loop-backed requests, only responses
-    const auto status = static_cast<MksMoveResponse>(message.at(1));
-    BOOST_LOG_TRIVIAL(debug) << "[" << info.get_bus_time() << "]: SetSpeed received for motor 0x" << std::hex
-                             << info.identifier() << std::dec << " with status=" << to_string_mks_move_response(status);
-    ESetSpeed(static_cast<uint16_t>(info.identifier()), status == 1);
-}
-
-void WheelController::handleEGetPosition(const std::vector<uint8_t>& message, drivers::socketcan::CanId& info) {
-    if (message.size() != 6) { return; } // Don't want to process loop-backed requests, only responses
-    auto position = static_cast<int32_t>(decode_32_big(message.cbegin() + 1));
-    BOOST_LOG_TRIVIAL(debug) << "[" << info.get_bus_time() << "]: GetPosition received for motor 0x" << std::hex
-                             << info.identifier() << std::dec << " with position=" << position
-                             << ", normalised_position=" << position / norm_factor;
-    EGetPosition(static_cast<uint16_t>(info.identifier()), position / norm_factor);
-}
-
-void WheelController::handleCanMessage(const std::vector<uint8_t>& message, drivers::socketcan::CanId& info) {
+void WheelController::handleCANMessage(const std::vector<uint8_t>& message, drivers::socketcan::CanId& info) {
     // Note: info can't be const because get_bus_time isn't const-qualified...
 
-    // Drop message if not addressed to us
-    if (info.is_extended() || !motor_ids->count(static_cast<uint16_t>(info.identifier()))) {
-        // We are subscribing to all messages on the bus, there is no reason to spam our log over it
+    //  Drop message if not addressed, this checks if the message is an Extended Frame message (29-bit CAN)
+    if (!info.is_extended()) {
+        //  Drop standard 11-bit messages, because we are J1939, 29-bit
         return;
-    }
+    } 
 
-    // So this message is from a motor driver; it must contain a command or there is something weird happening
+    //  If there is no payload, just send an Error message saying so 
     if (message.empty()) {
-        BOOST_LOG_TRIVIAL(error) << "[" << info.get_bus_time() << "]: Message received for motor 0x" << std::hex
+        BOOST_LOG_TRIVIAL(error) << "[" << info.get_bus_time() << "]: Message received for: " << std::hex
                                  << info.identifier() << std::dec << " with no payload";
-    }
+    }   
 
+    //  Grab the command from the CanId, command is not in the message anymore
+    uint32_t full_id = info.identifier();
+    uint32_t command = (full_id >> 8) & 0xFF;
+ 
     // Process the message
-    switch (message[0]) {
-        case MksCommands::SET_SPEED: this->handleESetSpeed(message, info); break;
-        case MksCommands::CURRENT_POS: this->handleEGetPosition(message, info); break;
+    switch (command) {
+        //  Fix this let this handle the CAN messages received, STM_ECHO, GET_SPEED (TBD), + more if necessary
+        case RoverCommands::STM_ECHO: this->handleEcho(message, info); break;
+        case RoverCommands::GET_SPEED: this->handleGetSpeed(message, info); break;
+        case RoverCommands::EMERGENCY_STOP: this->handleEStop(message, info); break;
         default:
             // Again, we are subscribing to all messages on the bus, no need to spam log with ignored messages
             break;
     }
-}
+}   //  handleCANMessage()
 
-/**
- * Calculates the "CRC" for an MKS message in accordance with @ref MksCommands.
- * @param driver_id CAN ID of the driver this message is sent to
- * @param payload CAN message payload
- * @return computed checksum for the CAN message
- */
-uint8_t WheelController::checksum(uint16_t driver_id, const std::vector<uint8_t>& payload) {
-    // Note: Accumulate is going to work in uint8_t, and unsigned integer overflow is well-defined - no need for explicit modulo
-    return std::accumulate(payload.cbegin(), payload.cend(), static_cast<uint8_t>(driver_id));
-}
+// void WheelController::handleESetSpeed(const std::vector<uint8_t>& message, drivers::socketcan::CanId& info) {
+//     if (message.size() != 3) { return; } // Don't want to process loop-backed requests, only responses
+//     const auto status = static_cast<MksMoveResponse>(message.at(1));
+//     BOOST_LOG_TRIVIAL(debug) << "[" << info.get_bus_time() << "]: SetSpeed received for motor 0x" << std::hex
+//                              << info.identifier() << std::dec << " with status=" << to_string_mks_move_response(status);
+//     ESetSpeed(static_cast<uint16_t>(info.identifier()), status == 1);
+// }
 
-/**
- * Creates the speed properties structure used in the @ref MksCommands::SET_SPEED and @ref MksCommands::SEEK_POS commands.
- * @param payload std::vector<uint8_t> to append the properties structure to
- * @param acceleration the speed ramp profile, see @ref MksTest.Constants.MAX_ACCEL;
- * @param normalised_speed speed value to write to the motor controller
- * @param dir direction to spin, set to `true` if speed is positive
- */
-void WheelController::packSpeedProperties(std::vector<uint8_t>& payload, const uint8_t acceleration, const int16_t normalised_speed, const bool dir) {
-    const auto speed_properties_low =
-            static_cast<uint8_t>((normalised_speed & 0xF00) >> 8 | (dir ? 1u << 7 : 0u));
-    const auto speed_properties_high = static_cast<uint8_t>(normalised_speed & 0xFF);
-    payload.insert(payload.end(), speed_properties_low);
-    payload.insert(payload.end(), speed_properties_high);
-    payload.insert(payload.end(), acceleration);
-}
+uint8_t WheelController::checksum(const std::vector<uint8_t>& payload) {
+    //  CRC8 Checksum
+    uint8_t crc = 0x00; // Standard J1939 start
+    // We only calculate over the first 7 bytes
+    for (size_t i = 0; i < 7; ++i) {
+        crc ^= payload[i];
+        for (uint8_t j = 0; j < 8; ++j) {
+            if (crc & 0x80) {
+                crc = (crc << 1) ^ 0x1D;
+            }
+            else {
+                crc <<= 1;
+            }
+        }
+    }
+    return crc;
+}   //  checksum()
+
+void WheelController::packPayload(std::vector<uint8_t>& payload, const int16_t left_speed, const int16_t right_speed, uint8_t counter) {
+    //  Clear and resize to exact size
+    payload.assign(8, 0x00);
+
+    //  Pack Speed Data (Bytes 0-3)
+    payload[0] = static_cast<uint8_t>(left_speed & 0xFF);
+    payload[1] = static_cast<uint8_t>((left_speed >> 8) & 0xFF);
+    payload[2] = static_cast<uint8_t>(right_speed & 0xFF);
+    payload[3] = static_cast<uint8_t>((right_speed >> 8) & 0xFF);
+
+    //  Bytes 4-5 stay 0x00 - for now 
+
+    //  Message Counter (Byte 6)
+    payload[6] = counter;
+
+    //  Checksum (Byte 7)
+    payload[7] = checksum(payload);
+}   //  packPayload()

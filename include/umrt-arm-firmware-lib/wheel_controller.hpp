@@ -38,16 +38,8 @@ class WheelController {
 public:
     /**
      * Initializes an WheelController.
-     *
-     * @param can_interface SocketCAN network interface corresponding to the CAN bus
-     * @param motor_ids CAN IDs for the motor controllers, used to filter CAN messages so other devices' messages aren't
-     *                  attempted to be decoded
-     * @param norm_factor interpolated normalisation factor to use, see @ref internorm; defaults to off
      */
-    WheelController(
-            const std::string& can_interface, std::shared_ptr<const std::unordered_set<uint16_t>> motor_ids,
-            const uint8_t norm_factor = 1
-    );
+    WheelController();
 
     /**
      * Destroys an WheelController.
@@ -55,41 +47,15 @@ public:
     ~WheelController() noexcept;
 
     /**
-     * Sends a @ref MksCommands::SET_SPEED command to set the speed of a motor.
+     * Sends a @ref RoverCommands::SET_SPEED command to set the speed ofthe motors.
      * Response callbacks are available through @ref ESetSpeed.
      * See @ref MksTest.Constants.MAX_SPEED for speed limits.
      *
-     * @param motor the ID of the motor to control
-     * @param speed the signed target speed to set the motor to, in RPM
-     * @param acceleration the speed ramp profile, see @ref MksTest.Constants.MAX_ACCEL; defaults to instantaneous
+     * @param left_speed speed value of the left wheels 
+     * @param right_speed speed value of the right wheels   
      * @return `true` if transmitted over the CAN bus
      */
-    bool setSpeed(const uint16_t motor, const int16_t speed, const uint8_t acceleration = 0);
-
-    /**
-     * Sends a @ref MksCommands::SEND_STEP command to move a motor a fixed number of steps.
-     * Direction is controlled by the sign of the target speed.
-     * Response callbacks are available through @ref ESendStep.
-     *
-     * @param motor the ID of the motor to move
-     * @param num_steps the number of steps to move, maximum of 2^24 - 1
-     * @param speed the signed target speed to set the motor to, in RPM
-     * @param acceleration the speed ramp profile, see @ref MksTest.Constants.MAX_ACCEL; defaults to instantaneous
-     * @return `true` if transmitted over the CAN bus
-     */
-    bool sendStep(const uint16_t motor, const uint32_t num_steps, const int16_t speed, const uint8_t acceleration = 0);
-
-    /**
-     * Sends a @ref MksCommands::SEEK_POS_BY_STEPS command to move a motor to specific step position.
-     * Since this command seeks a position, the sign of the speed is ignored.
-     *
-     * @param motor the ID of the motor to move
-     * @param position the target position in number of steps from the motor's zero point, maximum of 2^23 - 1
-     * @param speed the signed target speed to set the motor to, in RPM; note that the absolute value is taken
-     * @param acceleration the speed ramp profile, see @ref MksTest.Constants.MAX_ACCEL; defaults to instantaneous
-     * @return `true` if transmitted over the CAN bus
-     */
-    bool seekPosition(const uint16_t motor, const int32_t position, const int16_t speed, const uint8_t acceleration = 0);
+    bool setSpeed(const int16_t left_speed, const int16_t right_speed);
 
     /**
       * Sends a @ref MksCommands::CURRENT_POS command to query the current position of a motor in steps.
@@ -97,7 +63,7 @@ public:
       * @param motor the ID of the motor to query
       * @return `true` if transmitted over the CAN bus
       */
-    bool getPosition(const uint16_t motor);
+    // bool getSpeed(const uint16_t motor);
 
     /**
      * Returns whether the CAN bus connection has been fully established.
@@ -107,60 +73,21 @@ public:
 
     /**
      * Polls for CAN messages.
-     * If an applicable message is received, the appropriate event is signalled.
+     * If an applicable message is received, the appropriate CAN message handler is called.
      *
      * @param timeout maximum time to wait for a message to appear on the bus
      */
     void update(const std::chrono::nanoseconds& timeout = std::chrono::nanoseconds::zero());
 
-    // ==========================
-    //           Events
-    // ==========================
-
-    /**
-     * <a href=https://www.boost.org/doc/libs/1_63_0/doc/html/signals.html>Boost signal</a> triggered when
-     * @ref setSpeed responses are received.
-     *
-     * @param 1st [uint8_t] motor ID
-     * @param 2nd [bool] 1 if movement succeeded
-     */
-    boost::signals2::signal<void(uint16_t, bool)> ESetSpeed;
-
-    /**
-     * <a href=https://www.boost.org/doc/libs/1_63_0/doc/html/signals.html>Boost signal</a> triggered when
-     * @ref sendStep responses are received.
-     *
-     * @param 1st [uint8_t] motor ID
-     * @param 2nd [MksMoveResponse] current movement status
-     */
-    boost::signals2::signal<void(uint16_t, MksMoveResponse)> ESendStep;
-
-    /**
-     * <a href=https://www.boost.org/doc/libs/1_63_0/doc/html/signals.html>Boost signal</a> triggered when
-     * @ref seekPosition responses are received.
-     *
-     * @param 1st [uint8_t] motor ID
-     * @param 2nd [MksMoveResponse] current movement status
-     */
-    boost::signals2::signal<void(uint16_t, MksMoveResponse)> ESeekPosition;
-
-    /**
-     * <a href=https://www.boost.org/doc/libs/1_63_0/doc/html/signals.html>Boost signal</a> triggered when
-     * @ref getPosition responses are received.
-     *
-     * @param 1st [uint8_t] motor ID
-     * @param 2nd [int32_t] motor position in steps
-     */
-    boost::signals2::signal<void(uint16_t, int32_t)> EGetPosition;
-
 protected:
+
     /**
-     * Handles received CAN messages and sends out signals as appropriate.
+     * Handles received CAN messages and calls command handler.
      *
      * @param message the message payload
      * @param info auxiliary information associated with the message, e.g. driver ID, bus time
      */
-    void handleCanMessage(const std::vector<uint8_t>& message, drivers::socketcan::CanId& info);
+    void handleCANMessage(const std::vector<uint8_t>& message, drivers::socketcan::CanId& info);
 
     /**
      * @name Signal Processing Helper Functions
@@ -170,27 +97,44 @@ protected:
      * @param message the de-firmatified Sysex payload
      */
     //@{
-    void handleESetSpeed(const std::vector<uint8_t>& message, drivers::socketcan::CanId& info);
+    // void handleESetSpeed(const std::vector<uint8_t>& message, drivers::socketcan::CanId& info);
 
-    void handleESendStep(const std::vector<uint8_t>& message, drivers::socketcan::CanId& info);
+    // void handleESendStep(const std::vector<uint8_t>& message, drivers::socketcan::CanId& info);
 
-    void handleESeekPosition(const std::vector<uint8_t>& message, drivers::socketcan::CanId& info);
+    // void handleESeekPosition(const std::vector<uint8_t>& message, drivers::socketcan::CanId& info);
 
-    void handleEGetPosition(const std::vector<unsigned char>& message, drivers::socketcan::CanId& info);
+    // void handleEGetPosition(const std::vector<unsigned char>& message, drivers::socketcan::CanId& info);
     //@}
 
     std::unique_ptr<drivers::socketcan::SocketCanReceiver> can_receiver;
     std::unique_ptr<drivers::socketcan::SocketCanSender> can_sender;
-    std::shared_ptr<const std::unordered_set<uint16_t>> motor_ids;
-    const uint8_t norm_factor;
 
 private:
     /**
      * Flag which indicates whether the CAN bus connection has been initialised.
      */
     bool setup_completed;
-    void packSpeedProperties(std::vector<uint8_t>& payload, const uint8_t acceleration, const int16_t normalised_speed, const bool dir);
-    uint8_t checksum(uint16_t driver_id, const std::vector<uint8_t>& payload);
+
+    /**
+     * Message Counter for J1939 Payload, allow us to detect if messages are being lost
+     */
+    uint8_t msg_counter;
+    
+    /**
+     * Packs the speed onto payload
+     * @param payload std::vector<uint8_t> to append the properties structure to
+     * @param left_speed speed value of the left wheels 
+     * @param right_speed speed value of the right wheels 
+     * @param counter message counter for STM32 to check for missed messages 
+     */
+    void packPayload(std::vector<uint8_t>& payload, const int16_t left_speed, const int16_t right_speed, uint8_t counter);
+
+    /**
+     * Calculates the "CRC8" checksum for J1939 Payload
+     * @param payload CAN message payload
+     * @return computed checksum for the CAN message
+     */
+    uint8_t checksum(const std::vector<uint8_t>& payload);
 };
 
 #endif //UMRT_ARM_FIRMWARE_LIB_WHEEL_CONTROLLER_HPP

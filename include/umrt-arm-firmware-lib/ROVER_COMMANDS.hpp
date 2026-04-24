@@ -30,7 +30,8 @@ enum RoverCommands : uint8_t{
     EMERGENCY_STOP = 0x01, 
 
     /**
-     *  Gets the status of the Rover:
+     *  (might be removed, doesn't fit the scope of wheel_controller)
+     *  Gets the status of the Rover: 
      *      - Temperature 
      *      - Battery Voltage
      *      - Current Consumption
@@ -63,6 +64,7 @@ enum RoverCommands : uint8_t{
     GET_SPEED = 0x04, 
 
     /**
+     *  (might be removed, doesn't fit the scope of wheel_controller)
      *  Set's the servo motor's angle (0-270)
      * 
      *  @param yaw_angle [u_int16_t]  
