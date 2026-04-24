@@ -170,13 +170,20 @@ void WheelController::handleCANMessage(const std::vector<uint8_t>& message, driv
     }
 }   //  handleCANMessage()
 
-// void WheelController::handleESetSpeed(const std::vector<uint8_t>& message, drivers::socketcan::CanId& info) {
-//     if (message.size() != 3) { return; } // Don't want to process loop-backed requests, only responses
-//     const auto status = static_cast<MksMoveResponse>(message.at(1));
-//     BOOST_LOG_TRIVIAL(debug) << "[" << info.get_bus_time() << "]: SetSpeed received for motor 0x" << std::hex
-//                              << info.identifier() << std::dec << " with status=" << to_string_mks_move_response(status);
-//     ESetSpeed(static_cast<uint16_t>(info.identifier()), status == 1);
-// }
+void WheelController::handleEcho(const std::vector<uint8_t>& message, drivers::socketcan::CanId& info) {
+    BOOST_LOG_TRIVIAL(debug) << "[" << info.get_bus_time() << "]: STM32 ECHO received " << std::hex
+                             << info.identifier();
+}
+
+void WheelController::handleGetSpeed(const std::vector<uint8_t>& message, drivers::socketcan::CanId& info) {
+    BOOST_LOG_TRIVIAL(debug) << "[" << info.get_bus_time() << "]: Get Speed received " << std::hex
+                             << info.identifier();
+}
+
+void WheelController::handleEStop(const std::vector<uint8_t>& message, drivers::socketcan::CanId& info) {
+    BOOST_LOG_TRIVIAL(debug) << "[" << info.get_bus_time() << "]: Emergency Stop received " << std::hex
+                             << info.identifier();
+}
 
 uint8_t WheelController::checksum(const std::vector<uint8_t>& payload) {
     //  CRC8 Checksum
