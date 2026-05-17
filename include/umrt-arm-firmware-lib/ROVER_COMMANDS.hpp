@@ -14,7 +14,7 @@
 enum RoverCommands : uint8_t{
 
     /**
-     *  Respond back with payload, confirms communication connection to STM32
+     *  Pings communication connection to STM32
      * 
      *  @param payload 
      *  @return 'payload'
@@ -71,6 +71,14 @@ enum RoverCommands : uint8_t{
      *  @return yaw_angle 
     */
     SET_CAMERA_SERVO = 0x05, 
+
+    /**
+     *  Respond back with payload, confirms communication connection to STM32
+     * 
+     *  @param payload 
+     *  @return 'payload'
+    */
+    ECHO_RESPONSE = 0x06,
 
 };  //  enum RoverCommands
 

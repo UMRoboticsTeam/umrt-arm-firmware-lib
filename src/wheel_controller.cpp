@@ -11,18 +11,48 @@
 
 #include "ROVER_COMMANDS.hpp"
 #include "wheel_controller.hpp"
+#include "Crc8_J1850.h"
 #include "utils.hpp"
 #include <cmath>
+#include <array>
 
-uint8_t msg_counter = 0;
-// uint8_t checksum(uint16_t driver_id, const std::vector<uint8_t>& payload);
+/**
+ * Packs the speed onto payload
+ * @param payload std::vector<uint8_t> to append the properties structure to
+ * @param left_speed speed value of the left wheels 
+ * @param right_speed speed value of the right wheels 
+ * @param counter message counter for STM32 to check for missed messages 
+ */
+namespace {
+    void packPayload(std::array<uint8_t, 8>& payload, const int16_t left_speed, const int16_t right_speed, uint8_t counter) {
 
-WheelController::WheelController() {
+        //  Pack Speed Data (Bytes 0-3)
+        payload[0] = static_cast<uint8_t>(left_speed & 0xFF);
+        payload[1] = static_cast<uint8_t>((left_speed >> 8) & 0xFF);
+        payload[2] = static_cast<uint8_t>(right_speed & 0xFF);
+        payload[3] = static_cast<uint8_t>((right_speed >> 8) & 0xFF);
+
+        //  Bytes 4-5 stay 0x00 - for now 
+        payload[4] = 0xFF;
+        payload[5] = 0xFF;
+
+        //  Message Counter (Byte 6)
+        payload[6] = counter;
+
+        //  Checksum (Byte 7)
+        //  This is because Crc8 uses uint8*
+        payload[7] = Crc8(payload.data(), 8, 0xFF);    
+    }   //  packPayload()
+}
+
+WheelController::WheelController(const std::string& can_interface) {
 
     BOOST_LOG_TRIVIAL(trace) << "WheelController construction begun.";
 
     this->can_receiver = std::make_unique<drivers::socketcan::SocketCanReceiver>(can_interface);
     this->can_sender = std::make_unique<drivers::socketcan::SocketCanSender>(can_interface);
+
+    msg_counter = 0;
 
     //TODO: Write norm_factor as microstepping factor to the driver
 
@@ -68,12 +98,23 @@ WheelController::~WheelController() noexcept { BOOST_LOG_TRIVIAL(debug) << "Whee
 //     return true;
 // }
 
-bool WheelController::setSpeed(const int16_t left_speed, const int16_t right_speed){
+bool WheelController::setSpeed(const int16_t left_speed, const int16_t right_speed, const uint32_t priority){
 
     if (!isSetup()) { return false; }
 
+    //  Can't let the speeds be 0xFFFF or 0xFFFE, let's log to see which one it is
+    if (left_speed == 0xFFFF || right_speed == 0xFFFF) {
+        BOOST_LOG_TRIVIAL(error) << "ERROR -> Left Speed: " << std::hex 
+                                 << left_speed <<  ", Right Speed: " << right_speed;
+        return false; 
+    }
+    if (left_speed == 0xFFFE || right_speed == 0xFFFE) {
+        BOOST_LOG_TRIVIAL(debug) << "DONT CARE -> Left Speed: " << std::hex 
+                                 << left_speed <<  ", Right Speed: " << right_speed;
+        return false; 
+    }
+
     //  Setup CAN ID
-    uint32_t priority = 1;
     uint32_t rdp = 0;
     uint32_t pf = 0xFF; 
     uint32_t ps = RoverCommands::SET_SPEED; //  Command for Set Wheel Speed
@@ -85,7 +126,7 @@ bool WheelController::setSpeed(const int16_t left_speed, const int16_t right_spe
     drivers::socketcan::CanId can_id(ID, 0, drivers::socketcan::FrameType::DATA, drivers::socketcan::ExtendedFrame);
 
     //  Setup Payload 
-    std::vector<uint8_t> payload;
+    std::array<uint8_t, 8> payload;
     //  Make sure to create a counter 
     packPayload(payload, left_speed, right_speed, msg_counter);
     //  Non-vector method 
@@ -102,7 +143,7 @@ bool WheelController::setSpeed(const int16_t left_speed, const int16_t right_spe
         //  Send the Message over CAN 
         // this->can_sender->send(&payload, 8, can_id);
         this->can_sender->send(payload.data(), payload.size(), can_id);
-        msg_counter++;
+        msg_counter = (msg_counter+1) % 255;    //  modulo technique for rollover 
     } catch (drivers::socketcan::SocketCanTimeout& e) {
         BOOST_LOG_TRIVIAL(error) << "WheelController setSpeed timeout: " << std::hex << ID << std::dec
                                    << ", left speed=" << left_speed 
@@ -110,7 +151,6 @@ bool WheelController::setSpeed(const int16_t left_speed, const int16_t right_spe
                                    << ", error: " << e.what();
         return false;
     }  
-
     return true;
 
 }   //  setSpeed()
@@ -148,9 +188,9 @@ void WheelController::handleCANMessage(const std::vector<uint8_t>& message, driv
         return;
     } 
 
-    //  If there is no payload, just send an Error message saying so 
+    //  If there is no payload, just send a debug message saying so 
     if (message.empty()) {
-        BOOST_LOG_TRIVIAL(error) << "[" << info.get_bus_time() << "]: Message received for: " << std::hex
+        BOOST_LOG_TRIVIAL(debug) << "[" << info.get_bus_time() << "]: Message received for: " << std::hex
                                  << info.identifier() << std::dec << " with no payload";
     }   
 
@@ -161,9 +201,8 @@ void WheelController::handleCANMessage(const std::vector<uint8_t>& message, driv
     // Process the message
     switch (command) {
         //  Fix this let this handle the CAN messages received, STM_ECHO, GET_SPEED (TBD), + more if necessary
-        case RoverCommands::STM_ECHO: this->handleEcho(message, info); break;
+        case RoverCommands::ECHO_RESPONSE: this->handleEcho(message, info); break;
         case RoverCommands::GET_SPEED: this->handleGetSpeed(message, info); break;
-        case RoverCommands::EMERGENCY_STOP: this->handleEStop(message, info); break;
         default:
             // Again, we are subscribing to all messages on the bus, no need to spam log with ignored messages
             break;
@@ -173,51 +212,25 @@ void WheelController::handleCANMessage(const std::vector<uint8_t>& message, driv
 void WheelController::handleEcho(const std::vector<uint8_t>& message, drivers::socketcan::CanId& info) {
     BOOST_LOG_TRIVIAL(debug) << "[" << info.get_bus_time() << "]: STM32 ECHO received " << std::hex
                              << info.identifier();
-}
+}   //  handleEcho()
 
 void WheelController::handleGetSpeed(const std::vector<uint8_t>& message, drivers::socketcan::CanId& info) {
-    BOOST_LOG_TRIVIAL(debug) << "[" << info.get_bus_time() << "]: Get Speed received " << std::hex
-                             << info.identifier();
-}
-
-void WheelController::handleEStop(const std::vector<uint8_t>& message, drivers::socketcan::CanId& info) {
-    BOOST_LOG_TRIVIAL(debug) << "[" << info.get_bus_time() << "]: Emergency Stop received " << std::hex
-                             << info.identifier();
-}
-
-uint8_t WheelController::checksum(const std::vector<uint8_t>& payload) {
-    //  CRC8 Checksum
-    uint8_t crc = 0x00; // Standard J1939 start
-    // We only calculate over the first 7 bytes
-    for (size_t i = 0; i < 7; ++i) {
-        crc ^= payload[i];
-        for (uint8_t j = 0; j < 8; ++j) {
-            if (crc & 0x80) {
-                crc = (crc << 1) ^ 0x1D;
-            }
-            else {
-                crc <<= 1;
-            }
-        }
+    if (message.size() != 4) {
+        return;
     }
-    return crc;
-}   //  checksum()
+    int16_t left_speed  = (message[1] << 8) | message[0]; 
+    int16_t right_speed = (message[3] << 8) | message[2];
 
-void WheelController::packPayload(std::vector<uint8_t>& payload, const int16_t left_speed, const int16_t right_speed, uint8_t counter) {
-    //  Clear and resize to exact size
-    payload.assign(8, 0x00);
+    //  Check for 0xFFFE or 0xFFFF
+    if (left_speed >= 0xFFFE || right_speed >= 0xFFFE ) {
+        BOOST_LOG_TRIVIAL(error) << "getSpeed Error: " << std::hex << ID
+                            << ", left speed=" << left_speed 
+                            << ", right speed=" << right_speed;
+        return;
+    }
 
-    //  Pack Speed Data (Bytes 0-3)
-    payload[0] = static_cast<uint8_t>(left_speed & 0xFF);
-    payload[1] = static_cast<uint8_t>((left_speed >> 8) & 0xFF);
-    payload[2] = static_cast<uint8_t>(right_speed & 0xFF);
-    payload[3] = static_cast<uint8_t>((right_speed >> 8) & 0xFF);
-
-    //  Bytes 4-5 stay 0x00 - for now 
-
-    //  Message Counter (Byte 6)
-    payload[6] = counter;
-
-    //  Checksum (Byte 7)
-    payload[7] = checksum(payload);
-}   //  packPayload()
+    //  Need to determine if we want RPM back or m/s, also how does the STM32 send the speed
+    BOOST_LOG_TRIVIAL(debug) << "[" << info.get_bus_time() << "]: getSpeed received " << std::hex
+                             << info.identifier() << std::dec << " left speed= " << left_speed
+                             << " right speed= " << right_speed;
+}   //  handleGetSpeed()
