@@ -5,13 +5,13 @@
 #ifndef UMRT_ARM_FIRMWARE_LIB_WHEEL_CONTROLLER_HPP
 #define UMRT_ARM_FIRMWARE_LIB_WHEEL_CONTROLLER_HPP
 
-#include <boost/signals2.hpp>
+// #include <boost/signals2.hpp>
 #include <chrono>
 #include <string>
 #include <unordered_set>
 #include <vector>
 
-#include "mks_enums.hpp"
+// #include "mks_enums.hpp"
 
 // Forward declaring these classes so that ros2_socketcan can be a private dependency
 namespace drivers::socketcan {
@@ -39,7 +39,7 @@ public:
     /**
      * Initializes an WheelController.
      */
-    WheelController();
+    WheelController(const std::string& can_interface);
 
     /**
      * Destroys an WheelController.
@@ -52,10 +52,11 @@ public:
      * See @ref MksTest.Constants.MAX_SPEED for speed limits.
      *
      * @param left_speed speed value of the left wheels 
-     * @param right_speed speed value of the right wheels   
+     * @param right_speed speed value of the right wheels
+     * @param priority priority for CAN message    
      * @return `true` if transmitted over the CAN bus
      */
-    bool setSpeed(const int16_t left_speed, const int16_t right_speed);
+    bool setSpeed(const int16_t left_speed, const int16_t right_speed, const uint32_t priority);
 
     /**
       * Sends a @ref MksCommands::CURRENT_POS command to query the current position of a motor in steps.
@@ -101,8 +102,6 @@ protected:
 
     void handleGetSpeed(const std::vector<uint8_t>& message, drivers::socketcan::CanId& info);
 
-    void handleEStop(const std::vector<uint8_t>& message, drivers::socketcan::CanId& info);
-
     // void handleEGetPosition(const std::vector<unsigned char>& message, drivers::socketcan::CanId& info);
     //@}
 
@@ -119,22 +118,6 @@ private:
      * Message Counter for J1939 Payload, allow us to detect if messages are being lost
      */
     uint8_t msg_counter;
-    
-    /**
-     * Packs the speed onto payload
-     * @param payload std::vector<uint8_t> to append the properties structure to
-     * @param left_speed speed value of the left wheels 
-     * @param right_speed speed value of the right wheels 
-     * @param counter message counter for STM32 to check for missed messages 
-     */
-    void packPayload(std::vector<uint8_t>& payload, const int16_t left_speed, const int16_t right_speed, uint8_t counter);
-
-    /**
-     * Calculates the "CRC8" checksum for J1939 Payload
-     * @param payload CAN message payload
-     * @return computed checksum for the CAN message
-     */
-    uint8_t checksum(const std::vector<uint8_t>& payload);
 };
 
 #endif //UMRT_ARM_FIRMWARE_LIB_WHEEL_CONTROLLER_HPP
