@@ -113,6 +113,26 @@ target_link_libraries(${mks_test_target} PRIVATE
         ${lib_target}
 )
 
+# ********** Setup wheel_controller_test executable **********
+
+set(wheel_controller_test_target wheel_controller_test)
+
+add_executable(${wheel_controller_test_target})
+
+target_sources(${wheel_controller_test_target} PRIVATE
+        src/wheel_controller_test.cpp
+)
+
+target_link_libraries(${wheel_controller_test_target} PRIVATE
+        Boost::log_setup
+        Boost::log
+        Boost::filesystem
+        Boost::program_options
+        ${lib_target}
+)
+
+
+
 # ********** Setup packaging **********
 
 include(GNUInstallDirs)
@@ -142,7 +162,7 @@ install(FILES
         )
 
 install(
-        TARGETS ${lib_target} ${arduino_communication_test_target} ${mks_test_target} # These targets will be packaged
+        TARGETS ${lib_target} ${arduino_communication_test_target} ${mks_test_target} ${wheel_controller_test_target} # These targets will be packaged
         EXPORT ${PROJECT_NAME}Targets
         PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}
 )
