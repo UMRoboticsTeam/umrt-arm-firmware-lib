@@ -26,11 +26,27 @@
 namespace {
     void packPayload(std::array<uint8_t, 8>& payload, const int16_t left_speed, const int16_t right_speed, uint8_t counter) {
 
+        //  Please check over this seems overkill with the amount of 
+
+        //  CONSTANTS for SLOT 
+        constexpr double OFFSET = -4016.0;
+        constexpr double MIN_RPM = -4016.0;
+        constexpr double MAX_RPM = 4015.875;
+        constexpr double SCALE = 0.125;
+
+        //  Using doubles for this because of the scaling
+        //  Apply SLOT to speeds - Scaling, Limits, Offset and Transfer Function
+        const double left_speed  = static_cast<double>(std::clamp(left_speed, MIN_RPM, MAX_RPM));
+        const double right_speed = static_cast<double>(std::clamp(right_speed, MIN_RPM, MAX_RPM));
+
+        const uint16_t raw_left  = static_cast<uint16_t>(std::round((left_speed - OFFSET) / SCALE));
+        const uint16_t raw_right = static_cast<uint16_t>(std::round((right_speed - OFFSET) / SCALE));
+
         //  Pack Speed Data (Bytes 0-3)
-        payload[0] = static_cast<uint8_t>(left_speed & 0xFF);
-        payload[1] = static_cast<uint8_t>((left_speed >> 8) & 0xFF);
-        payload[2] = static_cast<uint8_t>(right_speed & 0xFF);
-        payload[3] = static_cast<uint8_t>((right_speed >> 8) & 0xFF);
+        payload[0] = static_cast<uint8_t>(raw_left & 0xFF);
+        payload[1] = static_cast<uint8_t>((raw left >> 8) & 0xFF);
+        payload[2] = static_cast<uint8_t>(raw_right & 0xFF);
+        payload[3] = static_cast<uint8_t>((raw_right >> 8) & 0xFF);
 
         //  Bytes 4-5 stay 0x00 - for now 
         payload[4] = 0xFF;
@@ -53,8 +69,6 @@ WheelController::WheelController(const std::string& can_interface) {
     this->can_sender = std::make_unique<drivers::socketcan::SocketCanSender>(can_interface);
 
     msg_counter = 0;
-
-    //TODO: Write norm_factor as microstepping factor to the driver
 
     BOOST_LOG_TRIVIAL(debug) << "WheelController constructed.";
 
@@ -129,14 +143,6 @@ bool WheelController::setSpeed(const int16_t left_speed, const int16_t right_spe
     std::array<uint8_t, 8> payload;
     //  Make sure to create a counter 
     packPayload(payload, left_speed, right_speed, msg_counter);
-    //  Non-vector method 
-    // uint8_t payload[8] = {0};
-    // // Left Wheel (Bytes 0-1)
-    // payload[0] = left_speed & 0xFF;
-    // payload[1] = (left_speed >> 8) & 0xFF;
-    // // Right Wheel (Bytes 2-3)
-    // payload[2] = right_speed & 0xFF;
-    // payload[3] = (right_speed >> 8) & 0xFF;
 
     //  Send the CAN message  
     try {
