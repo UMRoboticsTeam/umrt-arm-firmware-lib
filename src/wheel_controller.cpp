@@ -15,6 +15,7 @@
 #include "utils.hpp"
 #include <cmath>
 #include <array>
+#include <algorithm>
 
 /**
  * Packs the speed onto payload
@@ -26,8 +27,6 @@
 namespace {
     void packPayload(std::array<uint8_t, 8>& payload, const int16_t left_speed, const int16_t right_speed, uint8_t counter) {
 
-        //  Please check over this seems overkill with the amount of 
-
         //  CONSTANTS for SLOT 
         constexpr double OFFSET = -4016.0;
         constexpr double MIN_RPM = -4016.0;
@@ -36,15 +35,15 @@ namespace {
 
         //  Using doubles for this because of the scaling
         //  Apply SLOT to speeds - Scaling, Limits, Offset and Transfer Function
-        const double left_speed  = static_cast<double>(std::clamp(left_speed, MIN_RPM, MAX_RPM));
-        const double right_speed = static_cast<double>(std::clamp(right_speed, MIN_RPM, MAX_RPM));
+        const double left_speed_d = std::clamp(static_cast<double>(left_speed), MIN_RPM, MAX_RPM);
+        const double right_speed_d = std::clamp(static_cast<double>(right_speed), MIN_RPM, MAX_RPM);    
 
-        const uint16_t raw_left  = static_cast<uint16_t>(std::round((left_speed - OFFSET) / SCALE));
-        const uint16_t raw_right = static_cast<uint16_t>(std::round((right_speed - OFFSET) / SCALE));
+        const uint16_t raw_left  = static_cast<uint16_t>(std::round((left_speed_d - OFFSET) / SCALE));
+        const uint16_t raw_right = static_cast<uint16_t>(std::round((right_speed_d - OFFSET) / SCALE));
 
         //  Pack Speed Data (Bytes 0-3)
         payload[0] = static_cast<uint8_t>(raw_left & 0xFF);
-        payload[1] = static_cast<uint8_t>((raw left >> 8) & 0xFF);
+        payload[1] = static_cast<uint8_t>((raw_left >> 8) & 0xFF);
         payload[2] = static_cast<uint8_t>(raw_right & 0xFF);
         payload[3] = static_cast<uint8_t>((raw_right >> 8) & 0xFF);
 
@@ -116,23 +115,23 @@ bool WheelController::setSpeed(const int16_t left_speed, const int16_t right_spe
 
     if (!isSetup()) { return false; }
 
-    //  Can't let the speeds be 0xFFFF or 0xFFFE, let's log to see which one it is
-    if (left_speed == 0xFFFF || right_speed == 0xFFFF) {
-        BOOST_LOG_TRIVIAL(error) << "ERROR -> Left Speed: " << std::hex 
-                                 << left_speed <<  ", Right Speed: " << right_speed;
-        return false; 
-    }
-    if (left_speed == 0xFFFE || right_speed == 0xFFFE) {
-        BOOST_LOG_TRIVIAL(debug) << "DONT CARE -> Left Speed: " << std::hex 
-                                 << left_speed <<  ", Right Speed: " << right_speed;
-        return false; 
-    }
+    // //  Can't let the speeds be 0xFFFF or 0xFFFE, let's log to see which one it is
+    // if (left_speed == 0xFFFF || right_speed == 0xFFFF) {
+    //     BOOST_LOG_TRIVIAL(error) << "ERROR -> Left Speed: " << std::hex 
+    //                              << left_speed <<  ", Right Speed: " << right_speed;
+    //     return false; 
+    // }
+    // if (left_speed == 0xFFFE || right_speed == 0xFFFE) {
+    //     BOOST_LOG_TRIVIAL(debug) << "DONT CARE -> Left Speed: " << std::hex 
+    //                              << left_speed <<  ", Right Speed: " << right_speed;
+    //     return false; 
+    // }
 
     //  Setup CAN ID
     uint32_t rdp = 0;
     uint32_t pf = 0xFF; 
     uint32_t ps = RoverCommands::SET_SPEED; //  Command for Set Wheel Speed
-    uint32_t source = 0x80  //  Source Address for Jetson Xavier AGX placeholder - ea
+    uint32_t source = 0x80;  //  Source Address for Jetson Xavier AGX placeholder - ea
 
     uint32_t ID = (priority << 26) | (rdp << 24) | (pf << 16) | (ps << 8) | source;
 
@@ -141,7 +140,6 @@ bool WheelController::setSpeed(const int16_t left_speed, const int16_t right_spe
 
     //  Setup Payload 
     std::array<uint8_t, 8> payload;
-    //  Make sure to create a counter 
     packPayload(payload, left_speed, right_speed, msg_counter);
 
     //  Send the CAN message  
@@ -149,7 +147,7 @@ bool WheelController::setSpeed(const int16_t left_speed, const int16_t right_spe
         //  Send the Message over CAN 
         // this->can_sender->send(&payload, 8, can_id);
         this->can_sender->send(payload.data(), payload.size(), can_id);
-        msg_counter = (msg_counter+1) % 255;    //  modulo technique for rollover 
+        msg_counter = static_cast<uint8_t>((msg_counter + 1) % 255);    //  modulo technique for rollover 
     } catch (drivers::socketcan::SocketCanTimeout& e) {
         BOOST_LOG_TRIVIAL(error) << "WheelController setSpeed timeout: " << std::hex << ID << std::dec
                                    << ", left speed=" << left_speed 
@@ -175,12 +173,12 @@ void WheelController::update(const std::chrono::nanoseconds& timeout) {
         if (msg_info.frame_type() != drivers::socketcan::FrameType::DATA) { return; }   
 
         //  Check if this CAN message is 29-bit, J1939, Extended
-        if (msg_info.id_type() != drivers::socketcan::IdType::EXTENDED) { return; }
+        if (!msg_info.is_extended() ) { return; }
 
         // Turn the raw buffer into a vector
         std::vector msg(msg_buffer, msg_buffer + msg_info.length());
 
-        this->handleCanMessage(msg, msg_info);
+        this->handleCANMessage(msg, msg_info);
     }
     catch (drivers::socketcan::SocketCanTimeout& _) {} // Don't care if we don't receive a message
 }   //  update()
@@ -216,6 +214,7 @@ void WheelController::handleCANMessage(const std::vector<uint8_t>& message, driv
 }   //  handleCANMessage()
 
 void WheelController::handleEcho(const std::vector<uint8_t>& message, drivers::socketcan::CanId& info) {
+    (void)message;
     BOOST_LOG_TRIVIAL(debug) << "[" << info.get_bus_time() << "]: STM32 ECHO received " << std::hex
                              << info.identifier();
 }   //  handleEcho()
@@ -224,19 +223,31 @@ void WheelController::handleGetSpeed(const std::vector<uint8_t>& message, driver
     if (message.size() != 4) {
         return;
     }
-    int16_t left_speed  = (message[1] << 8) | message[0]; 
-    int16_t right_speed = (message[3] << 8) | message[2];
+    uint16_t raw_left  = static_cast<uint16_t>((message[1] << 8) | message[0]); 
+    uint16_t raw_right = static_cast<uint16_t>((message[3] << 8) | message[2]);
 
     //  Check for 0xFFFE or 0xFFFF
-    if (left_speed >= 0xFFFE || right_speed >= 0xFFFE ) {
-        BOOST_LOG_TRIVIAL(error) << "getSpeed Error: " << std::hex << ID
-                            << ", left speed=" << left_speed 
-                            << ", right speed=" << right_speed;
+    if (raw_left >= 0xFFFE || raw_right >= 0xFFFE ) {
+        BOOST_LOG_TRIVIAL(error) << "getSpeed Error: " << std::hex << info.identifier()
+                            << ", left speed=" << raw_left 
+                            << ", right speed=" << raw_right;
         return;
     }
 
+    constexpr double SLOT_SCALE = 0.125;
+    constexpr double SLOT_OFFSET = -4016.0;
+
+    double left_rpm  = (static_cast<double>(raw_left) * SLOT_SCALE) + SLOT_OFFSET;
+    double right_rpm = (static_cast<double>(raw_right) * SLOT_SCALE) + SLOT_OFFSET;
+
+    //  Unit Conversion to rad/sec
+    // constexpr double RPM_TO_RAD_SEC = (2.0 * M_PI) / 60.0;
+    // double left_rad_sec  = left_rpm * RPM_TO_RAD_SEC;
+    // double right_rad_sec = right_rpm * RPM_TO_RAD_SEC;
+
+
     //  Need to determine if we want RPM back or m/s, also how does the STM32 send the speed
     BOOST_LOG_TRIVIAL(debug) << "[" << info.get_bus_time() << "]: getSpeed received " << std::hex
-                             << info.identifier() << std::dec << " left speed= " << left_speed
-                             << " right speed= " << right_speed;
+                             << info.identifier() << std::dec << " left speed= " << left_rpm
+                             << " RPM, right speed= " << right_rpm << " RPM";
 }   //  handleGetSpeed()
