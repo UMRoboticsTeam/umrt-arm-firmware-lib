@@ -14,6 +14,7 @@
 #include "wheel_controller.hpp"
 
 class WheelControllerTest{
+public:
 
     WheelControllerTest(const std::string& can_interface)
         : controller(can_interface), stop_flag(false)
@@ -21,18 +22,16 @@ class WheelControllerTest{
         std::cout << "WheelControllerTest setup!" << std::endl;
 
         // Start the background test thread
-        test_thread = std::thread(&runTestRoutine, this);
+        test_thread = std::thread(&WheelControllerTest::runTestRoutine, this);
     }
 
     //safe thread shutdown
-    /**
     ~WheelControllerTest() {
         stop_flag = true;
         if (test_thread.joinable()) { //check thread is actually running, not yet joined, not detached
             test_thread.join(); 
         }
     }
-    */
 
     //peridoically call update() so incoming CAN messages are processed
     void  update() {
@@ -43,7 +42,7 @@ class WheelControllerTest{
         }
     }
 
-
+private:
     WheelController controller;
     std::thread test_thread;
     std::atomic<bool> stop_flag;
@@ -110,7 +109,18 @@ int main() {
     WheelControllerTest test("/dev/can0");
 
     // Main thread can do other work here, or just wait
-    std::this_thread::sleep_for(std::chrono::seconds(30)); // Run the test for 30 seconds
+    //std::this_thread::sleep_for(std::chrono::seconds(30)); // Run the test for 30 seconds
 
+    // Track execution runtime
+    auto start_time = std::chrono::steady_clock::now();
+    auto run_duration = std::chrono::seconds(30);
+
+    // FIX 4: The main thread pumps the CAN read loop at ~50Hz (every 20ms)
+    while (std::chrono::steady_clock::now() - start_time < run_duration) {
+        test.update(); // Keeps socketcan ring buffers totally empty and live
+        std::this_thread::sleep_for(std::chrono::milliseconds(20)); 
+    }
+
+    
     return 0;
 }
