@@ -11,7 +11,9 @@
 #include <vector>
 #include <atomic>
 
-class wheelControllerTest{
+#include "wheel_controller.hpp"
+
+class WheelControllerTest{
 
     WheelControllerTest(const std::string& can_interface)
         : controller(can_interface), stop_flag(false)
@@ -105,7 +107,7 @@ class wheelControllerTest{
 };
 
 int main() {
-    wheelControllerTest test("/dev/can0");
+    WheelControllerTest test("/dev/can0");
 
     // Main thread can do other work here, or just wait
     std::this_thread::sleep_for(std::chrono::seconds(30)); // Run the test for 30 seconds
