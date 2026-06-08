@@ -106,7 +106,7 @@ private:
 };
 
 int main() {
-    WheelControllerTest test("/dev/can0");
+    WheelControllerTest test("can0");
 
     // Main thread can do other work here, or just wait
     //std::this_thread::sleep_for(std::chrono::seconds(30)); // Run the test for 30 seconds
