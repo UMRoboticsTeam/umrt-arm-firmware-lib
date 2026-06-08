@@ -11,11 +11,14 @@
 
 #include "ROVER_COMMANDS.hpp"
 #include "wheel_controller.hpp"
-#include "Crc8_J1850.h"
 #include "utils.hpp"
 #include <cmath>
 #include <array>
 #include <algorithm>
+
+extern "C" {
+    #include "Crc8_J1850.h" 
+}
 
 /**
  * Packs the speed onto payload
