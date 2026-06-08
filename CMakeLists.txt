@@ -44,7 +44,7 @@ target_sources(${lib_target} PRIVATE # These files will only be available during
         src/mks_stepper_controller.cpp
         src/servo_controller.cpp
         src/wheel_controller.cpp
-        )
+)
 
 # Locate headers
 # Using FILE_SET would be much cleaner, but needs CMake 3.23+ and ROS Humble ships with 3.22
@@ -57,6 +57,8 @@ set(public_headers # These files will be installed with the library
         include/umrt-arm-firmware-lib/MKS_COMMANDS.hpp
         include/umrt-arm-firmware-lib/utils.hpp
         include/umrt-arm-firmware-lib/mks_enums.hpp
+        include/umrt-arm-firmware-lib/ROVER_COMMANDS.hpp
+        include/umrt-arm-firmware-lib/Crc8_J1850.h
         )
 set_property(TARGET ${lib_target} PROPERTY PUBLIC_HEADER ${public_headers})
 target_include_directories(${lib_target} PUBLIC # Everything in this folder will be available during building
@@ -87,14 +89,14 @@ add_executable(${arduino_communication_test_target})
 target_sources(${arduino_communication_test_target} PRIVATE
         src/arduino_communication_test_script.cpp
         src/arduino_communication_test.cpp
-        )
+)
 
 target_link_libraries(${arduino_communication_test_target} PRIVATE
         Boost::log_setup
         Boost::log
         Boost::filesystem
         ${lib_target}
-        )
+)
 
 # ********** Setup mks_test_script executable **********
 
@@ -123,6 +125,7 @@ add_executable(${wheel_controller_test_target})
 
 target_sources(${wheel_controller_test_target} PRIVATE
         src/wheel_controller_test.cpp
+        src/Crc8_J1850.c
 )
 
 target_link_libraries(${wheel_controller_test_target} PRIVATE
@@ -132,8 +135,6 @@ target_link_libraries(${wheel_controller_test_target} PRIVATE
         Boost::program_options
         ${lib_target}
 )
-
-
 
 # ********** Setup packaging **********
 
@@ -164,7 +165,7 @@ install(FILES
         )
 
 install(
-        TARGETS ${lib_target} ${arduino_communication_test_target} ${mks_test_target} ${wheel_controller_test_target} # These targets will be packaged
+        TARGETS ${lib_target} ${mks_test_target} ${wheel_controller_test_target} ${arduino_communication_test_target} # These targets will be packaged
         EXPORT ${PROJECT_NAME}Targets
         PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}
 )
