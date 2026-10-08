@@ -123,6 +123,45 @@ bool MksStepperController::sendStep(
     return true;
 }
 
+bool MksStepperController::seekPositionByAngle(
+        const uint16_t motor, const int32_t position, const int16_t speed, const uint8_t acceleration
+) {
+    if (!isSetup()) { return false; }
+
+    // Even when using the encoder, the normalization must still happen.
+    auto normalised_speed = static_cast<int16_t>(std::abs(speed) * (int32_t)16 / norm_factor);
+    int32_t normalised_position = position * norm_factor;
+
+    std::vector<uint8_t> payload{ MksCommands::SEEK_POS_BY_ANGLE };
+
+    // With move iterators the compiler might invoke copy elision? Not entirely sure
+    auto speed_packed = pack_16_big(normalised_speed);
+    auto position_packed = pack_24_big(normalised_position);
+    payload.insert(
+            payload.end(), std::make_move_iterator(speed_packed.begin()), std::make_move_iterator(speed_packed.end())
+    );
+    payload.insert(payload.end(), acceleration);
+    payload.insert(
+            payload.end(), std::make_move_iterator(position_packed.begin()), std::make_move_iterator(position_packed.end())
+    );
+    payload.insert(payload.end(), checksum(motor, payload));
+
+    BOOST_LOG_TRIVIAL(debug) << "MksStepperController: SeekPositionByAngle sent for motor 0x" << std::hex << motor << std::dec
+                             << " with position=" << position << ", speed=" << speed
+                             << ", accel=" << static_cast<uint16_t>(acceleration)
+                             << ", normalised_position=" << normalised_position << ", normalised_speed=" << normalised_speed;
+    try {
+        drivers::socketcan::CanId can_id(motor, 0, drivers::socketcan::FrameType::DATA, drivers::socketcan::StandardFrame);
+        can_sender->send(payload.data(), payload.size(), can_id);
+    } catch (drivers::socketcan::SocketCanTimeout& e) {
+        BOOST_LOG_TRIVIAL(warning) << "MksStepperController SeekPositionByAngle timeout: motor=0x" << std::hex << motor << std::dec
+                                   << ", position=" << normalised_position << ", speed=" << normalised_speed
+                                   << ", accel=" << static_cast<uint16_t>(acceleration);
+        return false;
+    }
+    return true;
+}
+
 bool MksStepperController::seekPosition(
         const uint16_t motor, const int32_t position, const int16_t speed, const uint8_t acceleration
 ) {
@@ -153,7 +192,7 @@ bool MksStepperController::seekPosition(
         drivers::socketcan::CanId can_id(motor, 0, drivers::socketcan::FrameType::DATA, drivers::socketcan::StandardFrame);
         can_sender->send(payload.data(), payload.size(), can_id);
     } catch (drivers::socketcan::SocketCanTimeout& e) {
-        BOOST_LOG_TRIVIAL(warning) << "MksStepperController sendStep timeout: motor=0x" << std::hex << motor << std::dec
+        BOOST_LOG_TRIVIAL(warning) << "MksStepperController SeekPosition timeout: motor=0x" << std::hex << motor << std::dec
                                    << ", position=" << normalised_position << ", speed=" << normalised_speed
                                    << ", accel=" << static_cast<uint16_t>(acceleration);
         return false;
