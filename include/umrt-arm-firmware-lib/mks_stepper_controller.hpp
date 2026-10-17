@@ -92,6 +92,18 @@ public:
     bool seekPosition(const uint16_t motor, const int32_t position, const int16_t speed, const uint8_t acceleration = 0);
 
     /**
+     * Sends a @ref MksCommands::SEEK_POS_BY_ANGLE command to move a motor to specific angle position.
+     * Since this command seeks a position, the sign of the speed is ignored.
+     *
+     * @param motor the ID of the motor to move
+     * @param position the target position in number of encoder units (1/16384 rev) from the motor's zero point, maximum of 2^23 - 1
+     * @param speed the signed target speed to set the motor to, in RPM; note that the absolute value is taken
+     * @param acceleration the speed ramp profile, see @ref MksTest.Constants.MAX_ACCEL; defaults to instantaneous
+     * @return `true` if transmitted over the CAN bus
+     */
+    bool seekPositionByAngle(const uint16_t motor, const int32_t position, const int16_t speed, const uint8_t acceleration = 0);
+
+    /**
       * Sends a @ref MksCommands::CURRENT_POS command to query the current position of a motor in steps.
       *
       * @param motor the ID of the motor to query
