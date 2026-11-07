@@ -32,6 +32,7 @@ find_package(ros2_socketcan CONFIG REQUIRED)
 # Fixes intellisense not finding ros2 headers https://youtrack.jetbrains.com/issue/CPP-29747/Certain-ROS2-package-headers-missing-from-Intellisense-when-using-a-Docker-toolchain
 # (since it doesn't seem transfer target_include_directories paths for remote toolchains)
 include_directories(SYSTEM /opt/ros/$ENV{ROS_DISTRO}/include)
+include_directories(SYSTEM /opt/ros/$ENV{ROS_DISTRO}/include/ros2_socketcan)
 
 # ********** Setup umrt_arm_firmware_lib library **********
 
@@ -70,7 +71,7 @@ target_link_libraries(${lib_target} PUBLIC
         )
 
 target_link_libraries(${lib_target} PRIVATE
-        /opt/ros/humble/lib/libros2_socketcan.so
+        /opt/ros/$ENV{ROS_DISTRO}/lib/libros2_socketcan.so
         )
 target_include_directories(${lib_target} PRIVATE
         ${ros2_socketcan_INCLUDE_DIRS}
